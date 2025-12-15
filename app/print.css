@@ -1,0 +1,147 @@
+@media print {
+
+    /* Hide specific UI elements globally */
+    body>div>header,
+    /* DashboardHeader */
+    body>div>aside,
+    /* Sidebar */
+    button,
+    /* All Buttons (Actions, Tabs triggers) */
+    .no-print,
+    /* Helper class to hide anything */
+    [role="tablist"],
+    /* Hiding specific tab navigation */
+    .toolbar-rich-text,
+    /* Custom Tiptap Toolbar */
+    .tiptap-grip-handle,
+    /* Custom Editor Grip */
+    .tox-editor-header,
+    /* If using other editors */
+    header,
+    aside,
+    nav {
+        display: none !important;
+    }
+
+    /* Reset Body and Main Layout */
+    body {
+        background-color: white !important;
+        color: black !important;
+        overflow: visible !important;
+    }
+
+    /* Reset Main Container */
+    main {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    /* Reset Page Layout wrappers (removing Sidebar/ChatPanel offsets) */
+    main>div,
+    main .flex-1,
+    main [class*="mr-"] {
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        flex: none !important;
+        max-width: none !important;
+    }
+
+    /* Ensure the Note Content (Printable Area) is visible and formatted */
+    .printable-note {
+        display: block !important;
+        visibility: visible !important;
+        position: relative !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: none !important;
+        margin: 0 !important;
+    }
+
+    .print-brand-header {
+        display: flex !important;
+        margin-bottom: 0.5cm !important;
+        border-bottom: 2px solid #000 !important;
+        padding-bottom: 0.5cm !important;
+    }
+
+    /* Typography Adjustments for Print */
+    .printable-note h1 {
+        font-size: 24pt !important;
+        line-height: 1.2 !important;
+        color: black !important;
+        margin: 0 !important;
+    }
+
+    .printable-note textarea {
+        font-size: 24pt !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        color: black !important;
+        border: none !important;
+        resize: none !important;
+        margin-bottom: 0.5cm !important;
+        padding: 0 !important;
+        min-height: auto !important;
+        background: transparent !important;
+        overflow: hidden !important;
+        width: 100% !important;
+    }
+
+    .printable-note .metadata-row {
+        margin-bottom: 1cm !important;
+        color: #555 !important;
+        font-size: 10pt !important;
+        display: flex !important;
+    }
+
+    /* Page Setup */
+    @page {
+        margin: 2cm;
+        size: A4;
+    }
+
+    /* Tiptap / ProseMirror Content */
+    .ProseMirror {
+        min-height: auto !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+    }
+
+    /* Ensure Tailwind Typography prose looks good in print */
+    .prose {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Reset Editor Container styles */
+    .flex-col.border.rounded-md {
+        border: none !important;
+        border-radius: 0 !important;
+    }
+
+    .EditorContent {
+        padding-left: 0 !important;
+    }
+
+    /* Clean up interactive elements in editor */
+    .tiptap-grip-handle {
+        display: none !important;
+    }
+
+    /* Hide placeholder text in print if empty */
+    .ProseMirror p.is-editor-empty:first-child::before {
+        display: none !important;
+    }
+}
