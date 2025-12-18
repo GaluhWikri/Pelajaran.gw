@@ -1,11 +1,22 @@
 import { useState } from "react"
-import { RotateCcw, CheckCircle2, XCircle, Trash2 } from "lucide-react"
+import { RotateCcw, CheckCircle2, XCircle, Trash2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+
+import { generateQuizFromNote } from "@/lib/ai-service"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +33,9 @@ interface QuizTabProps {
 }
 
 export function QuizTab({ noteId }: QuizTabProps) {
-  const { quizzes, addQuiz, updateQuiz, deleteQuiz } = useStore()
+  const { notes, quizzes, addQuiz, updateQuiz, deleteQuiz } = useStore()
   const noteQuizzes = quizzes.filter((q) => q.noteId === noteId)
+  const noteContent = notes.find((n) => n.id === noteId)?.content || ""
 
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null)
   const [deleteQuizId, setDeleteQuizId] = useState<string | null>(null)
@@ -31,45 +43,36 @@ export function QuizTab({ noteId }: QuizTabProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({})
   const [showResults, setShowResults] = useState(false)
 
+  // Generation state
+  const [showConfig, setShowConfig] = useState(false)
+  const [questionCount, setQuestionCount] = useState(5)
+  const [isGenerating, setIsGenerating] = useState(false)
+
   const activeQuiz = noteQuizzes.find((q) => q.id === activeQuizId)
 
-  const handleGenerateQuiz = () => {
-    const sampleQuiz = {
-      noteId,
-      userId: "demo-user",
-      title: "Quick Knowledge Check",
-      questions: [
-        {
-          id: "q1",
-          question: "What is the primary purpose of this learning material?",
-          options: [
-            "To provide an overview of the topic",
-            "To test existing knowledge",
-            "To introduce advanced concepts",
-            "To review previous material",
-          ],
-          correctAnswer: 0,
-          explanation: "The material is designed to provide a comprehensive overview of the key concepts.",
-        },
-        {
-          id: "q2",
-          question: "Which concept is most emphasized in the notes?",
-          options: ["Theoretical foundations", "Practical applications", "Historical context", "Future developments"],
-          correctAnswer: 1,
-          explanation: "The notes focus heavily on practical applications and real-world use cases.",
-        },
-        {
-          id: "q3",
-          question: "What is the recommended approach for studying this material?",
-          options: ["Memorize all details", "Understand core concepts", "Skip to examples", "Read once quickly"],
-          correctAnswer: 1,
-          explanation: "Understanding core concepts is more valuable than pure memorization.",
-        },
-      ],
-    }
+  const handleGenerateClick = () => {
+    setShowConfig(true)
+  }
 
-    addQuiz(sampleQuiz)
-    setActiveQuizId(noteQuizzes.length > 0 ? noteQuizzes[noteQuizzes.length].id : null)
+  const handleConfirmGenerate = async () => {
+    if (!noteContent) return
+
+    setIsGenerating(true)
+    try {
+      const quizData = await generateQuizFromNote(noteContent, questionCount)
+
+      addQuiz({
+        noteId,
+        userId: "demo-user",
+        ...quizData,
+      })
+
+      setShowConfig(false)
+    } catch (error) {
+      console.error("Failed to generate quiz:", error)
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const handleAnswerSelect = (questionId: string, answerIndex: number) => {
@@ -236,7 +239,7 @@ export function QuizTab({ noteId }: QuizTabProps) {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Quizzes</h3>
-        <Button onClick={handleGenerateQuiz} className="gap-2">
+        <Button onClick={handleGenerateClick} className="gap-2">
           <RotateCcw className="h-4 w-4" />
           Generate Quiz with AI
         </Button>
@@ -305,6 +308,53 @@ export function QuizTab({ noteId }: QuizTabProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showConfig} onOpenChange={setShowConfig}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Quiz with AI</DialogTitle>
+            <DialogDescription>
+              Customize your quiz generation settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="question-count">Number of Questions</Label>
+                <span className="text-sm font-medium border rounded px-3 py-1 bg-muted">
+                  {questionCount}
+                </span>
+              </div>
+              <Slider
+                id="question-count"
+                min={1}
+                max={20}
+                step={1}
+                value={[questionCount]}
+                onValueChange={(value) => setQuestionCount(value[0])}
+                className="cursor-pointer"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>1 Question</span>
+                <span>20 Questions</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfig(false)} disabled={isGenerating}>Cancel</Button>
+            <Button onClick={handleConfirmGenerate} disabled={isGenerating} className="gap-2">
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                "Generate Quiz"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

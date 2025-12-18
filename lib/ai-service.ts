@@ -249,6 +249,81 @@ async function mockGenerateLearningContent(file: File, errorMessage?: string) {
     }
 }
 
+
 async function mockGenerateChatResponse(message: string, context: Note) {
     return "Mode Mock: Harap tambahkan NEXT_PUBLIC_GEMINI_API_KEY untuk fitur chat aktif. Saya belum bisa menjawab pertanyaan '" + message + "' tanpa API key."
 }
+
+export async function generateQuizFromNote(
+    noteContent: string,
+    questionCount: number = 5
+): Promise<Omit<Quiz, "id" | "createdAt" | "noteId" | "userId">> {
+    if (!apiKey) {
+        console.warn("Gemini API Key is missing. Returning mock quiz.")
+        return mockGenerateQuizFromNote(questionCount)
+    }
+
+    try {
+        const prompt = `
+  ${AI_SYSTEM_PROMPT}
+
+  Tugas Khusus:
+  Buatlah kuis pilihan ganda berdasarkan materi berikut.
+  
+  Materi:
+  "${noteContent.substring(0, 10000)}..." (dipotong jika terlalu panjang)
+
+  Instruksi:
+  1. Buat tepat ${questionCount} pertanyaan.
+  2. Pertanyaan harus relevan dengan materi.
+  3. Berikan 4 pilihan jawaban untuk setiap pertanyaan.
+  4. Sertakan penjelasan singkat untuk jawaban yang benar.
+  
+  Output JSON format:
+  {
+    "title": "Judul Kuis (Relevan dengan materi)",
+    "questions": [
+      {
+        "id": "q1", // incrementing id
+        "question": "Pertanyaan...",
+        "options": ["A", "B", "C", "D"],
+        "correctAnswer": 0, // index of correct option (0-3)
+        "explanation": "Penjelasan..."
+      }
+    ]
+  }
+  `
+
+        const result = await retryGenAI(() => model.generateContent(prompt))
+        const responseText = result.response.text()
+
+        let data
+        try {
+            data = JSON.parse(responseText)
+        } catch (e) {
+            const jsonStr = responseText.replace(/```json/g, "").replace(/```/g, "")
+            data = JSON.parse(jsonStr)
+        }
+
+        return data
+    } catch (error) {
+        console.error("Error generating quiz:", error)
+        return mockGenerateQuizFromNote(questionCount)
+    }
+}
+
+async function mockGenerateQuizFromNote(questionCount: number) {
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    return {
+        title: "Mock Generated Quiz",
+        questions: Array.from({ length: questionCount }).map((_, i) => ({
+            id: `q${i + 1}`,
+            question: `This is a mock question #${i + 1} generated because API key is missing.`,
+            options: ["Option A", "Option B", "Option C", "Option D"],
+            correctAnswer: 0,
+            explanation: "This is a mock explanation.",
+        })),
+    }
+}
+
