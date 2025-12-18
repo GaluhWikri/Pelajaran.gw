@@ -103,7 +103,7 @@ export default function NotesPage() {
                     </div>
 
                     <p className="text-sm text-muted-foreground line-clamp-3">
-                      {note.content.replace(/#{1,6}\s/g, "").substring(0, 150)}
+                      {note.content.replace(/<[^>]+>/g, "").substring(0, 150)}
                     </p>
 
                     <div className="flex items-center justify-between pt-2">
@@ -124,7 +124,7 @@ export default function NotesPage() {
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(note.updatedAt, { addSuffix: true })}
+                        {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
                       </span>
                     </div>
                   </div>

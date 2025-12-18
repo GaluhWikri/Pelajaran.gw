@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Upload, FileText, Video, Mic, Youtube, Plus, Search, Tag, Star, Trash2, X, Loader2, CheckCircle } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
@@ -38,12 +38,19 @@ interface UploadedFile {
 
 type ModalType = "file" | "youtube" | "audio" | "video" | null
 
+
 export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<UploadedFile[]>([])
   const { addMaterial, addNote, addQuiz, addFlashcard, notes, deleteNote } = useStore()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
 
   // Modal State
   const [activeModal, setActiveModal] = useState<ModalType>(null)
@@ -151,19 +158,14 @@ export default function UploadPage() {
     setFiles((prev) => [...prev, ...newFiles])
 
     for (let i = 0; i < newFiles.length; i++) {
-      const fileIndex = files.length + i
+      const file = newFiles[i].file
+      const fileType = getFileType(file.name)
 
       // Upload simulation
-      for (let progress = 0; progress <= 100; progress += 20) {
+      for (let progress = 0; progress <= 90; progress += 10) {
         await new Promise((resolve) => setTimeout(resolve, 100))
         setFiles((prev) => {
           const updated = [...prev]
-          // Needs careful index handling if user adds more files while processing
-          // But for this simple version, we append. 
-          // However, 'files.length' changed inside the loop? No, state update function receives latest.
-          // Yet 'i' is relative to newFiles. 
-          // To be safe we should find the exact item or just trust append order if no removals.
-          // Let's rely on mapping logic:
           const targetIndex = prev.length - newFiles.length + i
           if (updated[targetIndex]) {
             updated[targetIndex] = { ...updated[targetIndex], progress }
@@ -172,75 +174,84 @@ export default function UploadPage() {
         })
       }
 
-      // Processing
+      // Processing State
       setFiles((prev) => {
         const updated = [...prev]
         const targetIndex = prev.length - newFiles.length + i
         if (updated[targetIndex]) {
-          updated[targetIndex] = { ...updated[targetIndex], status: "processing" }
+          updated[targetIndex] = { ...updated[targetIndex], status: "processing", progress: 95 }
         }
         return updated
       })
 
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      try {
+        // Add Material first
+        addMaterial({
+          userId: "demo-user",
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          type: fileType,
+          fileUrl: URL.createObjectURL(file),
+          fileName: file.name,
+          fileSize: file.size,
+        })
 
-      // Complete
-      setFiles((prev) => {
-        const updated = [...prev]
-        const targetIndex = prev.length - newFiles.length + i
-        if (updated[targetIndex]) {
-          updated[targetIndex] = { ...updated[targetIndex], status: "complete", progress: 100 }
-        }
-        return updated
-      })
+        // Generate content using AI Service with Options
+        // This is the heavy lifting
+        const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContent(file, {
+          subject: config.subject,
+          understandingLevel: config.understandingLevel,
+          writingStyle: config.writingStyle
+        })
 
-      // Add to store
-      const file = newFiles[i].file
-      const fileType = getFileType(file.name)
+        const noteId = Math.random().toString(36).substring(7)
+        const htmlContent = await marked.parse(summary)
 
-      addMaterial({
-        userId: "demo-user",
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        type: fileType,
-        fileUrl: URL.createObjectURL(file),
-        fileName: file.name,
-        fileSize: file.size,
-      })
+        // Add Note
+        addNote({
+          id: noteId,
+          userId: "demo-user",
+          title: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
+          content: htmlContent as string,
+          tags: [fileType, "AI Generated"],
+          isFavorite: false,
+        })
 
-      // Generate content using AI Service with Options
-      const { summary, quiz, flashcards } = await generateLearningContent(file, {
-        subject: config.subject,
-        understandingLevel: config.understandingLevel,
-        writingStyle: config.writingStyle
-      })
-
-      const noteId = Math.random().toString(36).substring(7)
-
-      // Convert Markdown to HTML for the Rich Text Editor
-      const htmlContent = await marked.parse(summary)
-
-      addNote({
-        id: noteId,
-        userId: "demo-user",
-        title: `Notes: ${file.name.replace(/\.[^/.]+$/, "")}`,
-        content: htmlContent as string,
-        tags: [fileType, "AI Generated"],
-        isFavorite: false,
-      })
-
-      addQuiz({
-        ...quiz,
-        noteId: noteId,
-        userId: "demo-user",
-      })
-
-      flashcards.forEach(card => {
-        addFlashcard({
-          ...card,
+        // Add Quiz
+        addQuiz({
+          ...quiz,
           noteId: noteId,
           userId: "demo-user",
         })
-      })
+
+        // Add Flashcards
+        flashcards.forEach(card => {
+          addFlashcard({
+            ...card,
+            noteId: noteId,
+            userId: "demo-user",
+          })
+        })
+
+        // Complete State
+        setFiles((prev) => {
+          const updated = [...prev]
+          const targetIndex = prev.length - newFiles.length + i
+          if (updated[targetIndex]) {
+            updated[targetIndex] = { ...updated[targetIndex], status: "complete", progress: 100 }
+          }
+          return updated
+        })
+      } catch (error) {
+        console.error("Error processing file:", error)
+        setFiles((prev) => {
+          const updated = [...prev]
+          const targetIndex = prev.length - newFiles.length + i
+          if (updated[targetIndex]) {
+            updated[targetIndex] = { ...updated[targetIndex], status: "error", progress: 100 }
+          }
+          return updated
+        })
+      }
     }
   }
 
@@ -439,7 +450,11 @@ export default function UploadPage() {
 
             {/* Notes List */}
             <div className="space-y-2">
-              {userNotes.length === 0 ? (
+              {!isMounted ? (
+                <div className="text-center py-12 border rounded-lg bg-card/50">
+                  <p className="text-muted-foreground">Loading notes...</p>
+                </div>
+              ) : userNotes.length === 0 ? (
                 <div className="text-center py-12 border rounded-lg bg-card/50">
                   <p className="text-muted-foreground">Belum ada catatan. Buat baru dengan mengupload materi di atas!</p>
                 </div>
@@ -458,7 +473,7 @@ export default function UploadPage() {
                         <div>
                           <h3 className="font-medium text-base group-hover:text-primary transition-colors">{note.title}</h3>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                            <span>{formatDistanceToNow(note.updatedAt, { addSuffix: true })}</span>
+                            <span>{formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}</span>
                             <span>•</span>
                             <span className="capitalize">{note.tags[0] || "General"}</span>
                           </div>

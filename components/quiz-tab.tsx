@@ -125,18 +125,22 @@ export function QuizTab({ noteId }: QuizTabProps) {
               <p className="text-xl font-medium mb-6">{currentQuestion.question}</p>
 
               <RadioGroup
+                key={currentQuestion.id}
                 value={selectedAnswers[currentQuestion.id]?.toString()}
                 onValueChange={(value) => handleAnswerSelect(currentQuestion.id, Number.parseInt(value))}
               >
                 <div className="space-y-3">
-                  {currentQuestion.options.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                      <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
+                  {currentQuestion.options.map((option, index) => {
+                    const uniqueId = `q-${currentQuestion.id}-op-${index}`
+                    return (
+                      <div key={index} className="flex items-center space-x-3">
+                        <RadioGroupItem value={index.toString()} id={uniqueId} />
+                        <Label htmlFor={uniqueId} className="flex-1 cursor-pointer">
+                          {option}
+                        </Label>
+                      </div>
+                    )
+                  })}
                 </div>
               </RadioGroup>
             </div>

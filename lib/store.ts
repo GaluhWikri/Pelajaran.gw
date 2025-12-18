@@ -30,6 +30,7 @@ interface AppState {
   updateNote: (id: string, updates: Partial<Note>) => void
   deleteNote: (id: string) => void
   setActiveNote: (id: string | null) => void
+  markNoteAsAccessed: (id: string) => void
 
   // Actions - Flashcards
   addFlashcard: (flashcard: Omit<Flashcard, "id" | "createdAt"> & { id?: string }) => void
@@ -107,6 +108,13 @@ export const useStore = create<AppState>()(
         })),
 
       setActiveNote: (id) => set({ activeNoteId: id }),
+
+      markNoteAsAccessed: (id) =>
+        set((state) => ({
+          notes: state.notes.map((note) =>
+            note.id === id ? { ...note, lastAccessedAt: new Date() } : note
+          ),
+        })),
 
       // Flashcards actions
       addFlashcard: (flashcard) =>

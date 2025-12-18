@@ -13,15 +13,29 @@ import { MessageSquare } from "lucide-react"
 
 export default function NoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { notes, chatPanelOpen, toggleChatPanel } = useStore()
+  // We use notes to find the note, but for the effect trigger we only care about existence
+  // to avoid infinite loops caused by object reference updates.
+  const { notes, chatPanelOpen, toggleChatPanel, markNoteAsAccessed } = useStore()
   const router = useRouter()
+
   const note = notes.find((n) => n.id === id)
+  const noteExists = !!note
 
   useEffect(() => {
-    if (!note) {
+    if (!noteExists) {
+      // Small timeout to allow hydration? No, usually unnecessary with persistent store if we handle loading state.
+      // But here we just redirect.
+      // We can't easily wait for "loading" in this simple store. 
+      // If it's truly missing, we redirect.
       router.push("/notes")
     }
-  }, [note, router])
+  }, [noteExists, router])
+
+  useEffect(() => {
+    if (noteExists) {
+      markNoteAsAccessed(id)
+    }
+  }, [id, noteExists, markNoteAsAccessed])
 
   if (!note) {
     return null

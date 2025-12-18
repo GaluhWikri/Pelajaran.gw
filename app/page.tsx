@@ -1,17 +1,23 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { FileText, CreditCard, Trophy, TrendingUp } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { StatsCard } from "@/components/stats-card"
 import { RecentActivity } from "@/components/recent-activity"
+import { ActivityChart } from "@/components/activity-chart"
 import { useStore } from "@/lib/store"
 import { mockNotes, mockFlashcards, mockQuizzes } from "@/lib/mock-data"
 
 export default function DashboardPage() {
   const { notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats } = useStore()
   const stats = getActivityStats()
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Load mock data on first visit
   useEffect(() => {
@@ -37,19 +43,19 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <StatsCard
               title="Total Notes"
-              value={stats.totalNotes}
+              value={isMounted ? stats.totalNotes : 0}
               icon={FileText}
               trend={{ value: "+12%", positive: true }}
             />
             <StatsCard
               title="Flashcards"
-              value={stats.totalFlashcards}
+              value={isMounted ? stats.totalFlashcards : 0}
               icon={CreditCard}
               trend={{ value: "+8%", positive: true }}
             />
             <StatsCard
               title="Quizzes Taken"
-              value={stats.totalQuizzes}
+              value={isMounted ? stats.totalQuizzes : 0}
               icon={Trophy}
               trend={{ value: "+23%", positive: true }}
             />
@@ -57,7 +63,9 @@ export default function DashboardPage() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              {/* Activity Chart was here, effectively removed column span usage by wrapping RecentActivity or just letting it fill */}
+              <ActivityChart />
+            </div>
+            <div className="lg:col-span-1">
               <RecentActivity />
             </div>
           </div>

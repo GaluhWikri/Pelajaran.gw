@@ -1,40 +1,116 @@
 "use client"
 
+import { useMemo, useState, useEffect } from "react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
-
-const data = [
-  { day: "Mon", hours: 2.5 },
-  { day: "Tue", hours: 3.2 },
-  { day: "Wed", hours: 1.8 },
-  { day: "Thu", hours: 4.1 },
-  { day: "Fri", hours: 2.9 },
-  { day: "Sat", hours: 5.3 },
-  { day: "Sun", hours: 3.7 },
-]
+import { useStore } from "@/lib/store"
+import { subDays, format } from "date-fns"
+import { id } from "date-fns/locale"
 
 export function ActivityChart() {
+  const { notes } = useStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const data = useMemo(() => {
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = subDays(new Date(), 6 - i)
+      return {
+        date: d,
+        label: format(d, "EEE", { locale: id }), // Mon, Tue, etc. in Indonesian
+        fullDate: format(d, "dd MMM yyyy", { locale: id }),
+        count: 0,
+      }
+    })
+
+    // Count notes per day
+    notes.forEach((note) => {
+      const noteDate = new Date(note.createdAt)
+      const DayItem = last7Days.find((day) =>
+        format(day.date, "yyyy-MM-dd") === format(noteDate, "yyyy-MM-dd")
+      )
+      if (DayItem) {
+        DayItem.count += 1
+      }
+    })
+
+    return last7Days
+  }, [notes])
+
+  if (!mounted) {
+    return (
+      <Card className="col-span-1">
+        <CardHeader>
+          <CardTitle>Aktivitas Harian (7 Hari Terakhir)</CardTitle>
+        </CardHeader>
+        <CardContent className="pl-2">
+          <div className="h-[240px] w-full flex items-center justify-center text-muted-foreground text-sm">
+            Loading chart...
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
-    <Card className="col-span-full lg:col-span-2">
+    <Card className="col-span-1">
       <CardHeader>
-        <CardTitle>Study Activity</CardTitle>
+        <CardTitle>Aktivitas Harian (7 Hari Terakhir)</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis dataKey="day" className="text-xs" stroke="hsl(var(--muted-foreground))" />
-            <YAxis className="text-xs" stroke="hsl(var(--muted-foreground))" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "var(--radius)",
-              }}
-            />
-            <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <CardContent className="pl-2">
+        <div className="h-[240px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data}>
+              <XAxis
+                dataKey="label"
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${value}`}
+                allowDecimals={false}
+              />
+              <Tooltip
+                cursor={{ fill: 'transparent' }}
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload;
+                    return (
+                      <div className="rounded-lg border bg-background p-2 shadow-sm">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex flex-col">
+                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                              {data.fullDate}
+                            </span>
+                            <span className="font-bold text-muted-foreground">
+                              {data.count} Notes
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return null
+                }}
+              />
+              <Bar
+                dataKey="count"
+                fill="currentColor"
+                radius={[4, 4, 0, 0]}
+                className="fill-primary"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   )

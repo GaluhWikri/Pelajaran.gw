@@ -34,8 +34,8 @@ const chatModel = genAI.getGenerativeModel({
  */
 async function retryGenAI<T>(
     operation: () => Promise<T>,
-    retries = 3,
-    delay = 2000
+    retries = 5,
+    delay = 3000
 ): Promise<T> {
     try {
         return await operation()
@@ -81,6 +81,7 @@ export interface GenerationOptions {
 }
 
 export async function generateLearningContent(file: File, options?: GenerationOptions): Promise<{
+    title?: string
     summary: string
     quiz: Omit<Quiz, "id" | "createdAt">
     flashcards: Omit<Flashcard, "id" | "createdAt">[]
@@ -114,18 +115,20 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     Analisis materi yang diberikan dan hasilkan output dalam format JSON yang valid.
 
     PENTING UNTUK RINGKASAN (summary):
-    - Gunakan format Markdown yang kaya dan terstruktur.
-    - Judul Utama (# Judul)
-    - Gunakan Headings (##, ###) untuk memisahkan bagian.
-    - Sertakan bagian "Inti Konsep" berupa poin-poin (bullet points) ringkas.
-    - Sertakan bagian "Penjelasan" yang mendetail.
+    - WAJIB mengikuti struktur header berikut:
+      # (H1) → Judul utama materi
+      ## (H2) → Subjudul/topik utama
+      ### (H3) → Ringkasan konsep penting
+      #### (H4) → Soal atau latihan (contoh soal dan pembahasan)
+    - JANGAN menuliskan kalimat pengantar/penutup seperti "Berdasarkan materi di atas", "Berikut adalah ringkasan", atau "Menurut teks".
+    - Langsung sajikan ringkasan dan soal.
+    - Gunakan bahasa ringkas, jelas, dan formal edukatif.
     - Gunakan **Bold** untuk istilah penting.
-    - Gunakan *Italic* untuk penekanan.
-    - Gunakan Numbered Lists (1., 2.) untuk langkah-langkah atau urutan.
-    - Buat tampilannya profesional seperti buku pelajaran premium.
+    - Tampilan profesional seperti catatan kuliah/buku pelajaran.
 
     Struktur JSON harus mengikuti format ini secara ketat:
     {
+      "title": "Judul Materi yang Relevan dan Menarik (Max 5-7 kata) berdasarkan isi konten",
       "summary": "String markdown ringkasan materi lengkap sesuai instruksi format di atas",
       "quiz": {
         "title": "Judul Kuis",
@@ -164,6 +167,7 @@ export async function generateLearningContent(file: File, options?: GenerationOp
         }
 
         return {
+            title: data.title, // Use the AI-generated title
             summary: data.summary,
             quiz: {
                 noteId: "", // Filled by caller
@@ -177,9 +181,10 @@ export async function generateLearningContent(file: File, options?: GenerationOp
                 reviewCount: 0,
             })),
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating content with Gemini:", error)
-        return mockGenerateLearningContent(file, error instanceof Error ? error.message : String(error))
+        // Rethrow the error so the UI sees it as a failure
+        throw error
     }
 }
 

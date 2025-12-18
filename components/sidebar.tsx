@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Home, FileText, CreditCard, Trophy, Upload, Clock, Star, Folder, Crown, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,17 @@ const navigation = [
 
 export function Sidebar() {
   const { sidebarOpen, notes, user } = useStore()
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const sortedRecentNotes = [...notes].sort((a, b) => {
+    const timeA = Math.max(new Date(a.updatedAt).getTime(), a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : 0)
+    const timeB = Math.max(new Date(b.updatedAt).getTime(), b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0)
+    return timeB - timeA
+  })
 
   return (
     <aside
@@ -47,21 +59,31 @@ export function Sidebar() {
           <div>
             <div className="flex items-center justify-between mb-2 px-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent Notes</h3>
-              <span className="text-xs text-muted-foreground">{notes.length}</span>
+              <span className="text-xs text-muted-foreground">{isMounted ? notes.length : "-"}</span>
             </div>
             <div className="space-y-1">
-              {notes.slice(0, 5).map((note) => (
-                <Button key={note.id} variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
-                  <Link href={`/notes/${note.id}`}>
-                    <div className="truncate text-left">
-                      <div className="font-medium truncate">{note.title}</div>
-                      <div className="text-xs text-muted-foreground">{note.tags.slice(0, 2).join(", ")}</div>
-                    </div>
-                  </Link>
-                </Button>
-              ))}
-              {notes.length === 0 && (
-                <p className="px-2 py-4 text-sm text-muted-foreground">No notes yet. Start by uploading material!</p>
+              {isMounted ? (
+                <>
+                  {sortedRecentNotes.slice(0, 5).map((note) => (
+                    <Button key={note.id} variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
+                      <Link href={`/notes/${note.id}`}>
+                        <div className="truncate text-left">
+                          <div className="font-medium truncate">{note.title}</div>
+                          <div className="text-xs text-muted-foreground">{note.tags.slice(0, 2).join(", ")}</div>
+                        </div>
+                      </Link>
+                    </Button>
+                  ))}
+                  {notes.length === 0 && (
+                    <p className="px-2 py-4 text-sm text-muted-foreground">No notes yet. Start by uploading material!</p>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-2 py-2">
+                  <div className="h-10 w-full bg-muted/40 animate-pulse rounded-md" />
+                  <div className="h-10 w-full bg-muted/40 animate-pulse rounded-md" />
+                  <div className="h-10 w-full bg-muted/40 animate-pulse rounded-md" />
+                </div>
               )}
             </div>
           </div>

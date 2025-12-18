@@ -28,6 +28,7 @@ export interface Note {
   isFavorite: boolean
   createdAt: Date
   updatedAt: Date
+  lastAccessedAt?: Date
 }
 
 export interface Flashcard {

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Menu, Search, Bell, Settings, User, FileText, CreditCard, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -65,9 +66,13 @@ export function DashboardHeader() {
         </Button>
 
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">P</span>
-          </div>
+          <Image
+            src="/favicon/android-chrome-192x192.png"
+            alt="Pelajaran.gw Logo"
+            width={40}
+            height={40}
+            className="h-10 w-auto object-contain"
+          />
           <h1 className="text-xl font-bold">
             Pelajaran<span className="text-primary">.gw</span>
           </h1>
