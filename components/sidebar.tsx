@@ -10,13 +10,8 @@ import Link from "next/link"
 const navigation = [
   { name: "Dashboard", icon: Home, href: "/" },
   { name: "All Notes", icon: FileText, href: "/notes" },
+  { name: "Favorites", icon: Star, href: "/notes?filter=favorites" },
   { name: "Upload Material", icon: Upload, href: "/upload" },
-]
-
-const quickAccess = [
-  { name: "Recent", icon: Clock },
-  { name: "Favorites", icon: Star },
-  { name: "Folders", icon: Folder },
 ]
 
 export function Sidebar() {
@@ -44,20 +39,6 @@ export function Sidebar() {
                     <item.icon className="h-4 w-4" />
                     {item.name}
                   </Link>
-                </Button>
-              ))}
-            </nav>
-          </div>
-
-          <div>
-            <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Quick Access
-            </h3>
-            <nav className="space-y-1">
-              {quickAccess.map((item) => (
-                <Button key={item.name} variant="ghost" className="w-full justify-start gap-3">
-                  <item.icon className="h-4 w-4" />
-                  {item.name}
                 </Button>
               ))}
             </nav>

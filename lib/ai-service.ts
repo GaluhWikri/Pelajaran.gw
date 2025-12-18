@@ -12,12 +12,42 @@ const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: {
         responseMimeType: "application/json",
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 8192,
     },
 })
 
 const chatModel = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
+    generationConfig: {
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 8192,
+    },
 })
+
+/**
+ * Helper to retry Gemini requests on 503 Overloaded errors
+ */
+async function retryGenAI<T>(
+    operation: () => Promise<T>,
+    retries = 3,
+    delay = 2000
+): Promise<T> {
+    try {
+        return await operation()
+    } catch (error: any) {
+        if (retries > 0 && (error.message?.includes("503") || error.message?.includes("overloaded"))) {
+            console.log(`Gemini 503 overloaded. Retrying in ${delay / 1000}s... (${retries} retries left)`)
+            await new Promise((resolve) => setTimeout(resolve, delay))
+            return retryGenAI(operation, retries - 1, delay * 2)
+        }
+        throw error
+    }
+}
 
 /**
  * Helper to convert a File object to a GenerativePart (base64)
@@ -82,9 +112,21 @@ export async function generateLearningContent(file: File, options?: GenerationOp
 
     Tugas Khusus:
     Analisis materi yang diberikan dan hasilkan output dalam format JSON yang valid.
+
+    PENTING UNTUK RINGKASAN (summary):
+    - Gunakan format Markdown yang kaya dan terstruktur.
+    - Judul Utama (# Judul)
+    - Gunakan Headings (##, ###) untuk memisahkan bagian.
+    - Sertakan bagian "Inti Konsep" berupa poin-poin (bullet points) ringkas.
+    - Sertakan bagian "Penjelasan" yang mendetail.
+    - Gunakan **Bold** untuk istilah penting.
+    - Gunakan *Italic* untuk penekanan.
+    - Gunakan Numbered Lists (1., 2.) untuk langkah-langkah atau urutan.
+    - Buat tampilannya profesional seperti buku pelajaran premium.
+
     Struktur JSON harus mengikuti format ini secara ketat:
     {
-      "summary": "String markdown ringkasan materi lengkap",
+      "summary": "String markdown ringkasan materi lengkap sesuai instruksi format di atas",
       "quiz": {
         "title": "Judul Kuis",
         "questions": [
@@ -106,7 +148,8 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     }
     `
 
-        const result = await model.generateContent([prompt, filePart])
+        // Wrap request in retry logic
+        const result = await retryGenAI(() => model.generateContent([prompt, filePart]))
         const responseText = result.response.text()
 
         // Ensure we parse JSON correctly

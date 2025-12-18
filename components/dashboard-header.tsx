@@ -1,6 +1,8 @@
 "use client"
 
-import { Menu, Search, Bell, Settings, User } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Menu, Search, Bell, Settings, User, FileText, CreditCard, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -15,7 +17,45 @@ import {
 import { useStore } from "@/lib/store"
 
 export function DashboardHeader() {
-  const { user, toggleSidebar } = useStore()
+  const { user, toggleSidebar, notes, flashcards, quizzes } = useStore()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showResults, setShowResults] = useState(false)
+  const router = useRouter()
+  const searchContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowResults(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const filteredNotes = notes.filter((note) =>
+    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.content.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const filteredFlashcards = flashcards.filter((card) =>
+    card.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    card.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const filteredQuizzes = quizzes.filter((quiz) =>
+    quiz.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const hasResults =
+    (filteredNotes.length > 0 || filteredFlashcards.length > 0 || filteredQuizzes.length > 0) &&
+    searchQuery.length > 0
+
+  const handleNavigate = (path: string) => {
+    setShowResults(false)
+    setSearchQuery("")
+    router.push(path)
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
@@ -34,9 +74,82 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex-1 max-w-xl mx-auto">
-          <div className="relative">
+          <div className="relative" ref={searchContainerRef}>
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search notes, flashcards, quizzes..." className="pl-10" />
+            <Input
+              placeholder="Search notes, flashcards, quizzes..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setShowResults(true)
+              }}
+              onFocus={() => setShowResults(true)}
+            />
+
+            {showResults && searchQuery && (
+              <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in fade-in-0 zoom-in-95 z-50 overflow-hidden">
+                {!hasResults ? (
+                  <div className="py-6 text-center text-sm text-muted-foreground">No results found.</div>
+                ) : (
+                  <div className="max-h-[300px] overflow-y-auto py-2">
+                    {filteredNotes.length > 0 && (
+                      <div className="mb-2">
+                        <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Notes
+                        </div>
+                        {filteredNotes.slice(0, 5).map((note) => (
+                          <div
+                            key={note.id}
+                            className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+                            onClick={() => handleNavigate(`/notes/${note.id}`)}
+                          >
+                            <FileText className="h-4 w-4 text-primary shrink-0" />
+                            <span className="truncate">{note.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {filteredFlashcards.length > 0 && (
+                      <div className="mb-2">
+                        <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Flashcards
+                        </div>
+                        {filteredFlashcards.slice(0, 5).map((card) => (
+                          <div
+                            key={card.id}
+                            className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+                            onClick={() => handleNavigate(`/notes/${card.noteId}`)}
+                          >
+                            <CreditCard className="h-4 w-4 text-orange-500 shrink-0" />
+                            <span className="truncate">{card.question}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {filteredQuizzes.length > 0 && (
+                      <div className="mb-2">
+                        <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Quizzes
+                        </div>
+                        {filteredQuizzes.slice(0, 5).map((quiz) => (
+                          <div
+                            key={quiz.id}
+                            className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+                            onClick={() => handleNavigate(`/notes/${quiz.noteId}`)}
+                          >
+                            <Trophy className="h-4 w-4 text-yellow-500 shrink-0" />
+                            <span className="truncate">{quiz.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

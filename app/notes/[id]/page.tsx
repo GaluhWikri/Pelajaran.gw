@@ -1,23 +1,30 @@
 "use client"
 
-import { use } from "react"
+import { use, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { NoteEditorTabs } from "@/components/note-editor-tabs"
 import { AIAssistantPanel } from "@/components/ai-assistant-panel"
 
 import { useStore } from "@/lib/store"
-import { notFound } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { MessageSquare } from "lucide-react"
 
 export default function NoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { notes, chatPanelOpen, toggleChatPanel } = useStore()
+  const router = useRouter()
   const note = notes.find((n) => n.id === id)
 
+  useEffect(() => {
+    if (!note) {
+      router.push("/notes")
+    }
+  }, [note, router])
+
   if (!note) {
-    notFound()
+    return null
   }
 
   return (

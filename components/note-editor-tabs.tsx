@@ -176,7 +176,7 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
       const filename = titleText.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".pdf"
 
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [10, 10, 10, 10] as [number, number, number, number],
         filename: filename,
         image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: {
@@ -191,7 +191,7 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
       }
 
       // We explicitly select the .pdf-root element inside the container
-      const elementToCapture = container.querySelector(".pdf-root") || container
+      const elementToCapture = (container.querySelector(".pdf-root") as HTMLElement) || container
 
       await html2pdf().set(opt).from(elementToCapture).save()
 
@@ -300,8 +300,14 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={handleDelete}
-                className="text-destructive"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (confirm("Are you sure you want to delete this note?")) {
+                    handleDelete()
+                  }
+                }}
+                className="text-destructive focus:text-destructive cursor-pointer"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Note

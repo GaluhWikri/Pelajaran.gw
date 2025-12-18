@@ -2,11 +2,12 @@
 
 import type React from "react"
 import { useState, useRef } from "react"
-import { Upload, FileText, Video, Mic, Youtube, Plus, Search, Tag, Star, Trash2, X } from "lucide-react"
+import { Upload, FileText, Video, Mic, Youtube, Plus, Search, Tag, Star, Trash2, X, Loader2, CheckCircle } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { useStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -27,6 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { marked } from "marked"
 
 interface UploadedFile {
   file: File
@@ -156,7 +158,16 @@ export default function UploadPage() {
         await new Promise((resolve) => setTimeout(resolve, 100))
         setFiles((prev) => {
           const updated = [...prev]
-          updated[fileIndex] = { ...updated[fileIndex], progress }
+          // Needs careful index handling if user adds more files while processing
+          // But for this simple version, we append. 
+          // However, 'files.length' changed inside the loop? No, state update function receives latest.
+          // Yet 'i' is relative to newFiles. 
+          // To be safe we should find the exact item or just trust append order if no removals.
+          // Let's rely on mapping logic:
+          const targetIndex = prev.length - newFiles.length + i
+          if (updated[targetIndex]) {
+            updated[targetIndex] = { ...updated[targetIndex], progress }
+          }
           return updated
         })
       }
@@ -164,7 +175,10 @@ export default function UploadPage() {
       // Processing
       setFiles((prev) => {
         const updated = [...prev]
-        updated[fileIndex] = { ...updated[fileIndex], status: "processing" }
+        const targetIndex = prev.length - newFiles.length + i
+        if (updated[targetIndex]) {
+          updated[targetIndex] = { ...updated[targetIndex], status: "processing" }
+        }
         return updated
       })
 
@@ -173,7 +187,10 @@ export default function UploadPage() {
       // Complete
       setFiles((prev) => {
         const updated = [...prev]
-        updated[fileIndex] = { ...updated[fileIndex], status: "complete", progress: 100 }
+        const targetIndex = prev.length - newFiles.length + i
+        if (updated[targetIndex]) {
+          updated[targetIndex] = { ...updated[targetIndex], status: "complete", progress: 100 }
+        }
         return updated
       })
 
@@ -199,11 +216,14 @@ export default function UploadPage() {
 
       const noteId = Math.random().toString(36).substring(7)
 
+      // Convert Markdown to HTML for the Rich Text Editor
+      const htmlContent = await marked.parse(summary)
+
       addNote({
         id: noteId,
         userId: "demo-user",
         title: `Notes: ${file.name.replace(/\.[^/.]+$/, "")}`,
-        content: summary,
+        content: htmlContent as string,
         tags: [fileType, "AI Generated"],
         isFavorite: false,
       })
@@ -321,6 +341,73 @@ export default function UploadPage() {
             multiple
             onChange={handleFileInputChange}
           />
+
+          {/* ACTIVE UPLOADS & PROCESSING STATUS */}
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">Status Pemrosesan</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setFiles(prev => prev.filter(f => f.status !== 'complete' && f.status !== 'error'))}
+                >
+                  Bersihkan yang selesai
+                </Button>
+              </div>
+
+              <div className="grid gap-3">
+                {files.map((fileData, index) => (
+                  <Card key={index} className="overflow-hidden border-l-4 border-l-primary">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
+                          fileData.status === 'complete' ? "bg-green-100 text-green-600" :
+                            fileData.status === 'error' ? "bg-red-100 text-red-600" :
+                              "bg-blue-100 text-blue-600"
+                        )}>
+                          {fileData.status === 'complete' ? <CheckCircle className="h-5 w-5" /> :
+                            fileData.status === 'error' ? <X className="h-5 w-5" /> :
+                              fileData.status === 'processing' ? <Loader2 className="h-5 w-5 animate-spin" /> :
+                                <Upload className="h-5 w-5" />}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between mb-1">
+                            <span className="font-medium truncate">{fileData.file.name}</span>
+                            <span className="text-xs font-mono text-muted-foreground">{fileData.progress}%</span>
+                          </div>
+
+                          <Progress value={fileData.progress} className="h-2 mb-2" />
+
+                          <p className="text-xs text-muted-foreground flex items-center gap-2">
+                            {fileData.status === 'uploading' && "Mengupload file..."}
+                            {fileData.status === 'processing' && <span className="flex items-center gap-1 text-blue-600 animate-pulse">Sedang menganalisis dengan AI...</span>}
+                            {fileData.status === 'complete' && <span className="text-green-600 font-medium">Selesai! Catatan telah dibuat.</span>}
+                            {fileData.status === 'error' && <span className="text-red-600">Terjadi kesalahan.</span>}
+                          </p>
+                        </div>
+
+                        {fileData.status === 'complete' && (
+                          <Button variant="outline" size="sm" onClick={() => {
+                            // Find the latest note created from this file (approximation by title/tag)
+                            // Since we don't store the created Note ID in 'files' state, we might just redirect to /notes or find by title
+                            // For now, let's just let them know it's done. 
+                            // Optionally we could store noteId in files state in the process loop.
+                            router.push('/notes')
+                          }}>
+                            Lihat
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Catatan Anda Section */}
           <div className="space-y-4">

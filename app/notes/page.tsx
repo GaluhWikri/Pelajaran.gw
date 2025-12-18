@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,12 +26,15 @@ export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isFavorites = searchParams.get("filter") === "favorites"
 
   const filteredNotes = notes.filter(
     (note) =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
+      (note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))) &&
+      (!isFavorites || note.isFavorite),
   )
 
   const createNewNote = () => {
@@ -47,7 +50,9 @@ export default function NotesPage() {
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-balance">All Notes</h2>
+              <h2 className="text-3xl font-bold tracking-tight text-balance">
+                {isFavorites ? "Favorite Notes" : "All Notes"}
+              </h2>
               <p className="text-muted-foreground">Manage and organize your learning notes</p>
             </div>
             <Button onClick={createNewNote} className="gap-2">
