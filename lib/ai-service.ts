@@ -188,6 +188,114 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     }
 }
 
+export async function generateLearningContentFromText(text: string, options?: GenerationOptions): Promise<{
+    title?: string
+    summary: string
+    quiz: Omit<Quiz, "id" | "createdAt">
+    flashcards: Omit<Flashcard, "id" | "createdAt">[]
+}> {
+    if (!apiKey) {
+        console.warn("Gemini API Key is missing. Returning mock data.")
+        // Reuse mock function but wrap text in a dummy file object representation or just create a new mock if needed.
+        // For query simplicity, let's just use the same mock function with a fake file name.
+        return mockGenerateLearningContent({ name: "YouTube Video.txt" } as File)
+    }
+
+    try {
+        let promptContext = ""
+        if (options) {
+            promptContext = `
+      Konteks Tambahan dari Pengguna:
+      - Mata Pelajaran/Topik: ${options.subject || "Umum"}
+      - Tingkat Pemahaman: ${options.understandingLevel}% (0 = Pemula, 100 = Ahli)
+      - Gaya Penulisan: ${options.writingStyle || "Standar"}
+      
+      Sesuaikan penjelasan, kesulitan kuis, dan bahasa ringkasan agar sesuai dengan preferensi di atas.
+      `
+        }
+
+        const prompt = `
+    ${AI_SYSTEM_PROMPT}
+
+    ${promptContext}
+
+    Tugas Khusus:
+    Analisis teks transkrip berikut (dari video/audio) dan hasilkan output dalam format JSON yang valid.
+    
+    TRANSKRIP:
+    "${text.substring(0, 50000)}..." (Dipotong jika terlalu panjang)
+
+    PENTING UNTUK RINGKASAN (summary):
+    - WAJIB mengikuti struktur header berikut:
+      # (H1) → Judul utama materi
+      ## (H2) → Subjudul/topik utama
+      ### (H3) → Ringkasan konsep penting
+      #### (H4) → Soal atau latihan (contoh soal dan pembahasan)
+    - JANGAN menuliskan kalimat pengantar/penutup.
+    - Langsung sajikan ringkasan dan soal.
+    - Gunakan bahasa ringkas, jelas, dan formal edukatif.
+    - Gunakan **Bold** untuk istilah penting.
+    - Tampilan profesional seperti catatan kuliah/buku pelajaran.
+
+    Struktur JSON harus mengikuti format ini secara ketat:
+    {
+      "title": "Judul Materi yang Relevan dan Menarik (Max 5-7 kata)",
+      "summary": "String markdown ringkasan materi lengkap sesuai instruksi format di atas",
+      "quiz": {
+        "title": "Judul Kuis",
+        "questions": [
+          {
+            "id": "q1",
+            "question": "Pertanyaan",
+            "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
+            "correctAnswer": 0,
+            "explanation": "Penjelasan jawaban"
+          }
+        ]
+      },
+      "flashcards": [
+        {
+          "question": "Pertanyaan Flashcard",
+          "answer": "Jawaban Flashcard"
+        }
+      ]
+    }
+    `
+
+        // Send text directly vs filePart
+        const result = await retryGenAI(() => model.generateContent(prompt))
+        const responseText = result.response.text()
+
+        let data;
+        try {
+            data = JSON.parse(responseText)
+        } catch (e) {
+            console.error("Failed to parse JSON directly, attempting cleanup", e)
+            const jsonStr = responseText.replace(/```json/g, "").replace(/```/g, "")
+            data = JSON.parse(jsonStr)
+        }
+
+        return {
+            title: data.title,
+            summary: data.summary,
+            quiz: {
+                noteId: "",
+                userId: "",
+                ...data.quiz,
+            },
+            flashcards: data.flashcards.map((f: any) => ({
+                noteId: "",
+                userId: "",
+                ...f,
+                reviewCount: 0,
+            })),
+        }
+    } catch (error: any) {
+        console.error("Error generating content from text with Gemini:", error)
+        throw error
+    }
+}
+
 export async function generateChatResponse(message: string, context: Note): Promise<string> {
     if (!apiKey) {
         return mockGenerateChatResponse(message, context)

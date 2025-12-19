@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { useStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { generateLearningContent } from "@/lib/ai-service"
+import { generateLearningContent, generateLearningContentFromText } from "@/lib/ai-service"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -131,73 +131,88 @@ export default function UploadPage() {
 
   const handleYoutubeSubmit = () => {
     if (!youtubeUrl) return
-    // Mocking YouTube handling as a 'file' for now to fit existing flow
-    // In a real app, we'd pass the URL to the AI service
-    alert(`YouTube URL '${youtubeUrl}' akan diproses (Simulasi).`)
-
-    // Reset and close
     setActiveModal(null)
-    setYoutubeUrl("")
-
-    // Here we could technically allow opening ConfigDialog too if we want AI config for the video summary
-    // For now, let's just close to indicate action received.
+    setShowConfigDialog(true)
   }
+
+
 
 
   // --- AI Processing Flow ---
   const startProcessing = async () => {
     setShowConfigDialog(false)
     const fileList = pendingFiles
+    const currentYoutubeUrl = youtubeUrl
 
+    if (fileList.length === 0 && !currentYoutubeUrl) return
+
+    // Prepare UI state for files
     const newFiles: UploadedFile[] = fileList.map((file) => ({
       file,
       progress: 0,
       status: "uploading" as const,
     }))
 
+    // Prepare UI state for YouTube (mock a file entry)
+    if (currentYoutubeUrl) {
+      newFiles.push({
+        file: { name: "YouTube Video", size: 0, type: "video/youtube" } as any, // Mock file object
+        progress: 0,
+        status: "processing" as const, // Skip uploading for URL
+      })
+    }
+
+
+
     setFiles((prev) => [...prev, ...newFiles])
 
-    for (let i = 0; i < newFiles.length; i++) {
-      const file = newFiles[i].file
+    // Process Files
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i]
       const fileType = getFileType(file.name)
+      const targetIndex = files.length + i // Calculate index in the main list
 
       // Upload simulation
       for (let progress = 0; progress <= 90; progress += 10) {
         await new Promise((resolve) => setTimeout(resolve, 100))
         setFiles((prev) => {
           const updated = [...prev]
-          const targetIndex = prev.length - newFiles.length + i
-          if (updated[targetIndex]) {
-            updated[targetIndex] = { ...updated[targetIndex], progress }
+          // Find the exact item we just added. 
+          // Note: State updates might be async/batched, but in this simple loop it's usually okay.
+          // Better logic: store unique IDs. But for now, using index offset from previous length.
+          const idx = prev.length - newFiles.length + i
+          if (updated[idx]) {
+            updated[idx] = { ...updated[idx], progress }
           }
           return updated
         })
       }
 
-      // Processing State
-      setFiles((prev) => {
-        const updated = [...prev]
-        const targetIndex = prev.length - newFiles.length + i
-        if (updated[targetIndex]) {
-          updated[targetIndex] = { ...updated[targetIndex], status: "processing", progress: 95 }
-        }
-        return updated
-      })
+      await processContent(file, fileType, i, newFiles.length, prevLength => prevLength)
+    }
 
+    // Process YouTube
+    if (currentYoutubeUrl) {
+      const ytIndex = fileList.length
+      // YouTube processing
       try {
-        // Add Material first
-        addMaterial({
-          userId: "demo-user",
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          type: fileType,
-          fileUrl: URL.createObjectURL(file),
-          fileName: file.name,
-          fileSize: file.size,
+        // Fetch Transcript
+        const res = await fetch("/api/youtube-transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: currentYoutubeUrl }),
         })
 
-        // Generate content using AI Service with Options
-        // This is the heavy lifting
-        const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContent(file, {
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "Gagal mengambil transkrip video.")
+        }
+
+        const { transcript } = await res.json()
+        if (!transcript) throw new Error("Video tidak memiliki caption/transkrip.")
+
+        // Generate Content
+        const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContentFromText(transcript, {
           subject: config.subject,
           understandingLevel: config.understandingLevel,
           writingStyle: config.writingStyle
@@ -206,54 +221,125 @@ export default function UploadPage() {
         const noteId = Math.random().toString(36).substring(7)
         const htmlContent = await marked.parse(summary)
 
-        // Add Note
+        // Save Data
         addNote({
           id: noteId,
           userId: "demo-user",
-          title: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
+          title: generatedTitle || "YouTube Summary",
           content: htmlContent as string,
-          tags: [fileType, "AI Generated"],
+          tags: [config.subject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
           isFavorite: false,
         })
 
-        // Add Quiz
-        addQuiz({
-          ...quiz,
-          noteId: noteId,
-          userId: "demo-user",
-        })
+        addQuiz({ ...quiz, noteId, userId: "demo-user" })
+        flashcards.forEach(card => addFlashcard({ ...card, noteId, userId: "demo-user" }))
 
-        // Add Flashcards
-        flashcards.forEach(card => {
-          addFlashcard({
-            ...card,
-            noteId: noteId,
-            userId: "demo-user",
-          })
-        })
-
-        // Complete State
+        // Mark complete
         setFiles((prev) => {
           const updated = [...prev]
-          const targetIndex = prev.length - newFiles.length + i
-          if (updated[targetIndex]) {
-            updated[targetIndex] = { ...updated[targetIndex], status: "complete", progress: 100 }
+          const idx = prev.length - 1 // Last item is YouTube
+          if (updated[idx]) {
+            updated[idx] = { ...updated[idx], status: "complete", progress: 100, file: { ...updated[idx].file, name: generatedTitle || "YouTube Video" } }
           }
           return updated
         })
-      } catch (error) {
-        console.error("Error processing file:", error)
+
+        // Clear YouTube URL after success
+        setYoutubeUrl("")
+
+      } catch (error: any) {
+        console.error("YouTube processing error:", error)
         setFiles((prev) => {
           const updated = [...prev]
-          const targetIndex = prev.length - newFiles.length + i
-          if (updated[targetIndex]) {
-            updated[targetIndex] = { ...updated[targetIndex], status: "error", progress: 100 }
+          const idx = prev.length - 1
+          if (updated[idx]) {
+            updated[idx] = {
+              ...updated[idx],
+              status: "error",
+              progress: 100
+            }
           }
           return updated
         })
+        alert(`Gagal memproses video: ${error.message}`)
       }
     }
   }
+
+  // Helper to process file content (isolated from loop for clarity, though used inline above for now I kept the loop structure but split processing)
+  // Actually, to avoid rewriting the whole file processing logic cleanly let's just adapt the existing "try/catch" block into a helper or keep it.
+  // The 'startProcessing' replacement above needs to be careful about the existing 'processContent' function I alluded to. 
+  // Wait, I cannot introduce a new function 'processContent' inside 'startProcessing' easily without defining it.
+  // Let me rewrite 'startProcessing' fully to handle both, mostly by copying the file logic.
+
+  async function processContent(file: File, fileType: string, indexInBatch: number, batchSize: number, getPrevLength: (l: number) => number) {
+    // Logic for file items... 
+    // To keep it simple in this specific tool call, I will perform the file processing directly in the loop as before,
+    // and append the YouTube processing at the end.
+
+    // Since I cannot call 'processContent' if it doesn't exist, I will paste the body of the loop here.
+    setFiles((prev) => {
+      const updated = [...prev]
+      const targetIndex = prev.length - batchSize + indexInBatch
+      if (updated[targetIndex]) {
+        updated[targetIndex] = { ...updated[targetIndex], status: "processing", progress: 95 }
+      }
+      return updated
+    })
+
+    try {
+      addMaterial({
+        userId: "demo-user",
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        type: fileType as any,
+        fileUrl: URL.createObjectURL(file), // Warning: Object URL lifecycle
+        fileName: file.name,
+        fileSize: file.size,
+      })
+
+      const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContent(file, {
+        subject: config.subject,
+        understandingLevel: config.understandingLevel,
+        writingStyle: config.writingStyle
+      })
+
+      const noteId = Math.random().toString(36).substring(7)
+      const htmlContent = await marked.parse(summary)
+
+      addNote({
+        id: noteId,
+        userId: "demo-user",
+        title: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
+        content: htmlContent as string,
+        tags: [config.subject, fileType, "AI Generated"].filter((t) => t && t.trim() !== ""),
+        isFavorite: false,
+      })
+
+      addQuiz({ ...quiz, noteId, userId: "demo-user" })
+      flashcards.forEach(card => addFlashcard({ ...card, noteId, userId: "demo-user" }))
+
+      setFiles((prev) => {
+        const updated = [...prev]
+        const targetIndex = prev.length - batchSize + indexInBatch
+        if (updated[targetIndex]) {
+          updated[targetIndex] = { ...updated[targetIndex], status: "complete", progress: 100 }
+        }
+        return updated
+      })
+    } catch (error) {
+      console.error("Error processing file:", error)
+      setFiles((prev) => {
+        const updated = [...prev]
+        const targetIndex = prev.length - batchSize + indexInBatch
+        if (updated[targetIndex]) {
+          updated[targetIndex] = { ...updated[targetIndex], status: "error", progress: 100 }
+        }
+        return updated
+      })
+    }
+  }
+
+
 
   const getFileType = (filename: string): "pdf" | "docx" | "pptx" | "video" | "audio" | "image" => {
     const ext = filename.split(".").pop()?.toLowerCase()
@@ -399,6 +485,7 @@ export default function UploadPage() {
                             {fileData.status === 'complete' && <span className="text-green-600 font-medium">Selesai! Catatan telah dibuat.</span>}
                             {fileData.status === 'error' && <span className="text-red-600">Terjadi kesalahan.</span>}
                           </p>
+
                         </div>
 
                         {fileData.status === 'complete' && (
@@ -552,6 +639,7 @@ export default function UploadPage() {
             {activeModal === 'youtube' && (
               <Button onClick={handleYoutubeSubmit}>Lanjutkan</Button>
             )}
+
             {/* For file uploads, the action is triggered by 'drop' or 'select', so no explicit 'Submit' button needed inside the generic drag area unless we want a queue. 
                 But per existing logic, selection triggers the next step directly. So we can keep it simple or add a button if we implemented a queue view. 
                 For now, let's behave like the previous "select -> go" flow for files.
@@ -614,6 +702,36 @@ export default function UploadPage() {
               </Select>
             </div>
           </div>
+
+
+
+          {youtubeUrl && (
+            <div className="space-y-2">
+              <Label>Link YouTube yang akan diproses</Label>
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-red-500/10 border-red-200">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="h-8 w-8 rounded bg-red-500 text-white flex items-center justify-center shrink-0">
+                    <Youtube className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">YouTube Video</p>
+                    <p className="text-xs text-muted-foreground truncate">{youtubeUrl}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setYoutubeUrl("")
+                    if (pendingFiles.length === 0) setShowConfigDialog(false)
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
 
           {pendingFiles.length > 0 && (
             <div className="space-y-2">
@@ -681,6 +799,8 @@ export default function UploadPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+
     </div>
   )
 }

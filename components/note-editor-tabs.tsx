@@ -248,12 +248,14 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
                 </span>
               </div>
 
-              {note.tags[0] && (
-                <div className="flex items-center gap-1.5 text-foreground/80">
-                  <BookOpen className="h-4 w-4" />
-                  <span className="capitalize">{note.tags[0]}</span>
-                </div>
-              )}
+              {note.tags
+                .filter((t) => t !== "AI Generated")
+                .map((tag, index) => (
+                  <div key={index} className="flex items-center gap-1.5 text-foreground/80">
+                    {index === 0 ? <BookOpen className="h-4 w-4" /> : <Tag className="h-4 w-4" />}
+                    <span className="capitalize">{tag}</span>
+                  </div>
+                ))}
 
               {material && (
                 <div className="flex items-center gap-1.5 text-foreground/80">
