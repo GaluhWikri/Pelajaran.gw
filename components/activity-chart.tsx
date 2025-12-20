@@ -8,7 +8,7 @@ import { subDays, format } from "date-fns"
 import { id } from "date-fns/locale"
 
 export function ActivityChart() {
-  const { notes } = useStore()
+  const { notes, quizzes } = useStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -22,23 +22,53 @@ export function ActivityChart() {
         date: d,
         label: format(d, "EEE", { locale: id }), // Mon, Tue, etc. in Indonesian
         fullDate: format(d, "dd MMM yyyy", { locale: id }),
-        count: 0,
+        notesCount: 0,
+        editsCount: 0,
+        quizzesCount: 0,
+        total: 0,
       }
     })
 
-    // Count notes per day
-    notes.forEach((note) => {
-      const noteDate = new Date(note.createdAt)
-      const DayItem = last7Days.find((day) =>
-        format(day.date, "yyyy-MM-dd") === format(noteDate, "yyyy-MM-dd")
+    const getDayItem = (date: Date | string) => {
+      const d = new Date(date)
+      return last7Days.find((day) =>
+        format(day.date, "yyyy-MM-dd") === format(d, "yyyy-MM-dd")
       )
-      if (DayItem) {
-        DayItem.count += 1
+    }
+
+    // Count notes (creation and updates)
+    notes.forEach((note) => {
+      const createdDay = getDayItem(note.createdAt)
+      if (createdDay) {
+        createdDay.notesCount += 1
+        createdDay.total += 1
+      }
+
+      // If updated on a different day, count as separate activity
+      if (note.updatedAt) {
+        const createdStr = format(new Date(note.createdAt), "yyyy-MM-dd")
+        const updatedStr = format(new Date(note.updatedAt), "yyyy-MM-dd")
+        if (createdStr !== updatedStr) {
+          const updatedDay = getDayItem(note.updatedAt)
+          if (updatedDay) {
+            updatedDay.editsCount += 1
+            updatedDay.total += 1
+          }
+        }
+      }
+    })
+
+    // Count quizzes
+    quizzes.forEach((quiz) => {
+      const quizDay = getDayItem(quiz.createdAt)
+      if (quizDay) {
+        quizDay.quizzesCount += 1
+        quizDay.total += 1
       }
     })
 
     return last7Days
-  }, [notes])
+  }, [notes, quizzes])
 
   if (!mounted) {
     return (
@@ -85,16 +115,39 @@ export function ActivityChart() {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     return (
-                      <div className="rounded-lg border bg-background p-2 shadow-sm">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                      <div className="rounded-lg border bg-background p-3 shadow-md min-w-[150px]">
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-[0.70rem] uppercase text-muted-foreground block mb-1">
                               {data.fullDate}
                             </span>
-                            <span className="font-bold text-muted-foreground">
-                              {data.count} Notes
+                            <span className="font-bold text-lg">
+                              {data.total} Activities
                             </span>
                           </div>
+
+                          {(data.notesCount > 0 || data.editsCount > 0 || data.quizzesCount > 0) && (
+                            <div className="border-t pt-2 space-y-1 text-xs">
+                              {data.notesCount > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Notes Created:</span>
+                                  <span className="font-medium">{data.notesCount}</span>
+                                </div>
+                              )}
+                              {data.editsCount > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Edits:</span>
+                                  <span className="font-medium">{data.editsCount}</span>
+                                </div>
+                              )}
+                              {data.quizzesCount > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Quizzes:</span>
+                                  <span className="font-medium">{data.quizzesCount}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
@@ -103,7 +156,7 @@ export function ActivityChart() {
                 }}
               />
               <Bar
-                dataKey="count"
+                dataKey="total"
                 fill="currentColor"
                 radius={[4, 4, 0, 0]}
                 className="fill-primary"
