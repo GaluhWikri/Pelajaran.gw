@@ -418,6 +418,13 @@ export async function generateQuizFromNote(
             data = JSON.parse(jsonStr)
         }
 
+        if (data.questions && Array.isArray(data.questions)) {
+            data.questions = data.questions.map((q: any) => ({
+                ...q,
+                id: Math.random().toString(36).substring(2, 9)
+            }))
+        }
+
         return data
     } catch (error) {
         console.error("Error generating quiz:", error)
@@ -431,7 +438,7 @@ async function mockGenerateQuizFromNote(questionCount: number) {
     return {
         title: "Mock Generated Quiz",
         questions: Array.from({ length: questionCount }).map((_, i) => ({
-            id: `q${i + 1}`,
+            id: Math.random().toString(36).substring(2, 9),
             question: `This is a mock question #${i + 1} generated because API key is missing.`,
             options: ["Option A", "Option B", "Option C", "Option D"],
             correctAnswer: 0,

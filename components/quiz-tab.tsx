@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { RotateCcw, CheckCircle2, XCircle, Trash2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -42,6 +42,12 @@ export function QuizTab({ noteId }: QuizTabProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({})
   const [showResults, setShowResults] = useState(false)
+
+  useEffect(() => {
+    setCurrentQuestionIndex(0)
+    setSelectedAnswers({})
+    setShowResults(false)
+  }, [activeQuizId])
 
   // Generation state
   const [showConfig, setShowConfig] = useState(false)

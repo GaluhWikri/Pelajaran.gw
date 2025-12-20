@@ -21,7 +21,7 @@ export function PomodoroTimer({ noteId }: PomodoroTimerProps) {
   const [isRunning, setIsRunning] = useState(false)
   const [isFocus, setIsFocus] = useState(true)
   const [isMinimized, setIsMinimized] = useState(false)
-  const intervalRef = useRef<NodeJS.Timeout>()
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const { addStudySession } = useStore()
 
   useEffect(() => {
