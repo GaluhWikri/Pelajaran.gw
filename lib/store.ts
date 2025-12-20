@@ -24,6 +24,7 @@ interface AppState {
   activeNoteId: string | null
   sidebarOpen: boolean
   chatPanelOpen: boolean
+  hasInitialized: boolean
 
   // Actions - Notes
   addNote: (note: Omit<Note, "id" | "createdAt" | "updatedAt"> & { id?: string }) => void
@@ -31,6 +32,8 @@ interface AppState {
   deleteNote: (id: string) => void
   setActiveNote: (id: string | null) => void
   markNoteAsAccessed: (id: string) => void
+
+  setHasInitialized: (value: boolean) => void
 
   // Actions - Flashcards
   addFlashcard: (flashcard: Omit<Flashcard, "id" | "createdAt"> & { id?: string }) => void
@@ -80,6 +83,9 @@ export const useStore = create<AppState>()(
       activeNoteId: null,
       sidebarOpen: true,
       chatPanelOpen: false,
+      hasInitialized: false,
+
+      setHasInitialized: (value) => set({ hasInitialized: value }),
 
       // Notes actions
       addNote: (note) =>

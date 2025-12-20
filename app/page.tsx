@@ -11,7 +11,7 @@ import { useStore } from "@/lib/store"
 import { mockNotes, mockFlashcards, mockQuizzes } from "@/lib/mock-data"
 
 export default function DashboardPage() {
-  const { notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats } = useStore()
+  const { notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats, hasInitialized, setHasInitialized } = useStore()
   const stats = getActivityStats()
   const [isMounted, setIsMounted] = useState(false)
 
@@ -21,12 +21,15 @@ export default function DashboardPage() {
 
   // Load mock data on first visit
   useEffect(() => {
-    if (notes.length === 0) {
-      mockNotes.forEach((note) => addNote(note))
-      mockFlashcards.forEach((card) => addFlashcard(card))
-      mockQuizzes.forEach((quiz) => addQuiz(quiz))
+    if (!hasInitialized) {
+      if (notes.length === 0) {
+        mockNotes.forEach((note) => addNote(note))
+        mockFlashcards.forEach((card) => addFlashcard(card))
+        mockQuizzes.forEach((quiz) => addQuiz(quiz))
+      }
+      setHasInitialized(true)
     }
-  }, [])
+  }, [hasInitialized, notes.length, addNote, addFlashcard, addQuiz, setHasInitialized])
 
   return (
     <div className="min-h-screen">
