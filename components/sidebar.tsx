@@ -32,14 +32,12 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r border-border bg-card transition-transform lg:translate-x-0",
+        "fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r border-border bg-card transition-transform lg:translate-x-0 flex flex-col",
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
       )}
     >
-      <ScrollArea className="h-full py-6">
+      <ScrollArea className="flex-1 py-6">
         <div className="space-y-6 px-4">
-
-
           <div>
             <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Navigation
@@ -64,7 +62,7 @@ export function Sidebar() {
             <div className="space-y-1">
               {isMounted ? (
                 <>
-                  {sortedRecentNotes.slice(0, 5).map((note) => (
+                  {sortedRecentNotes.map((note) => (
                     <Button key={note.id} variant="ghost" className="w-full justify-start text-sm h-auto py-2" asChild>
                       <Link href={`/notes/${note.id}`}>
                         <div className="truncate text-left">
@@ -87,27 +85,27 @@ export function Sidebar() {
               )}
             </div>
           </div>
-
-          <div className="pt-4 mt-6 border-t border-border">
-            <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Danger Zone
-            </h3>
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => {
-                if (confirm("Apakah Anda yakin ingin menghapus SEMUA data? Tindakan ini tidak bisa dibatalkan.")) {
-                  localStorage.removeItem("pelajarin-storage")
-                  window.location.href = "/"
-                }
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-              Reset Semua Data
-            </Button>
-          </div>
         </div>
       </ScrollArea>
+
+      <div className="p-4 border-t border-border mt-auto">
+        <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Danger Zone
+        </h3>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={() => {
+            if (confirm("Apakah Anda yakin ingin menghapus SEMUA data? Tindakan ini tidak bisa dibatalkan.")) {
+              localStorage.removeItem("pelajarin-storage")
+              window.location.href = "/"
+            }
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+          Reset Semua Data
+        </Button>
+      </div>
     </aside>
   )
 }
