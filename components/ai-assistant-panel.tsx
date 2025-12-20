@@ -44,7 +44,10 @@ export function AIAssistantPanel({ noteId }: AIAssistantPanelProps) {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      const viewport = scrollRef.current.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight
+      }
     }
   }, [relevantMessages, isThinking])
 
@@ -99,7 +102,7 @@ export function AIAssistantPanel({ noteId }: AIAssistantPanelProps) {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {relevantMessages.length === 0 && (
             <div className="space-y-4">
