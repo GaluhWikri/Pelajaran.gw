@@ -344,7 +344,7 @@ export function Sidebar() {
           <Button
             variant="default"
             className={cn(
-              "w-full justify-start gap-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 shadow-md",
+              "w-full justify-start gap-3 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 shadow-md",
               !sidebarOpen && "lg:justify-center lg:px-2"
             )}
             asChild

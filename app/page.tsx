@@ -68,7 +68,7 @@ export default function LandingPage() {
   }, [user, router])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+    <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/20">
       {/* Landing Page Navbar */}
       <LandingNavbar />
 
@@ -89,7 +89,7 @@ export default function LandingPage() {
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
               Belajar Lebih Cerdas
               <br />
-              dengan <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">AI Assistant</span>
+              dengan <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-orange-600">AI Assistant</span>
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -120,7 +120,7 @@ export default function LandingPage() {
             style={{ scale, opacity }}
             className="relative"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 blur-3xl -z-10" />
+            <div className="absolute inset-0 bg-linear-to-r from-orange-500/20 to-orange-600/20 blur-3xl -z-10" />
 
             {/* Demo Container */}
             <div className={`relative rounded-3xl border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-sm mx-auto' : ''
@@ -239,7 +239,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow"
               >
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-4">
+                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
@@ -253,7 +253,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl">
-          <div className="relative rounded-3xl bg-gradient-to-r from-orange-500 to-orange-600 p-12 text-center text-white overflow-hidden">
+          <div className="relative rounded-3xl bg-linear-to-r from-orange-500 to-orange-600 p-12 text-center text-white overflow-hidden">
             <div className="absolute inset-0 bg-grid-white/10" />
             <div className="relative z-10 space-y-6">
               <h2 className="text-4xl font-bold">Siap Belajar Lebih Cerdas?</h2>

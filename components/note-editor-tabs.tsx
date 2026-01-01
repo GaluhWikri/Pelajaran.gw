@@ -432,15 +432,15 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
       {/* ================= TABS ================= */}
       <Tabs defaultValue="notes" className="flex-1 flex flex-col">
         <TabsList className="border-b-0 px-1 mx-6 h-12 w-fit justify-start bg-muted/50 rounded-lg p-1">
-          <TabsTrigger value="notes" className="rounded-md data-[state=active]:bg-background data-[state=active]:!text-primary data-[state=active]:shadow-sm px-4 h-full">
+          <TabsTrigger value="notes" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-4 h-full">
             <FileText className="h-4 w-4 mr-2" />
             Notes
           </TabsTrigger>
-          <TabsTrigger value="flashcards" className="rounded-md data-[state=active]:bg-background data-[state=active]:!text-primary data-[state=active]:shadow-sm px-4 h-full">
+          <TabsTrigger value="flashcards" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-4 h-full">
             <CreditCard className="h-4 w-4 mr-2" />
             Flashcards ({noteFlashcards.length})
           </TabsTrigger>
-          <TabsTrigger value="quiz" className="rounded-md data-[state=active]:bg-background data-[state=active]:!text-primary data-[state=active]:shadow-sm px-4 h-full">
+          <TabsTrigger value="quiz" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-4 h-full">
             <Trophy className="h-4 w-4 mr-2" />
             Quiz ({noteQuizzes.length})
           </TabsTrigger>
