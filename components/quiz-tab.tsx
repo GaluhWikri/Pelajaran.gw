@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { deleteQuizFromSupabase, saveQuizToSupabase } from "@/lib/supabase-helpers"
 import { Slider } from "@/components/ui/slider"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -28,12 +29,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+import { useAuth } from "@/lib/auth-context"
+
 interface QuizTabProps {
   noteId: string
 }
 
 export function QuizTab({ noteId }: QuizTabProps) {
   const { notes, quizzes, addQuiz, updateQuiz, deleteQuiz } = useStore()
+  const { user } = useAuth()
   const noteQuizzes = quizzes.filter((q) => q.noteId === noteId)
   const noteContent = notes.find((n) => n.id === noteId)?.content || ""
 
@@ -51,7 +55,7 @@ export function QuizTab({ noteId }: QuizTabProps) {
 
   // Generation state
   const [showConfig, setShowConfig] = useState(false)
-  const [questionCount, setQuestionCount] = useState(5)
+  const [questionCount, setQuestionCount] = useState(10)
   const [isGenerating, setIsGenerating] = useState(false)
 
   const activeQuiz = noteQuizzes.find((q) => q.id === activeQuizId)
@@ -67,11 +71,19 @@ export function QuizTab({ noteId }: QuizTabProps) {
     try {
       const quizData = await generateQuizFromNote(noteContent, questionCount)
 
-      addQuiz({
+      const newQuiz = {
         noteId,
-        userId: "demo-user",
+        userId: user?.id || "demo-user",
         ...quizData,
-      })
+      }
+
+      // Save to Supabase first if user exists
+      if (user) {
+        await saveQuizToSupabase(newQuiz)
+      }
+
+      // Update local store
+      addQuiz(newQuiz)
 
       setShowConfig(false)
     } catch (error) {
@@ -96,13 +108,25 @@ export function QuizTab({ noteId }: QuizTabProps) {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!activeQuiz) return
 
     const correctCount = activeQuiz.questions.filter((q) => selectedAnswers[q.id] === q.correctAnswer).length
     const score = Math.round((correctCount / activeQuiz.questions.length) * 100)
+    const completedAt = new Date()
 
-    updateQuiz(activeQuiz.id, { score, completedAt: new Date() })
+    // Update local store
+    updateQuiz(activeQuiz.id, { score, completedAt })
+
+    // Save to Supabase
+    // We construct the full quiz object to ensure all required fields are passed to upsert
+    // The saveQuizToSupabase function handles mapping to snake_case for the DB
+    await saveQuizToSupabase({
+      ...activeQuiz,
+      score,
+      completedAt
+    })
+
     setShowResults(true)
   }
 
@@ -112,23 +136,23 @@ export function QuizTab({ noteId }: QuizTabProps) {
     setShowResults(false)
   }
 
-  if (activeQuiz && !showResults) {
+  if (activeQuiz && activeQuiz.questions?.length > 0 && !showResults) {
     const currentQuestion = activeQuiz.questions[currentQuestionIndex]
     const isAnswered = selectedAnswers[currentQuestion.id] !== undefined
 
     return (
-      <div className="p-6 space-y-6 max-w-3xl mx-auto">
+      <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{activeQuiz.title}</h3>
-          <span className="text-sm text-muted-foreground">
-            Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}
+          <h3 className="text-lg font-semibold truncate pr-4">{activeQuiz.title}</h3>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            Q {currentQuestionIndex + 1} / {activeQuiz.questions.length}
           </span>
         </div>
 
         <Card>
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="p-6 md:p-8 space-y-6">
             <div>
-              <p className="text-xl font-medium mb-6">{currentQuestion.question}</p>
+              <p className="text-lg md:text-xl font-medium mb-6 leading-relaxed">{currentQuestion.question}</p>
 
               <RadioGroup
                 key={currentQuestion.id}
@@ -139,9 +163,14 @@ export function QuizTab({ noteId }: QuizTabProps) {
                   {currentQuestion.options.map((option, index) => {
                     const uniqueId = `q-${currentQuestion.id}-op-${index}`
                     return (
-                      <div key={index} className="flex items-center space-x-3">
-                        <RadioGroupItem value={index.toString()} id={uniqueId} />
-                        <Label htmlFor={uniqueId} className="flex-1 cursor-pointer">
+                      <div key={index} className={cn(
+                        "flex items-start space-x-3 p-3 rounded-lg border transition-colors cursor-pointer hover:bg-muted/50",
+                        selectedAnswers[currentQuestion.id] === index ? "border-primary bg-primary/5" : "border-transparent bg-muted/20"
+                      )}
+                        onClick={() => handleAnswerSelect(currentQuestion.id, index)}
+                      >
+                        <RadioGroupItem value={index.toString()} id={uniqueId} className="mt-1" />
+                        <Label htmlFor={uniqueId} className="flex-1 cursor-pointer leading-relaxed text-sm md:text-base">
                           {option}
                         </Label>
                       </div>
@@ -151,16 +180,16 @@ export function QuizTab({ noteId }: QuizTabProps) {
               </RadioGroup>
             </div>
 
-            <div className="flex justify-between pt-4">
-              <Button variant="outline" onClick={() => setActiveQuizId(null)}>
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4">
+              <Button variant="outline" onClick={() => setActiveQuizId(null)} className="w-full sm:w-auto">
                 Exit Quiz
               </Button>
               {currentQuestionIndex < activeQuiz.questions.length - 1 ? (
-                <Button onClick={handleNext} disabled={!isAnswered}>
+                <Button onClick={handleNext} disabled={!isAnswered} className="w-full sm:w-auto">
                   Next Question
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={!isAnswered}>
+                <Button onClick={handleSubmit} disabled={!isAnswered} className="w-full sm:w-auto">
                   Submit Quiz
                 </Button>
               )}
@@ -185,9 +214,9 @@ export function QuizTab({ noteId }: QuizTabProps) {
     const score = Math.round((correctCount / activeQuiz.questions.length) * 100)
 
     return (
-      <div className="p-6 space-y-6 max-w-3xl mx-auto">
+      <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
         <Card className="border-primary/50">
-          <CardContent className="p-8 text-center space-y-4">
+          <CardContent className="p-6 md:p-8 text-center space-y-4">
             <h3 className="text-2xl font-bold">Quiz Complete!</h3>
             <div>
               <p className="text-5xl font-bold text-primary">{score}%</p>
@@ -246,16 +275,16 @@ export function QuizTab({ noteId }: QuizTabProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-lg font-semibold">Quizzes</h3>
-        <Button onClick={handleGenerateClick} className="gap-2">
+        <Button onClick={handleGenerateClick} className="w-full sm:w-auto gap-2">
           <RotateCcw className="h-4 w-4" />
           Generate Quiz with AI
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         {noteQuizzes.map((quiz) => (
           <Card key={quiz.id} className="hover:border-primary/50 transition-colors cursor-pointer group">
             <CardContent className="p-6 relative" onClick={() => setActiveQuizId(quiz.id)}>
@@ -265,7 +294,7 @@ export function QuizTab({ noteId }: QuizTabProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive absolute top-4 right-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive absolute top-4 right-4"
                     onClick={(e) => {
                       e.stopPropagation()
                       setDeleteQuizId(quiz.id)
@@ -306,8 +335,9 @@ export function QuizTab({ noteId }: QuizTabProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
+              onClick={async () => {
                 if (deleteQuizId) {
+                  await deleteQuizFromSupabase(deleteQuizId)
                   deleteQuiz(deleteQuizId)
                   setDeleteQuizId(null)
                 }

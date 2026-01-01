@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import Image from "next/image"
-import { Menu, Search, Bell, Settings, User, FileText, CreditCard, Trophy } from "lucide-react"
+import { PanelLeft, Search, Settings, User, FileText, CreditCard, Trophy, LogIn, UserPlus, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -16,9 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useStore } from "@/lib/store"
+import { useAuth } from "@/lib/auth-context"
 
 export function DashboardHeader() {
-  const { user, toggleSidebar, notes, flashcards, quizzes } = useStore()
+  const { user: storeUser, toggleSidebar, notes, flashcards, quizzes } = useStore()
+  const { user: authUser, loading, signOut } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const [showResults, setShowResults] = useState(false)
   const router = useRouter()
@@ -59,10 +62,10 @@ export function DashboardHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-      <div className="flex h-16 items-center gap-4 px-6">
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
-          <Menu className="h-5 w-5" />
+    <header className="fixed top-0 left-0 right-0 w-full z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <div className="flex h-14 items-center gap-4 px-4">
+        <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+          <PanelLeft className="h-5 w-5" />
         </Button>
 
         <div className="flex items-center gap-3">
@@ -78,7 +81,7 @@ export function DashboardHeader() {
           </h1>
         </div>
 
-        <div className="flex-1 max-w-xl mx-auto">
+        <div className="hidden md:block flex-1 max-w-xl mx-auto">
           <div className="relative" ref={searchContainerRef}>
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -97,7 +100,7 @@ export function DashboardHeader() {
                 {!hasResults ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">No results found.</div>
                 ) : (
-                  <div className="max-h-[300px] overflow-y-auto py-2">
+                  <div className="max-h-[300px] overflow-y-auto py-2 custom-scrollbar">
                     {filteredNotes.length > 0 && (
                       <div className="mb-2">
                         <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -159,43 +162,88 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-          </Button>
+          {loading ? (
+            // Show login/register buttons while loading
+            <>
+              <Link href="/login">
+                <Button variant="ghost" className="gap-2">
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button className="gap-2 bg-primary hover:bg-primary/90">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sign Up</span>
+                </Button>
+              </Link>
+            </>
+          ) : authUser ? (
+            <>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.name.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden md:inline text-sm">{user?.name}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                {user?.isPremium ? (
-                  <span className="text-primary">Premium Account</span>
-                ) : (
-                  <span>Upgrade to Premium</span>
-                )}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {storeUser?.name.charAt(0) || authUser.email?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:inline text-sm">{storeUser?.name || authUser.email}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer w-full flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    {storeUser?.isPremium ? (
+                      <span className="text-primary">Premium Account</span>
+                    ) : (
+                      <span>Upgrade to Premium</span>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                    onClick={async () => {
+                      await signOut()
+                      router.push('/login')
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" className="gap-2">
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button className="gap-2 bg-primary hover:bg-primary/90">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sign Up</span>
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

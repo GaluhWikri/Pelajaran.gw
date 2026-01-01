@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   FileText,
   CreditCard,
@@ -14,6 +14,8 @@ import {
   Calendar,
   FileDown,
   BookOpen,
+  Loader2,
+  Check,
 } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -33,6 +35,18 @@ import { QuizTab } from "@/components/quiz-tab"
 import { useRouter } from "next/navigation"
 import { RichTextEditor } from "@/components/editor/rich-text-editor"
 import { marked } from "marked"
+import { saveNoteToSupabase, deleteNoteFromSupabase } from "@/lib/supabase-helpers"
+import { useAuth } from "@/lib/auth-context"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface NoteEditorTabsProps {
   noteId: string
@@ -40,6 +54,7 @@ interface NoteEditorTabsProps {
 
 export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
   const { notes, materials, updateNote, deleteNote, flashcards, quizzes } = useStore()
+  const { user } = useAuth()
   const note = notes.find((n) => n.id === noteId)
   const material = note?.materialId ? materials.find((m) => m.id === note.materialId) : null
   const router = useRouter()
@@ -49,8 +64,36 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
 
 
   const [isExporting, setIsExporting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved')
 
   if (!note) return null
+
+  // Auto-save logic
+  useEffect(() => {
+    const saveData = async () => {
+      setSaveStatus('saving')
+      try {
+        await handleSave()
+        setSaveStatus('saved')
+      } catch (error) {
+        setSaveStatus('error')
+      }
+    }
+
+    // Only set timer if content matches local state but differs from store
+    // (This avoids saving immediately on load if they match)
+    if (title === note.title && content === note.content) {
+      setSaveStatus('saved')
+      return
+    }
+
+    const timer = setTimeout(() => {
+      saveData()
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [title, content, note.title, note.content]) // Dependencies ensure we check against latest store state
 
   const noteFlashcards = flashcards.filter((f) => f.noteId === noteId)
   const noteQuizzes = quizzes.filter((q) => q.noteId === noteId)
@@ -59,18 +102,71 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
      ACTIONS
   ========================= */
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Update Supabase first
+    if (user && note) {
+      const { error } = await saveNoteToSupabase({
+        id: noteId,
+        userId: user.id,
+        title,
+        content,
+        tags: note.tags,
+        isFavorite: note.isFavorite,
+      })
+
+      if (error) {
+        console.error('Error saving note to Supabase:', error)
+        alert('Failed to save note to database')
+        return
+      }
+    }
+
+    // Then update local store
     updateNote(noteId, { title, content })
   }
 
-  const handleDelete = () => {
+
+  const handleDelete = async () => {
+    // Delete from Supabase first
+    if (user) {
+      const { error } = await deleteNoteFromSupabase(noteId)
+      if (error) {
+        console.error('Failed to delete note from Supabase:', error)
+        alert('Gagal menghapus catatan dari database')
+        return
+      }
+    }
+
     deleteNote(noteId)
     router.push("/notes")
   }
 
-  const handleToggleFavorite = () => {
-    updateNote(noteId, { isFavorite: !note.isFavorite })
+  const handleToggleFavorite = async () => {
+    const newFavoriteState = !note.isFavorite
+
+    // Update Supabase first
+    if (user && note) {
+      const { error } = await saveNoteToSupabase({
+        id: noteId,
+        userId: user.id,
+        title: title, // Use local state to preserve unsaved changes
+        content: content, // Use local state to preserve unsaved changes
+        tags: note.tags,
+        isFavorite: newFavoriteState,
+      })
+
+      if (error) {
+        console.error('Error updating favorite status in Supabase:', error)
+        alert('Failed to update favorite status')
+        return
+      }
+    }
+
+    // Then update local store
+    updateNote(noteId, { isFavorite: newFavoriteState })
   }
+
+
 
 
 
@@ -82,15 +178,6 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
     if (isExporting) return
     setIsExporting(true)
 
-    // We will track the variables we overwrite to restore them later
-    const cssVars = [
-      "--background", "--foreground", "--card", "--card-foreground",
-      "--popover", "--popover-foreground", "--primary", "--primary-foreground",
-      "--secondary", "--secondary-foreground", "--muted", "--muted-foreground",
-      "--accent", "--accent-foreground", "--destructive", "--destructive-foreground",
-      "--border", "--input", "--ring", "--radius"
-    ]
-    const previousValues: Record<string, string> = {}
     let container: HTMLElement | null = null
 
     try {
@@ -125,28 +212,30 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
       `
 
       // 4. Inject Content with Styles
+      // We use 'page-break-inside: avoid' to prevent cutting text in half.
       container.innerHTML = `
         <style>
           .pdf-root { font-size: 12pt; line-height: 1.5; color: #000; width: 100%; }
-          .pdf-root h1 { font-size: 24pt; font-weight: bold; margin-bottom: 0.5em; border-bottom: 2px solid black; padding-bottom: 10px; color: #000; }
-          .pdf-root h2 { font-size: 18pt; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.5em; color: #000; }
-          .pdf-root h3 { font-size: 14pt; font-weight: bold; margin-top: 1.2em; margin-bottom: 0.5em; color: #000; }
-          .pdf-root p { margin-bottom: 1em; text-align: justify; color: #000; }
+          .pdf-root h1 { font-size: 24pt; font-weight: bold; margin-bottom: 0.5em; color: #000; page-break-inside: avoid; break-inside: avoid; }
+          .pdf-title { border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px; }
+          .pdf-root h2 { font-size: 18pt; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.5em; color: #000; page-break-inside: avoid; break-inside: avoid; }
+          .pdf-root h3 { font-size: 14pt; font-weight: bold; margin-top: 1.2em; margin-bottom: 0.5em; color: #000; page-break-inside: avoid; break-inside: avoid; }
+          .pdf-root p { margin-bottom: 1em; text-align: justify; color: #000; page-break-inside: avoid; break-inside: avoid; }
           .pdf-root ul, .pdf-root ol { margin-bottom: 1em; padding-left: 1.5em; color: #000; }
-          .pdf-root li { margin-bottom: 0.3em; }
-          .pdf-root blockquote { border-left: 4px solid #ccc; padding-left: 10px; margin-left: 0; font-style: italic; color: #444; }
+          .pdf-root li { margin-bottom: 0.3em; page-break-inside: avoid; break-inside: avoid; }
+          .pdf-root blockquote { border-left: 4px solid #ccc; padding-left: 10px; margin-left: 0; font-style: italic; color: #444; page-break-inside: avoid; break-inside: avoid; }
           .pdf-root pre, .pdf-root code { font-family: 'Courier New', monospace; background-color: #f5f5f5; border-radius: 3px; color: #000; }
-          .pdf-root pre { padding: 10px; overflow-x: auto; white-space: pre-wrap; margin-bottom: 1em; }
+          .pdf-root pre { padding: 10px; overflow-x: auto; white-space: pre-wrap; margin-bottom: 1em; page-break-inside: avoid; break-inside: avoid; }
           .pdf-root code { padding: 2px 4px; font-size: 0.9em; }
-          .pdf-root img { max-width: 100%; height: auto; display: block; margin: 15px 0; }
-          .pdf-root table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+          .pdf-root img { max-width: 100%; height: auto; display: block; margin: 15px 0; page-break-inside: avoid; break-inside: avoid; }
+          .pdf-root table { width: 100%; border-collapse: collapse; margin-bottom: 1em; page-break-inside: avoid; break-inside: avoid; }
           .pdf-root th, .pdf-root td { border: 1px solid #000; padding: 6px 10px; text-align: left; }
           .pdf-root th { background-color: #f0f0f0; font-weight: bold; }
           .pdf-meta { margin-bottom: 30px; color: #666; font-family: Arial, sans-serif; font-size: 10pt; }
         </style>
 
         <div class="pdf-root">
-          <h1>${titleText}</h1>
+          <h1 class="pdf-title">${titleText}</h1>
           <div class="pdf-meta">
             <span>📅 ${dateText}</span>
             ${tagText ? `<span> &nbsp;|&nbsp; 🏷️ ${tagText}</span>` : ""}
@@ -159,16 +248,21 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
 
       document.body.appendChild(container)
 
-      // 5. CRITICAL FIX: Overwrite global CSS variables
-      const root = document.documentElement
+      // 5. Apply local style override to container for immediate safety
+      const cssVars = [
+        "--background", "--foreground", "--card", "--card-foreground",
+        "--popover", "--popover-foreground", "--primary", "--primary-foreground",
+        "--secondary", "--secondary-foreground", "--muted", "--muted-foreground",
+        "--accent", "--accent-foreground", "--destructive", "--destructive-foreground",
+        "--border", "--input", "--ring", "--radius"
+      ]
       cssVars.forEach((v) => {
-        previousValues[v] = root.style.getPropertyValue(v)
-        if (v.includes("background")) root.style.setProperty(v, "#ffffff")
-        else if (v.includes("foreground")) root.style.setProperty(v, "#000000")
-        else root.style.setProperty(v, "#dddddd")
+        const val = v.includes("foreground") ? "#000000" : "#ffffff"
+        if (v === "--border") container!.style.setProperty(v, "#dddddd")
+        else container!.style.setProperty(v, val)
       })
 
-      // 6. Brief delay for DOM paint (invisible to user)
+      // 6. Brief delay for DOM paint
       await new Promise(resolve => setTimeout(resolve, 100))
 
       // 7. Generate PDF
@@ -185,9 +279,23 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
           backgroundColor: "#ffffff",
           scrollY: 0,
           scrollX: 0,
-          windowWidth: 1200 // Force explicit width for off-screen render
+          windowWidth: 1200,
+          // CRITICAL: Use onclone to sanitize the cloned document environment
+          // This fixes the 'lab()' color error and avoids global UI flashing
+          onclone: (clonedDoc: Document) => {
+            const doc = clonedDoc as Document;
+            // Reset root variables in the clone to safe hex values
+            cssVars.forEach((v) => {
+              const val = v.includes("foreground") ? "#000000" : "#ffffff"
+              doc.documentElement.style.setProperty(v, val)
+            })
+            // Force body colors in clone
+            doc.body.style.backgroundColor = "#ffffff"
+            doc.body.style.color = "#000000"
+          }
         },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const }
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        pagebreak: { mode: ['css', 'legacy'] }
       }
 
       // We explicitly select the .pdf-root element inside the container
@@ -200,15 +308,6 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
       alert("Gagal mengunduh PDF: " + (err.message || String(err)))
     } finally {
       // 8. Cleanup
-      const root = document.documentElement
-      cssVars.forEach((v) => {
-        if (previousValues[v]) {
-          root.style.setProperty(v, previousValues[v])
-        } else {
-          root.style.removeProperty(v)
-        }
-      })
-
       if (container && document.body.contains(container)) {
         document.body.removeChild(container)
       }
@@ -280,11 +379,24 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
 
 
         {/* ACTIONS */}
-        <div className="mt-4 flex justify-end gap-2">
-          <Button onClick={handleSave} size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Save
-          </Button>
+        <div className="mt-4 flex justify-end items-center gap-2">
+          {saveStatus === 'saving' && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+              Saving...
+            </div>
+          )}
+          {saveStatus === 'saved' && (
+            <div className="flex items-center text-sm text-green-600 font-medium px-3 py-2">
+              <Check className="h-3 w-3 mr-2" />
+              Saved
+            </div>
+          )}
+          {saveStatus === 'error' && (
+            <Button onClick={handleSave} size="sm" variant="destructive">
+              Retry Save
+            </Button>
+          )}
           <Button variant="ghost" size="icon" onClick={handleToggleFavorite}>
             <Star
               className={cn(
@@ -305,9 +417,7 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  if (confirm("Are you sure you want to delete this note?")) {
-                    handleDelete()
-                  }
+                  setShowDeleteDialog(true)
                 }}
                 className="text-destructive focus:text-destructive cursor-pointer"
               >
@@ -321,16 +431,16 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
 
       {/* ================= TABS ================= */}
       <Tabs defaultValue="notes" className="flex-1 flex flex-col">
-        <TabsList className="border-b px-6 h-12">
-          <TabsTrigger value="notes">
+        <TabsList className="border-b-0 px-1 mx-6 h-12 w-fit justify-start bg-muted/50 rounded-lg p-1">
+          <TabsTrigger value="notes" className="rounded-md data-[state=active]:bg-background data-[state=active]:!text-primary data-[state=active]:shadow-sm px-4 h-full">
             <FileText className="h-4 w-4 mr-2" />
             Notes
           </TabsTrigger>
-          <TabsTrigger value="flashcards">
+          <TabsTrigger value="flashcards" className="rounded-md data-[state=active]:bg-background data-[state=active]:!text-primary data-[state=active]:shadow-sm px-4 h-full">
             <CreditCard className="h-4 w-4 mr-2" />
             Flashcards ({noteFlashcards.length})
           </TabsTrigger>
-          <TabsTrigger value="quiz">
+          <TabsTrigger value="quiz" className="rounded-md data-[state=active]:bg-background data-[state=active]:!text-primary data-[state=active]:shadow-sm px-4 h-full">
             <Trophy className="h-4 w-4 mr-2" />
             Quiz ({noteQuizzes.length})
           </TabsTrigger>
@@ -348,6 +458,31 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
           <QuizTab noteId={noteId} />
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus catatan ini?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Catatan ini akan dihapus secara permanen beserta semua data terkait:
+              <br className="my-2" />
+              • Semua flashcard dari catatan ini
+              <br />
+              • Semua quiz dari catatan ini
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleDelete}
+            >
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

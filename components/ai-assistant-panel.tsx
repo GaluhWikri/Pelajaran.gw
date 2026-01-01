@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { X, Send, Sparkles, Lightbulb, HelpCircle, RotateCcw } from "lucide-react"
+import { PanelRightClose, Send, Sparkles, Lightbulb, HelpCircle, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -98,7 +98,7 @@ export function AIAssistantPanel({ noteId }: AIAssistantPanelProps) {
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={toggleChatPanel}>
-          <X className="h-4 w-4" />
+          <PanelRightClose className="h-4 w-4" />
         </Button>
       </div>
 

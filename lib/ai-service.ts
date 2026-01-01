@@ -76,7 +76,7 @@ async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: s
 
 export interface GenerationOptions {
     subject: string
-    understandingLevel: number // 1-100
+    understandingLevel: string
     writingStyle: string
 }
 
@@ -96,57 +96,50 @@ export async function generateLearningContent(file: File, options?: GenerationOp
 
         let promptContext = ""
         if (options) {
+            const level = options.understandingLevel || "Menengah"
+            let styleGuide = "Penjelasan seimbang untuk pemahaman umum"
+
+            if (["Pemula", "Dasar"].includes(level)) {
+                styleGuide = "Penjelasan detail dengan analogi sederhana, hindari jargon rumit."
+            } else if (level === "Menengah") {
+                styleGuide = "Penjelasan seimbang, informatif, dan mudah dipahami."
+            } else if (["Mahir", "Ahli"].includes(level)) {
+                styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
+            }
+
             promptContext = `
-      Konteks Tambahan dari Pengguna:
-      - Mata Pelajaran/Topik: ${options.subject || "Umum"}
-      - Tingkat Pemahaman: ${options.understandingLevel}% (0 = Pemula, 100 = Ahli)
-      - Gaya Penulisan: ${options.writingStyle || "Standar"}
-      
-      Sesuaikan penjelasan, kesulitan kuis, dan bahasa ringkasan agar sesuai dengan preferensi di atas.
-      `
+    KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
+    - Tingkat Pemahaman: ${level}
+    - Gaya Bahasa: ${styleGuide}
+    `
         }
 
         const prompt = `
     ${AI_SYSTEM_PROMPT}
 
+    Tugas: Analisis materi yang diberikan (File/Gambar) dan buat output JSON.
+
     ${promptContext}
 
-    Tugas Khusus:
-    Analisis materi yang diberikan dan hasilkan output dalam format JSON yang valid.
+    INSTRUKSI KONTEN:
+    1. RINGKASAN (Summary): Tulis rangkuman materi di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
+       - Gunakan format Markdown (Header #, ##, ###).
+       - JANGAN pakai pembuka/penutup basa-basi.
+    2. KUIS (Quiz): Wajib buat 10 soal pilihan ganda yang relevan.
+    3. FLASHCARDS: Wajib buat minimal 5 flashcards.
 
-    PENTING UNTUK RINGKASAN (summary):
-    - WAJIB mengikuti struktur header berikut:
-      # (H1) → Judul utama materi
-      ## (H2) → Subjudul/topik utama
-      ### (H3) → Ringkasan konsep penting
-      #### (H4) → Soal atau latihan (contoh soal dan pembahasan)
-    - JANGAN menuliskan kalimat pengantar/penutup seperti "Berdasarkan materi di atas", "Berikut adalah ringkasan", atau "Menurut teks".
-    - Langsung sajikan ringkasan dan soal.
-    - Gunakan bahasa ringkas, jelas, dan formal edukatif.
-    - Gunakan **Bold** untuk istilah penting.
-    - Tampilan profesional seperti catatan kuliah/buku pelajaran.
-
-    Struktur JSON harus mengikuti format ini secara ketat:
+    FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
-      "title": "Judul Materi yang Relevan dan Menarik (Max 5-7 kata) berdasarkan isi konten",
-      "summary": "String markdown ringkasan materi lengkap sesuai instruksi format di atas",
+      "title": "Judul Materi (Max 5-7 kata)",
+      "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
         "questions": [
-          {
-            "id": "q1",
-            "question": "Pertanyaan",
-            "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
-            "correctAnswer": 0,
-            "explanation": "Penjelasan jawaban"
-          }
+          { "id": "q1", "question": "...", "options": ["A","B","C","D"], "correctAnswer": 0, "explanation": "..." }
         ]
       },
       "flashcards": [
-        {
-          "question": "Pertanyaan Flashcard",
-          "answer": "Jawaban Flashcard"
-        }
+        { "question": "...", "answer": "..." }
       ]
     }
     `
@@ -155,31 +148,65 @@ export async function generateLearningContent(file: File, options?: GenerationOp
         const result = await retryGenAI(() => model.generateContent([prompt, filePart]))
         const responseText = result.response.text()
 
-        // Ensure we parse JSON correctly
+        // Ensure we parse JSON correctly or fallback gracefully
         let data;
         try {
-            data = JSON.parse(responseText)
+            const cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+            data = JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to parse JSON directly, attempting cleanup", e)
-            // Basic cleanup if markdown backticks are included despite mimeType enforcement
-            const jsonStr = responseText.replace(/```json/g, "").replace(/```/g, "")
-            data = JSON.parse(jsonStr)
+            console.warn("JSON parse failed, attempting regex fallback", e);
+
+            const titleMatch = responseText.match(/"title":\s*"([^"]+)"/);
+            const summaryStart = responseText.indexOf('"summary": "');
+            let summaryText = "";
+
+            if (summaryStart !== -1) {
+                const startContent = summaryStart + 12;
+                summaryText = responseText.substring(startContent);
+
+                // Heuristic to find end of summary field
+                const nextField = summaryText.search(/",\s*"\w+":/);
+                if (nextField !== -1) {
+                    summaryText = summaryText.substring(0, nextField);
+                } else {
+                    summaryText = summaryText.replace(/["}]+$/, "");
+                }
+
+                // Basic unescape
+                summaryText = summaryText
+                    .replace(/\\n/g, "\n")
+                    .replace(/\\"/g, '"')
+                    .replace(/\\\\/g, "\\");
+            } else {
+                summaryText = "Failed to parse content. Raw output:\n" + responseText;
+            }
+
+            // Construct fallback object
+            data = {
+                title: titleMatch ? titleMatch[1] : "Generated Content (Partial)",
+                summary: summaryText,
+                quiz: { title: "Quiz Generation Failed", questions: [] },
+                flashcards: []
+            };
         }
 
         return {
-            title: data.title, // Use the AI-generated title
-            summary: data.summary,
+            title: data.title || "Untitled Note",
+            summary: data.summary || "",
             quiz: {
-                noteId: "", // Filled by caller
-                userId: "", // Filled by caller
-                ...data.quiz,
-            },
-            flashcards: data.flashcards.map((f: any) => ({
                 noteId: "",
                 userId: "",
-                ...f,
-                reviewCount: 0,
-            })),
+                title: data.quiz?.title || "Quiz",
+                questions: Array.isArray(data.quiz?.questions) ? data.quiz.questions : [],
+            },
+            flashcards: Array.isArray(data.flashcards)
+                ? data.flashcards.map((f: any) => ({
+                    noteId: "",
+                    userId: "",
+                    ...f,
+                    reviewCount: 0,
+                }))
+                : [],
         }
     } catch (error: any) {
         console.error("Error generating content with Gemini:", error)
@@ -204,60 +231,53 @@ export async function generateLearningContentFromText(text: string, options?: Ge
     try {
         let promptContext = ""
         if (options) {
+            const level = options.understandingLevel || "Menengah"
+            let styleGuide = "Penjelasan seimbang untuk pemahaman umum"
+
+            if (["Pemula", "Dasar"].includes(level)) {
+                styleGuide = "Penjelasan detail dengan analogi sederhana, hindari jargon rumit."
+            } else if (level === "Menengah") {
+                styleGuide = "Penjelasan seimbang, informatif, dan mudah dipahami."
+            } else if (["Mahir", "Ahli"].includes(level)) {
+                styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
+            }
+
             promptContext = `
-      Konteks Tambahan dari Pengguna:
-      - Mata Pelajaran/Topik: ${options.subject || "Umum"}
-      - Tingkat Pemahaman: ${options.understandingLevel}% (0 = Pemula, 100 = Ahli)
-      - Gaya Penulisan: ${options.writingStyle || "Standar"}
-      
-      Sesuaikan penjelasan, kesulitan kuis, dan bahasa ringkasan agar sesuai dengan preferensi di atas.
-      `
+    KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
+    - Tingkat Pemahaman: ${level}
+    - Gaya Bahasa: ${styleGuide}
+    `
         }
 
         const prompt = `
     ${AI_SYSTEM_PROMPT}
 
+    Tugas: Analisis TEKS TRANSKRIP berikut dan buat output JSON.
+
+    TRANSKRIP:
+    "${text.substring(0, 50000)}..."
+
     ${promptContext}
 
-    Tugas Khusus:
-    Analisis teks transkrip berikut (dari video/audio) dan hasilkan output dalam format JSON yang valid.
-    
-    TRANSKRIP:
-    "${text.substring(0, 50000)}..." (Dipotong jika terlalu panjang)
+    INSTRUKSI KONTEN:
+    1. RINGKASAN (Summary): Tulis rangkuman materi di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
+       - Gunakan format Markdown (Header #, ##, ###).
+       - JANGAN pakai pembuka/penutup basa-basi.
+    2. KUIS (Quiz): Wajib buat 10 soal pilihan ganda yang relevan.
+    3. FLASHCARDS: Wajib buat minimal 5 flashcards.
 
-    PENTING UNTUK RINGKASAN (summary):
-    - WAJIB mengikuti struktur header berikut:
-      # (H1) → Judul utama materi
-      ## (H2) → Subjudul/topik utama
-      ### (H3) → Ringkasan konsep penting
-      #### (H4) → Soal atau latihan (contoh soal dan pembahasan)
-    - JANGAN menuliskan kalimat pengantar/penutup.
-    - Langsung sajikan ringkasan dan soal.
-    - Gunakan bahasa ringkas, jelas, dan formal edukatif.
-    - Gunakan **Bold** untuk istilah penting.
-    - Tampilan profesional seperti catatan kuliah/buku pelajaran.
-
-    Struktur JSON harus mengikuti format ini secara ketat:
+    FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
-      "title": "Judul Materi yang Relevan dan Menarik (Max 5-7 kata)",
-      "summary": "String markdown ringkasan materi lengkap sesuai instruksi format di atas",
+      "title": "Judul Materi (Max 5-7 kata)",
+      "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
         "questions": [
-          {
-            "id": "q1",
-            "question": "Pertanyaan",
-            "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
-            "correctAnswer": 0,
-            "explanation": "Penjelasan jawaban"
-          }
+          { "id": "q1", "question": "...", "options": ["A","B","C","D"], "correctAnswer": 0, "explanation": "..." }
         ]
       },
       "flashcards": [
-        {
-          "question": "Pertanyaan Flashcard",
-          "answer": "Jawaban Flashcard"
-        }
+        { "question": "...", "answer": "..." }
       ]
     }
     `
@@ -266,29 +286,62 @@ export async function generateLearningContentFromText(text: string, options?: Ge
         const result = await retryGenAI(() => model.generateContent(prompt))
         const responseText = result.response.text()
 
+        // Ensure we parse JSON correctly or fallback gracefully
         let data;
         try {
-            data = JSON.parse(responseText)
+            const cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+            data = JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to parse JSON directly, attempting cleanup", e)
-            const jsonStr = responseText.replace(/```json/g, "").replace(/```/g, "")
-            data = JSON.parse(jsonStr)
+            console.warn("JSON parse failed from text, attempting regex fallback", e);
+
+            const titleMatch = responseText.match(/"title":\s*"([^"]+)"/);
+            const summaryStart = responseText.indexOf('"summary": "');
+            let summaryText = "";
+
+            if (summaryStart !== -1) {
+                const startContent = summaryStart + 12;
+                summaryText = responseText.substring(startContent);
+
+                const nextField = summaryText.search(/",\s*"\w+":/);
+                if (nextField !== -1) {
+                    summaryText = summaryText.substring(0, nextField);
+                } else {
+                    summaryText = summaryText.replace(/["}]+$/, "");
+                }
+
+                summaryText = summaryText
+                    .replace(/\\n/g, "\n")
+                    .replace(/\\"/g, '"')
+                    .replace(/\\\\/g, "\\");
+            } else {
+                summaryText = "Failed to parse content. Raw output:\n" + responseText;
+            }
+
+            data = {
+                title: titleMatch ? titleMatch[1] : "Generated Content (Partial)",
+                summary: summaryText,
+                quiz: { title: "Quiz Generation Failed", questions: [] },
+                flashcards: []
+            };
         }
 
         return {
-            title: data.title,
-            summary: data.summary,
+            title: data.title || "Untitled Note",
+            summary: data.summary || "",
             quiz: {
                 noteId: "",
                 userId: "",
-                ...data.quiz,
+                title: data.quiz?.title || "Quiz",
+                questions: Array.isArray(data.quiz?.questions) ? data.quiz.questions : [],
             },
-            flashcards: data.flashcards.map((f: any) => ({
-                noteId: "",
-                userId: "",
-                ...f,
-                reviewCount: 0,
-            })),
+            flashcards: Array.isArray(data.flashcards)
+                ? data.flashcards.map((f: any) => ({
+                    noteId: "",
+                    userId: "",
+                    ...f,
+                    reviewCount: 0,
+                }))
+                : [],
         }
     } catch (error: any) {
         console.error("Error generating content from text with Gemini:", error)
@@ -369,7 +422,7 @@ async function mockGenerateChatResponse(message: string, context: Note) {
 
 export async function generateQuizFromNote(
     noteContent: string,
-    questionCount: number = 5
+    questionCount: number = 10
 ): Promise<Omit<Quiz, "id" | "createdAt" | "noteId" | "userId">> {
     if (!apiKey) {
         console.warn("Gemini API Key is missing. Returning mock quiz.")
@@ -381,13 +434,17 @@ export async function generateQuizFromNote(
   ${AI_SYSTEM_PROMPT}
 
   Tugas Khusus:
-  Buatlah kuis pilihan ganda berdasarkan materi berikut.
+  Buatlah kuis pilihan ganda berdasarkan materi yang disediakan di bawah ini.
   
   Materi:
-  "${noteContent.substring(0, 10000)}..." (dipotong jika terlalu panjang)
+  "${noteContent.substring(0, 15000)}..."
+
+  PENTING - INSTRUKSI KUANTITAS:
+  Anda HARUS menghasilkan TEPAT ${questionCount} pertanyaan. Tidak boleh kurang dari ${questionCount}.
+  Jika materi terbatas, gali lebih dalam ke detail spesifik untuk mencapai target ${questionCount} pertanyaan.
 
   Instruksi:
-  1. Buat tepat ${questionCount} pertanyaan.
+  1. Jumlah Pertanyaan: ${questionCount} (WAJIB).
   2. Pertanyaan harus relevan dengan materi.
   3. Berikan 4 pilihan jawaban untuk setiap pertanyaan.
   4. Sertakan penjelasan singkat untuk jawaban yang benar.
@@ -397,10 +454,10 @@ export async function generateQuizFromNote(
     "title": "Judul Kuis (Relevan dengan materi)",
     "questions": [
       {
-        "id": "q1", // incrementing id
+        "id": "q1",
         "question": "Pertanyaan...",
         "options": ["A", "B", "C", "D"],
-        "correctAnswer": 0, // index of correct option (0-3)
+        "correctAnswer": 0,
         "explanation": "Penjelasan..."
       }
     ]
@@ -447,3 +504,61 @@ async function mockGenerateQuizFromNote(questionCount: number) {
     }
 }
 
+export async function generateFlashcardsFromNote(
+    noteContent: string,
+    count: number = 5
+): Promise<Omit<Flashcard, "id" | "createdAt" | "noteId" | "userId">[]> {
+    if (!apiKey) {
+        console.warn("Gemini API Key is missing. Returns mock flashcards.")
+        return mockGenerateFlashcardsFromNote(count)
+    }
+
+    try {
+        const prompt = `
+  ${AI_SYSTEM_PROMPT}
+
+  Note Content:
+  "${noteContent.substring(0, 15000)}..."
+
+  Task:
+  Create EXACTLY ${count} flashcards based on the note content above.
+  Do not create more or less than ${count}.
+  Focus on identifying the most critical concepts, definitions, and key takeaways.
+  
+  Output JSON:
+  {
+    "flashcards": [
+      {
+        "question": "Front of card (Concept/Question)",
+        "answer": "Back of card (Definition/Answer)"
+      }
+    ]
+  }
+  `
+        const result = await retryGenAI(() => model.generateContent(prompt))
+        const responseText = result.response.text()
+
+        let data
+        try {
+            data = JSON.parse(responseText.replace(/```json/g, "").replace(/```/g, ""))
+        } catch (e) {
+            console.error("Failed to parse flashcards JSON", e)
+            return []
+        }
+
+        // Strictly limit the number of cards returned to the requested count
+        return (data.flashcards || []).slice(0, count)
+    } catch (error) {
+        console.error("Error generating flashcards:", error)
+        return mockGenerateFlashcardsFromNote(count)
+    }
+}
+
+async function mockGenerateFlashcardsFromNote(count: number) {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    return Array.from({ length: count }).map((_, i) => ({
+        question: `Mock generated question ${i + 1}?`,
+        answer: `Mock generated answer ${i + 1}`,
+        reviewCount: 0
+    }))
+}

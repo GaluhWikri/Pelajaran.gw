@@ -5,6 +5,8 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useStore } from "@/lib/store"
+import { cn } from "@/lib/utils"
 
 const features = [
   {
@@ -81,12 +83,14 @@ const plans = [
 ]
 
 export default function PremiumPage() {
+  const { sidebarOpen } = useStore()
+
   return (
     <div className="min-h-screen">
       <DashboardHeader />
       <Sidebar />
 
-      <main className="lg:pl-64 pt-16">
+      <main className={cn("pt-14 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
         <div className="p-6 space-y-8 max-w-6xl mx-auto">
           <div className="text-center space-y-3">
             <div className="flex justify-center mb-4">

@@ -120,7 +120,80 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Flashcard Flip Animation Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Custom Modern Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--muted);
+  border-radius: 20px;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--muted-foreground);
+}
+
+/* Global Scrollbar - Apply to all pages */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background-color: var(--muted);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+html:hover::-webkit-scrollbar-thumb,
+body:hover::-webkit-scrollbar-thumb,
+*:hover::-webkit-scrollbar-thumb {
+  background-color: var(--muted-foreground);
+}
+
+/* Firefox scrollbar */
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
 }

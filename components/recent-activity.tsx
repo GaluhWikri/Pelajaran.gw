@@ -61,7 +61,7 @@ export function RecentActivity() {
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
       </CardHeader>

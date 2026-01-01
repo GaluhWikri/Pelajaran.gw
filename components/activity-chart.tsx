@@ -8,7 +8,7 @@ import { subDays, format } from "date-fns"
 import { id } from "date-fns/locale"
 
 export function ActivityChart() {
-  const { notes, quizzes } = useStore()
+  const { notes, quizzes, flashcards } = useStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -24,7 +24,9 @@ export function ActivityChart() {
         fullDate: format(d, "dd MMM yyyy", { locale: id }),
         notesCount: 0,
         editsCount: 0,
+        readsCount: 0,
         quizzesCount: 0,
+        flashcardsCount: 0,
         total: 0,
       }
     })
@@ -36,7 +38,7 @@ export function ActivityChart() {
       )
     }
 
-    // Count notes (creation and updates)
+    // Count notes (creation, updates, and accesses)
     notes.forEach((note) => {
       const createdDay = getDayItem(note.createdAt)
       if (createdDay) {
@@ -56,6 +58,20 @@ export function ActivityChart() {
           }
         }
       }
+
+      // Count accesses/reads
+      if (note.lastAccessedAt) {
+        // We only count read if it's on a different day than creation to avoid double counting "Create" as "Read" immediately
+        // Or we can just count it as a separate valid interaction. Let's count it to be clear for the user.
+        // Actually, to be safe and showing "Activity", reading is valuable. 
+        const accessedDay = getDayItem(note.lastAccessedAt)
+        if (accessedDay) {
+          // Optional: prevent double counting if created and accessed at VALID SAME TIME, but usually access is later.
+          // Let's just add it.
+          accessedDay.readsCount += 1
+          accessedDay.total += 1
+        }
+      }
     })
 
     // Count quizzes
@@ -67,8 +83,17 @@ export function ActivityChart() {
       }
     })
 
+    // Count flashcards
+    flashcards.forEach((card) => {
+      const cardDay = getDayItem(card.createdAt)
+      if (cardDay) {
+        cardDay.flashcardsCount += 1
+        cardDay.total += 1
+      }
+    })
+
     return last7Days
-  }, [notes, quizzes])
+  }, [notes, quizzes, flashcards])
 
   if (!mounted) {
     return (
@@ -86,12 +111,12 @@ export function ActivityChart() {
   }
 
   return (
-    <Card className="col-span-1">
+    <Card className="col-span-1 h-full flex flex-col">
       <CardHeader>
         <CardTitle>Aktivitas Harian (7 Hari Terakhir)</CardTitle>
       </CardHeader>
-      <CardContent className="pl-2">
-        <div className="h-[240px] w-full">
+      <CardContent className="flex-1 min-h-[350px] pb-4 pl-2">
+        <div className="h-full w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
               <XAxis
@@ -126,7 +151,7 @@ export function ActivityChart() {
                             </span>
                           </div>
 
-                          {(data.notesCount > 0 || data.editsCount > 0 || data.quizzesCount > 0) && (
+                          {(data.notesCount > 0 || data.editsCount > 0 || data.readsCount > 0 || data.quizzesCount > 0 || data.flashcardsCount > 0) && (
                             <div className="border-t pt-2 space-y-1 text-xs">
                               {data.notesCount > 0 && (
                                 <div className="flex justify-between">
@@ -140,10 +165,22 @@ export function ActivityChart() {
                                   <span className="font-medium">{data.editsCount}</span>
                                 </div>
                               )}
+                              {data.readsCount > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Reads/Accessed:</span>
+                                  <span className="font-medium">{data.readsCount}</span>
+                                </div>
+                              )}
                               {data.quizzesCount > 0 && (
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Quizzes:</span>
                                   <span className="font-medium">{data.quizzesCount}</span>
+                                </div>
+                              )}
+                              {data.flashcardsCount > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Flashcards:</span>
+                                  <span className="font-medium">{data.flashcardsCount}</span>
                                 </div>
                               )}
                             </div>

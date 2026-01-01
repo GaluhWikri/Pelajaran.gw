@@ -10,12 +10,13 @@ import { useStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { MessageSquare } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function NoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   // We use notes to find the note, but for the effect trigger we only care about existence
   // to avoid infinite loops caused by object reference updates.
-  const { notes, chatPanelOpen, toggleChatPanel, markNoteAsAccessed } = useStore()
+  const { notes, chatPanelOpen, toggleChatPanel, markNoteAsAccessed, setActiveNote, sidebarOpen } = useStore()
   const router = useRouter()
 
   const note = notes.find((n) => n.id === id)
@@ -23,19 +24,13 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     if (!noteExists) {
-      // Small timeout to allow hydration? No, usually unnecessary with persistent store if we handle loading state.
-      // But here we just redirect.
-      // We can't easily wait for "loading" in this simple store. 
-      // If it's truly missing, we redirect.
       router.push("/notes")
-    }
-  }, [noteExists, router])
-
-  useEffect(() => {
-    if (noteExists) {
+    } else {
+      // Mark as accessed immediately when note is loaded
       markNoteAsAccessed(id)
+      setActiveNote(id)
     }
-  }, [id, noteExists, markNoteAsAccessed])
+  }, [id, noteExists, markNoteAsAccessed, setActiveNote, router])
 
   if (!note) {
     return null
@@ -46,8 +41,8 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
       <DashboardHeader />
       <Sidebar />
 
-      <main className="lg:pl-64 pt-16">
-        <div className="flex h-[calc(100vh-4rem)]">
+      <main className={cn("pt-14 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+        <div className="flex h-[calc(100vh-3.5rem)]">
           <div className={`flex-1 transition-all ${chatPanelOpen ? "mr-96" : "mr-0"}`}>
             <NoteEditorTabs noteId={id} />
           </div>

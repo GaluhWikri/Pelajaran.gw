@@ -4,7 +4,9 @@ export interface User {
   email: string
   avatar?: string
   isPremium: boolean
-  createdAt: Date
+  level: number
+  currentXP: number
+  lastLoginDate?: string
 }
 
 export interface Material {
@@ -87,4 +89,10 @@ export interface ActivityStats {
   totalStudyTime: number
   streak: number
   lastActive: Date
+  trends: {
+    notes: number
+    flashcards: number
+    quizzes: number
+  }
+  longestStreak: number
 }
