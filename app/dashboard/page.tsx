@@ -211,7 +211,7 @@ export default function DashboardPage() {
                         badgeImg = "/image/badges/master learner.png"
                       } else if (level >= 26) {
                         title = "Advanced Scholar"
-                        badgeImg = "/image/badges/advanced learner.png" // typo in filename source
+                        badgeImg = "/image/badges/advanced learner.png"
                       }
 
                       return (
