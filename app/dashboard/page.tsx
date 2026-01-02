@@ -188,15 +188,15 @@ export default function DashboardPage() {
       <Sidebar />
 
       <main className={cn("pt-14 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-balance">Welcome back, {storeUser?.name}!</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-balance">Welcome back, {storeUser?.name} !</h2>
             <p className="text-muted-foreground">Here's what's happening with your learning today.</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {/* Level Progress Card - Spans 2 columns on large screens if needed, or just 1 */}
-            <div className="col-span-full mb-4">
+            <div className="col-span-full">
               <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -225,10 +225,15 @@ export default function DashboardPage() {
                       )
                     })()}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-yellow-500" />
-                    <span className="font-bold">{useStore(state => state.user?.currentXP || 0)} XP</span>
-                    <span className="text-muted-foreground text-sm"> / {(useStore(state => state.user?.level || 1)) * 300} XP</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                      <span className="font-bold">{useStore(state => state.user?.currentXP || 0)} XP</span>
+                      <span className="text-muted-foreground text-sm"> / {(useStore(state => state.user?.level || 1)) * 300} XP</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {((useStore(state => state.user?.level || 1)) * 300) - (useStore(state => state.user?.currentXP || 0))} XP to next level
+                    </p>
                   </div>
                 </div>
                 {/* Progress Bar */}
@@ -240,85 +245,82 @@ export default function DashboardPage() {
                     }}
                   />
                 </div>
-              </div>
-              <div className="flex justify-between items-center mt-2">
-                <p className="text-xs text-muted-foreground">
-                  {((useStore(state => state.user?.level || 1)) * 300) - (useStore(state => state.user?.currentXP || 0))} XP to next level
-                </p>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="text-xs text-primary hover:underline hover:text-primary/80 transition-colors font-medium">
-                      How to level up?
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Level Up Guide 🚀</DialogTitle>
-                      <DialogDescription>
-                        Accumulate XP to climb the ranks and unlock new achievements!
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2 text-sm">
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-primary">Activities & Rewards</h4>
-                        <ul className="space-y-2 text-muted-foreground">
-                          <li className="flex justify-between border-b pb-1">
-                            <span>📝 Create a Note</span>
-                            <span className="font-bold text-foreground">+100 XP</span>
-                          </li>
-                          <li className="flex justify-between border-b pb-1">
-                            <span>🧠 Finish a Quiz</span>
-                            <span className="font-bold text-foreground">+20 XP</span>
-                          </li>
-                          <li className="flex justify-between border-b pb-1">
-                            <span>💯 Perfect Quiz Score (100)</span>
-                            <span className="font-bold text-foreground">+50 XP</span>
-                          </li>
-                          <li className="flex justify-between border-b pb-1">
-                            <span>📅 Daily Login</span>
-                            <span className="font-bold text-foreground">+10 XP</span>
-                          </li>
-                          <li className="flex justify-between border-b pb-1">
-                            <span>🔥 7-Day Streak</span>
-                            <span className="font-bold text-foreground">+100 XP</span>
-                          </li>
-                        </ul>
-                      </div>
+                <div className="flex justify-end items-center mt-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="text-xs text-primary hover:underline hover:text-primary/80 transition-colors font-medium">
+                        How to level up?
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Level Up Guide 🚀</DialogTitle>
+                        <DialogDescription>
+                          Accumulate XP to climb the ranks and unlock new achievements!
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-2 text-sm">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-primary">Activities & Rewards</h4>
+                          <ul className="space-y-2 text-muted-foreground">
+                            <li className="flex justify-between border-b pb-1">
+                              <span>📝 Create a Note</span>
+                              <span className="font-bold text-foreground">+100 XP</span>
+                            </li>
+                            <li className="flex justify-between border-b pb-1">
+                              <span>🧠 Finish a Quiz</span>
+                              <span className="font-bold text-foreground">+20 XP</span>
+                            </li>
+                            <li className="flex justify-between border-b pb-1">
+                              <span>💯 Perfect Quiz Score (100)</span>
+                              <span className="font-bold text-foreground">+50 XP</span>
+                            </li>
+                            <li className="flex justify-between border-b pb-1">
+                              <span>📅 Daily Login</span>
+                              <span className="font-bold text-foreground">+10 XP</span>
+                            </li>
+                            <li className="flex justify-between border-b pb-1">
+                              <span>🔥 7-Day Streak</span>
+                              <span className="font-bold text-foreground">+100 XP</span>
+                            </li>
+                          </ul>
+                        </div>
 
-                      <div className="space-y-2 pt-2">
-                        <h4 className="font-semibold text-primary">Ranks</h4>
-                        <div className="grid grid-cols-1 gap-2">
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
-                            <img src="/image/badges/novice learner.png" className="w-8 h-8 object-contain" />
-                            <div>
-                              <p className="font-bold text-xs uppercase">Level 1-25</p>
-                              <p className="font-medium">Novice Learner</p>
+                        <div className="space-y-2 pt-2">
+                          <h4 className="font-semibold text-primary">Ranks</h4>
+                          <div className="grid grid-cols-1 gap-2">
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
+                              <img src="/image/badges/novice learner.png" className="w-8 h-8 object-contain" />
+                              <div>
+                                <p className="font-bold text-xs uppercase">Level 1-25</p>
+                                <p className="font-medium">Novice Learner</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
-                            <img src="/image/badges/advanced learner.png" className="w-8 h-8 object-contain" />
-                            <div>
-                              <p className="font-bold text-xs uppercase">Level 26-49</p>
-                              <p className="font-medium">Advanced Scholar</p>
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
+                              <img src="/image/badges/advanced learner.png" className="w-8 h-8 object-contain" />
+                              <div>
+                                <p className="font-bold text-xs uppercase">Level 26-49</p>
+                                <p className="font-medium">Advanced Scholar</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
-                            <img src="/image/badges/master learner.png" className="w-8 h-8 object-contain" />
-                            <div>
-                              <p className="font-bold text-xs uppercase text-primary">Level 50+</p>
-                              <p className="font-medium text-primary">Master Learner</p>
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
+                              <img src="/image/badges/master learner.png" className="w-8 h-8 object-contain" />
+                              <div>
+                                <p className="font-bold text-xs uppercase text-primary">Level 50+</p>
+                                <p className="font-medium text-primary">Master Learner</p>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <DialogFooter className="sm:justify-end">
-                      <DialogClose asChild>
-                        <Button type="button" variant="secondary">Got it!</Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                      <DialogFooter className="sm:justify-end">
+                        <DialogClose asChild>
+                          <Button type="button" variant="secondary">Got it!</Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </div>
 
