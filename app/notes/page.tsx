@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { useStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { deleteNoteFromSupabase, saveNoteToSupabase } from "@/lib/supabase-helpers"
 import { useAuth } from "@/lib/auth-context"
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 
-export default function NotesPage() {
+function NotesContent() {
   const { notes, addNote, deleteNote, updateNote, sidebarOpen, activeUploads, removeActiveUpload } = useStore()
   const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
@@ -347,5 +347,13 @@ export default function NotesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+export default function NotesPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+      <NotesContent />
+    </Suspense>
   )
 }

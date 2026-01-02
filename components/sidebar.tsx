@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import {
   Home,
@@ -51,7 +51,7 @@ const navigation = [
   { name: "Upload Material", icon: Upload, href: "/upload" },
 ]
 
-export function Sidebar() {
+function SidebarContent() {
   const { sidebarOpen, notes, updateNote, deleteNote } = useStore()
   const { user } = useAuth()
   const pathname = usePathname()
@@ -384,5 +384,13 @@ export function Sidebar() {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  )
+}
+
+export function Sidebar() {
+  return (
+    <Suspense fallback={<aside className="fixed left-0 top-14 z-40 h-[calc(100vh-3.5rem)] w-[70px] border-r bg-card" />}>
+      <SidebarContent />
+    </Suspense>
   )
 }

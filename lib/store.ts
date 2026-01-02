@@ -581,6 +581,7 @@ export const useStore = create<AppState>()(
       },
       storage: {
         getItem: (name) => {
+          if (typeof window === "undefined") return null
           try {
             const str = localStorage.getItem(name)
             if (!str) return null
@@ -590,11 +591,12 @@ export const useStore = create<AppState>()(
           } catch (error) {
             console.error('Error parsing localStorage:', error)
             // Clear corrupted data
-            localStorage.removeItem(name)
+            if (typeof window !== "undefined") localStorage.removeItem(name)
             return null
           }
         },
         setItem: (name, value) => {
+          if (typeof window === "undefined") return
           try {
             // Use native JSON.stringify which handles special characters correctly
             const serialized = JSON.stringify(value)
@@ -603,7 +605,9 @@ export const useStore = create<AppState>()(
             console.error('Error serializing to localStorage:', error)
           }
         },
-        removeItem: (name) => localStorage.removeItem(name),
+        removeItem: (name) => {
+          if (typeof window !== "undefined") localStorage.removeItem(name)
+        },
       },
     },
   ),
