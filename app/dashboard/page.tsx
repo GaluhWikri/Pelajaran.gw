@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FileText, CreditCard, Trophy, TrendingUp, Flame, Crown, Brain, GraduationCap, Target, Puzzle } from "lucide-react"
+import { FileText, CreditCard, Trophy, TrendingUp, Flame, Puzzle } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { StatsCard } from "@/components/stats-card"
