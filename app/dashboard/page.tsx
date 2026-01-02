@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FileText, CreditCard, Trophy, TrendingUp, Flame, Crown } from "lucide-react"
+import { FileText, CreditCard, Trophy, TrendingUp, Flame, Crown, Brain, GraduationCap, Target, Puzzle } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { StatsCard } from "@/components/stats-card"
@@ -345,7 +345,7 @@ export default function DashboardPage() {
             <StatsCard
               title="Quizzes Taken"
               value={isMounted ? `${stats.totalQuizzes} / ${stats.totalQuizzesAvailable}` : "0 / 0"}
-              icon={Trophy}
+              icon={Puzzle}
               trend={{
                 value: `${isMounted && stats.trends ? (stats.trends.quizzes > 0 ? "+" : "") + stats.trends.quizzes : 0}%`,
                 positive: isMounted && stats.trends ? stats.trends.quizzes >= 0 : true
