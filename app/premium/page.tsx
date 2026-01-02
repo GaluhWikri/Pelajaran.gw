@@ -94,7 +94,7 @@ export default function PremiumPage() {
         <div className="p-6 space-y-8 max-w-6xl mx-auto">
           <div className="text-center space-y-3">
             <div className="flex justify-center mb-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-primary to-secondary">
                 <Crown className="h-8 w-8 text-white" />
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function PremiumPage() {
             </div>
           </div>
 
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
+          <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 to-secondary/5">
             <CardContent className="p-8 text-center space-y-4">
               <h3 className="text-2xl font-bold">Start Your Free Trial Today</h3>
               <p className="text-muted-foreground max-w-2xl mx-auto">
