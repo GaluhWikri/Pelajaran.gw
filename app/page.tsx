@@ -133,7 +133,7 @@ export default function LandingPage() {
                     <div className="h-3 w-3 rounded-full bg-yellow-500" />
                     <div className="h-3 w-3 rounded-full bg-green-500" />
                   </div>
-                  <span className="text-sm text-muted-foreground ml-4">pelajaran.gw - Dashboard</span>
+                  <span className="text-sm text-muted-foreground ml-4">pelajaran.gw - DEMO</span>
                 </div>
               )}
 
