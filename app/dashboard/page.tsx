@@ -23,7 +23,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 export default function DashboardPage() {
-  const { notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats, clearAll, setUser, sidebarOpen } = useStore()
+  const { notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats, clearAll, setUser, sidebarOpen, hasInitialized } = useStore()
   const { user } = useAuth()
   const stats = getActivityStats()
   const [isMounted, setIsMounted] = useState(false)
@@ -47,6 +47,9 @@ export default function DashboardPage() {
         setIsLoading(false)
         return
       }
+
+      // Wait for store to be hydrated before syncing
+      if (!useStore.getState().hasInitialized) return
 
       setIsLoading(true)
 
@@ -84,23 +87,31 @@ export default function DashboardPage() {
 
         if (notesError) throw notesError
 
-        // Clear existing data first
-        // clearAll() - NO, clearAll resets everything including UI state. We just want to replace data.
-        // Actually setNotes will replace.
-
         // Add fetched notes to store
         if (notesData && notesData.length > 0) {
-          const mappedNotes = notesData.map((note) => ({
-            id: note.id,
-            userId: note.user_id,
-            title: note.title,
-            content: note.content,
-            tags: note.tags || [],
-            isFavorite: note.is_favorite || false,
-            createdAt: new Date(note.created_at),
-            updatedAt: new Date(note.updated_at),
-            lastAccessedAt: note.updated_at ? new Date(note.updated_at) : undefined // fallback
-          }))
+          // Get current local notes to preserve 'lastAccessedAt' since it's not in DB
+          const currentNotes = useStore.getState().notes;
+
+          const mappedNotes = notesData.map((note) => {
+            const existingNote = currentNotes.find(n => n.id === note.id);
+            // Prioritize local lastAccessedAt if it exists (since DB doesn't track it)
+            // Otherwise fallback to server update time
+            let lastAccessedAt = existingNote?.lastAccessedAt
+              ? new Date(existingNote.lastAccessedAt)
+              : (note.updated_at ? new Date(note.updated_at) : undefined);
+
+            return {
+              id: note.id,
+              userId: note.user_id,
+              title: note.title,
+              content: note.content,
+              tags: note.tags || [],
+              isFavorite: note.is_favorite || false,
+              createdAt: new Date(note.created_at),
+              updatedAt: new Date(note.updated_at),
+              lastAccessedAt: lastAccessedAt
+            };
+          })
           useStore.getState().setNotes(mappedNotes)
         } else {
           useStore.getState().setNotes([])
@@ -169,7 +180,7 @@ export default function DashboardPage() {
     }
 
     fetchUserData()
-  }, [user, addNote, addFlashcard, addQuiz, clearAll, setUser])
+  }, [user, addNote, addFlashcard, addQuiz, clearAll, setUser, hasInitialized])
 
   return (
     <div className="min-h-screen">
@@ -331,7 +342,7 @@ export default function DashboardPage() {
             />
             <StatsCard
               title="Quizzes Taken"
-              value={isMounted ? stats.totalQuizzes : 0}
+              value={isMounted ? `${stats.totalQuizzes} / ${stats.totalQuizzesAvailable}` : "0 / 0"}
               icon={Trophy}
               trend={{
                 value: `${isMounted && stats.trends ? (stats.trends.quizzes > 0 ? "+" : "") + stats.trends.quizzes : 0}%`,

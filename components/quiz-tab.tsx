@@ -36,7 +36,7 @@ interface QuizTabProps {
 }
 
 export function QuizTab({ noteId }: QuizTabProps) {
-  const { notes, quizzes, addQuiz, updateQuiz, deleteQuiz } = useStore()
+  const { notes, quizzes, addQuiz, updateQuiz, deleteQuiz, addStudySession } = useStore()
   const { user } = useAuth()
   const noteQuizzes = quizzes.filter((q) => q.noteId === noteId)
   const noteContent = notes.find((n) => n.id === noteId)?.content || ""
@@ -117,6 +117,15 @@ export function QuizTab({ noteId }: QuizTabProps) {
 
     // Update local store
     updateQuiz(activeQuiz.id, { score, completedAt })
+
+    // Log the quiz attempt as a Study Session to track activity "Drills"
+    addStudySession({
+      userId: user?.id || "demo-user",
+      noteId: noteId,
+      duration: activeQuiz.questions.length * 1, // Estimate 1 min per question or just 1 for count
+      type: "quiz",
+      completedAt: completedAt
+    })
 
     // Save to Supabase
     // We construct the full quiz object to ensure all required fields are passed to upsert

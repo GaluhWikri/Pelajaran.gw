@@ -8,7 +8,7 @@ import { subDays, format } from "date-fns"
 import { id } from "date-fns/locale"
 
 export function ActivityChart() {
-  const { notes, quizzes, flashcards } = useStore()
+  const { notes, quizzes, flashcards, studySessions } = useStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -24,8 +24,7 @@ export function ActivityChart() {
         fullDate: format(d, "dd MMM yyyy", { locale: id }),
         notesCount: 0,
         editsCount: 0,
-        readsCount: 0,
-        quizzesCount: 0,
+        quizzesTakenCount: 0,
         flashcardsCount: 0,
         total: 0,
       }
@@ -59,27 +58,39 @@ export function ActivityChart() {
         }
       }
 
-      // Count accesses/reads
-      if (note.lastAccessedAt) {
-        // We only count read if it's on a different day than creation to avoid double counting "Create" as "Read" immediately
-        // Or we can just count it as a separate valid interaction. Let's count it to be clear for the user.
-        // Actually, to be safe and showing "Activity", reading is valuable. 
-        const accessedDay = getDayItem(note.lastAccessedAt)
-        if (accessedDay) {
-          // Optional: prevent double counting if created and accessed at VALID SAME TIME, but usually access is later.
-          // Let's just add it.
-          accessedDay.readsCount += 1
-          accessedDay.total += 1
+      // Count accesses/reads REMOVED - User requested removal to prevent spam and fix persistence issues.
+      // We focus on Notes Created/Edited and Quizzes/Flashcards.
+    })
+
+    // Count quizzes (From Study Sessions Log - supports retakes!)
+    studySessions.forEach((session) => {
+      if (session.type === 'quiz') {
+        const sessionDay = getDayItem(session.completedAt)
+        if (sessionDay) {
+          sessionDay.quizzesTakenCount += 1
+          sessionDay.total += 1
         }
       }
     })
 
-    // Count quizzes
+    // Count quizzes (Historical / Legacy Data)
+    // Restore history for quizzes taken BEFORE the StudySession tracking system was added.
     quizzes.forEach((quiz) => {
-      const quizDay = getDayItem(quiz.createdAt)
-      if (quizDay) {
-        quizDay.quizzesCount += 1
-        quizDay.total += 1
+      if (quiz.completedAt) {
+        // Check if this completion is already counted in the loop above
+        const isAlreadyCounted = studySessions.some(s =>
+          s.type === 'quiz' &&
+          s.noteId === quiz.noteId &&
+          Math.abs(new Date(s.completedAt).getTime() - new Date(quiz.completedAt!).getTime()) < 5000 // 5 sec tolerance
+        )
+
+        if (!isAlreadyCounted) {
+          const quizDay = getDayItem(quiz.completedAt)
+          if (quizDay) {
+            quizDay.quizzesTakenCount += 1
+            quizDay.total += 1
+          }
+        }
       }
     })
 
@@ -93,7 +104,7 @@ export function ActivityChart() {
     })
 
     return last7Days
-  }, [notes, quizzes, flashcards])
+  }, [notes, quizzes, flashcards, studySessions])
 
   if (!mounted) {
     return (
@@ -151,7 +162,7 @@ export function ActivityChart() {
                             </span>
                           </div>
 
-                          {(data.notesCount > 0 || data.editsCount > 0 || data.readsCount > 0 || data.quizzesCount > 0 || data.flashcardsCount > 0) && (
+                          {(data.notesCount > 0 || data.editsCount > 0 || data.quizzesTakenCount > 0 || data.flashcardsCount > 0) && (
                             <div className="border-t pt-2 space-y-1 text-xs">
                               {data.notesCount > 0 && (
                                 <div className="flex justify-between">
@@ -165,16 +176,10 @@ export function ActivityChart() {
                                   <span className="font-medium">{data.editsCount}</span>
                                 </div>
                               )}
-                              {data.readsCount > 0 && (
+                              {data.quizzesTakenCount > 0 && (
                                 <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Reads/Accessed:</span>
-                                  <span className="font-medium">{data.readsCount}</span>
-                                </div>
-                              )}
-                              {data.quizzesCount > 0 && (
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Quizzes:</span>
-                                  <span className="font-medium">{data.quizzesCount}</span>
+                                  <span className="text-muted-foreground">Quizzes Taken:</span>
+                                  <span className="font-medium">{data.quizzesTakenCount}</span>
                                 </div>
                               )}
                               {data.flashcardsCount > 0 && (

@@ -323,20 +323,33 @@ export const useStore = create<AppState>()(
 
       updateQuiz: (id, updates) => {
         // Jika kuis baru saja diselesaikan (ada score dan sebelumnya belum ada), beri XP
+        // Gamification Logic
         if (updates.score !== undefined) {
           const currentQuiz = get().quizzes.find(q => q.id === id)
 
-          // HANYA BERI XP JIKA KUIS BELUM SELESAI SEBELUMNYA
-          // Jika currentQuiz.completedAt sudah ada, berarti ini re-take atau update biasa.
-          if (currentQuiz && !currentQuiz.completedAt) {
-            let earnedXP = 20 // 1. Base Reward: Hadiah partisipasi
+          if (currentQuiz) {
+            let earnedXP = 0
+            const isFirstTime = !currentQuiz.completedAt
+            const previousScore = currentQuiz.score || 0
 
-            // 2. Bonus Perfect Score
-            if (updates.score === 100) {
-              earnedXP += 50
+            // 1. Participation Reward
+            if (isFirstTime) {
+              earnedXP += 20 // Base First Clear
+            } else {
+              earnedXP += 5 // Retake/Drill Reward (Small incentive)
             }
 
-            get().addXP(earnedXP)
+            // 2. Perfect Score Bonus (100 XP)
+            // Awarded if this run is perfect AND (it's the first run OR previous run wasn't perfect)
+            if (updates.score === 100) {
+              if (isFirstTime || previousScore < 100) {
+                earnedXP += 100
+              }
+            }
+
+            if (earnedXP > 0) {
+              get().addXP(earnedXP)
+            }
           }
         }
 
@@ -543,10 +556,13 @@ export const useStore = create<AppState>()(
           }
         }
 
+        const completedQuizzes = state.quizzes.filter(q => q.completedAt)
+
         return {
           totalNotes: state.notes.length,
           totalFlashcards: state.flashcards.length,
-          totalQuizzes: state.quizzes.length,
+          totalQuizzes: completedQuizzes.length,
+          totalQuizzesAvailable: state.quizzes.length,
           totalStudyTime,
           streak,
           longestStreak,
@@ -554,7 +570,7 @@ export const useStore = create<AppState>()(
           trends: {
             notes: calculateTrend(state.notes),
             flashcards: calculateTrend(state.flashcards),
-            quizzes: calculateTrend(state.quizzes),
+            quizzes: calculateTrend(completedQuizzes.map(q => ({ ...q, createdAt: q.completedAt }))),
           }
         }
       },
@@ -608,6 +624,9 @@ export const useStore = create<AppState>()(
         removeItem: (name) => {
           if (typeof window !== "undefined") localStorage.removeItem(name)
         },
+      },
+      onRehydrateStorage: () => (state) => {
+        state?.setHasInitialized(true)
       },
     },
   ),

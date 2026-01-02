@@ -78,7 +78,7 @@ export interface StudySession {
   userId: string
   noteId: string
   duration: number
-  type: "focus" | "break"
+  type: "focus" | "break" | "quiz"
   completedAt: Date
 }
 
@@ -86,6 +86,7 @@ export interface ActivityStats {
   totalNotes: number
   totalFlashcards: number
   totalQuizzes: number
+  totalQuizzesAvailable: number
   totalStudyTime: number
   streak: number
   lastActive: Date

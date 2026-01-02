@@ -7,28 +7,36 @@ import { useStore } from "@/lib/store"
 import { formatDistanceToNow } from "date-fns"
 
 export function RecentActivity() {
-  const { notes } = useStore()
+  const { notes, quizzes, flashcards } = useStore()
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  const sortedNotes = [...notes].sort((a, b) => {
-    const timeA = Math.max(new Date(a.updatedAt).getTime(), a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : 0)
-    const timeB = Math.max(new Date(b.updatedAt).getTime(), b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0)
-    return timeB - timeA
-  })
-
-  const activities = sortedNotes.slice(0, 5).map((note) => {
-    const timeVal = Math.max(new Date(note.updatedAt).getTime(), note.lastAccessedAt ? new Date(note.lastAccessedAt).getTime() : 0)
-    return {
+  const allActivities = [
+    ...notes.map(note => ({
       id: note.id,
       type: "note" as const,
       title: note.title,
-      time: new Date(timeVal),
-    }
-  })
+      time: new Date(Math.max(new Date(note.updatedAt).getTime(), note.lastAccessedAt ? new Date(note.lastAccessedAt).getTime() : 0))
+    })),
+    ...quizzes.map(quiz => ({
+      id: quiz.id,
+      type: "quiz" as const,
+      title: quiz.title,
+      time: quiz.completedAt ? new Date(quiz.completedAt) : new Date(quiz.createdAt)
+    })),
+    ...flashcards.map(card => ({
+      id: card.id,
+      type: "flashcard" as const,
+      title: card.question, // Flashcards might not have titles, using question or a generic name
+      time: new Date(card.createdAt)
+    }))
+  ]
+
+  const sortedActivities = allActivities.sort((a, b) => b.time.getTime() - a.time.getTime())
+  const activities = sortedActivities.slice(0, 5)
 
   const getIcon = (type: string) => {
     switch (type) {
