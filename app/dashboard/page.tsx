@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { FileText, CreditCard, Trophy, TrendingUp, Flame, Crown } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
@@ -174,7 +174,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen">
       <DashboardHeader />
-      <Sidebar />
+      <Suspense fallback={<div className="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-[70px] border-r bg-card" />}>
+        <Sidebar />
+      </Suspense>
 
       <main className={cn("pt-14 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
         <div className="p-6 space-y-6">
