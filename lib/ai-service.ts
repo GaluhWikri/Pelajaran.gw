@@ -93,36 +93,7 @@ export async function generateLearningContent(file: File, options?: GenerationOp
 
     try {
         const filePart = await fileToGenerativePart(file)
-
-        let promptContext = ""
-        if (options) {
-            const level = options.understandingLevel || "Menengah"
-            let styleGuide = "Penjelasan seimbang untuk pemahaman umum"
-
-            if (["Pemula", "Dasar"].includes(level)) {
-                styleGuide = "Penjelasan detail dengan analogi sederhana, hindari jargon rumit."
-            } else if (level === "Menengah") {
-                styleGuide = "Penjelasan seimbang, informatif, dan mudah dipahami."
-            } else if (["Mahir", "Ahli"].includes(level)) {
-                styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
-            }
-
-            // Map writing style to prompt instruction
-            const styleMap: Record<string, string> = {
-                "relaxed": "Gunakan bahasa yang santai, ramah, dan seperti teman belajar (conversational). Boleh menggunakan sapaan akrab.",
-                "formal": "Gunakan bahasa yang formal, akademis, dan baku. Hindari slang.",
-                "concise": "Langsung pada poinnya (to-the-point), bullet points, tanpa basa-basi.",
-                "humorous": "Gunakan gaya yang lucu, menyenangkan, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
-            }
-            const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
-
-            promptContext = `
-    KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
-    - Tingkat Pemahaman: ${level}
-    - Kompleksitas Penjelasan: ${styleGuide}
-    - Gaya Penulisan & Tone: ${toneInstruction}
-    `
-        }
+        const promptContext = buildPromptContext(options)
 
         const prompt = `
     ${AI_SYSTEM_PROMPT}
@@ -158,66 +129,8 @@ export async function generateLearningContent(file: File, options?: GenerationOp
         const result = await retryGenAI(() => model.generateContent([prompt, filePart]))
         const responseText = result.response.text()
 
-        // Ensure we parse JSON correctly or fallback gracefully
-        let data;
-        try {
-            const cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-            data = JSON.parse(cleanText);
-        } catch (e) {
-            console.warn("JSON parse failed, attempting regex fallback", e);
+        return parseGeminiResponse(responseText)
 
-            const titleMatch = responseText.match(/"title":\s*"([^"]+)"/);
-            const summaryStart = responseText.indexOf('"summary": "');
-            let summaryText = "";
-
-            if (summaryStart !== -1) {
-                const startContent = summaryStart + 12;
-                summaryText = responseText.substring(startContent);
-
-                // Heuristic to find end of summary field
-                const nextField = summaryText.search(/",\s*"\w+":/);
-                if (nextField !== -1) {
-                    summaryText = summaryText.substring(0, nextField);
-                } else {
-                    summaryText = summaryText.replace(/["}]+$/, "");
-                }
-
-                // Basic unescape
-                summaryText = summaryText
-                    .replace(/\\n/g, "\n")
-                    .replace(/\\"/g, '"')
-                    .replace(/\\\\/g, "\\");
-            } else {
-                summaryText = "Failed to parse content. Raw output:\n" + responseText;
-            }
-
-            // Construct fallback object
-            data = {
-                title: titleMatch ? titleMatch[1] : "Generated Content (Partial)",
-                summary: summaryText,
-                quiz: { title: "Quiz Generation Failed", questions: [] },
-                flashcards: []
-            };
-        }
-
-        return {
-            title: data.title || "Untitled Note",
-            summary: data.summary || "",
-            quiz: {
-                noteId: "",
-                userId: "",
-                title: data.quiz?.title || "Quiz",
-                questions: Array.isArray(data.quiz?.questions) ? data.quiz.questions : [],
-            },
-            flashcards: Array.isArray(data.flashcards)
-                ? data.flashcards.map((f: any) => ({
-                    noteId: "",
-                    userId: "",
-                    ...f,
-                    reviewCount: 0,
-                }))
-                : [],
-        }
     } catch (error: any) {
         console.error("Error generating content with Gemini:", error)
         // Rethrow the error so the UI sees it as a failure
@@ -233,41 +146,12 @@ export async function generateLearningContentFromText(text: string, options?: Ge
 }> {
     if (!apiKey) {
         console.warn("Gemini API Key is missing. Returning mock data.")
-        // Reuse mock function but wrap text in a dummy file object representation or just create a new mock if needed.
-        // For query simplicity, let's just use the same mock function with a fake file name.
+        // Reuse mock function but wrap text in a dummy file object representation
         return mockGenerateLearningContent({ name: "YouTube Video.txt" } as File)
     }
 
     try {
-        let promptContext = ""
-        if (options) {
-            const level = options.understandingLevel || "Menengah"
-            let styleGuide = "Penjelasan seimbang untuk pemahaman umum"
-
-            if (["Pemula", "Dasar"].includes(level)) {
-                styleGuide = "Penjelasan detail dengan analogi sederhana, hindari jargon rumit."
-            } else if (level === "Menengah") {
-                styleGuide = "Penjelasan seimbang, informatif, dan mudah dipahami."
-            } else if (["Mahir", "Ahli"].includes(level)) {
-                styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
-            }
-
-            // Map writing style to prompt instruction
-            const styleMap: Record<string, string> = {
-                "relaxed": "Gunakan bahasa yang santai, ramah, dan seperti teman belajar (conversational). Boleh menggunakan sapaan akrab.",
-                "formal": "Gunakan bahasa yang formal, akademis, dan baku. Hindari slang.",
-                "concise": "Langsung pada poinnya (to-the-point), bullet points, tanpa basa-basi.",
-                "humorous": "Gunakan gaya yang lucu, menyenangkan, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
-            }
-            const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
-
-            promptContext = `
-    KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
-    - Tingkat Pemahaman: ${level}
-    - Kompleksitas Penjelasan: ${styleGuide}
-    - Gaya Penulisan & Tone: ${toneInstruction}
-    `
-        }
+        const promptContext = buildPromptContext(options)
 
         const prompt = `
     ${AI_SYSTEM_PROMPT}
@@ -306,66 +190,106 @@ export async function generateLearningContentFromText(text: string, options?: Ge
         const result = await retryGenAI(() => model.generateContent(prompt))
         const responseText = result.response.text()
 
-        // Ensure we parse JSON correctly or fallback gracefully
-        let data;
-        try {
-            const cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-            data = JSON.parse(cleanText);
-        } catch (e) {
-            console.warn("JSON parse failed from text, attempting regex fallback", e);
+        return parseGeminiResponse(responseText)
 
-            const titleMatch = responseText.match(/"title":\s*"([^"]+)"/);
-            const summaryStart = responseText.indexOf('"summary": "');
-            let summaryText = "";
-
-            if (summaryStart !== -1) {
-                const startContent = summaryStart + 12;
-                summaryText = responseText.substring(startContent);
-
-                const nextField = summaryText.search(/",\s*"\w+":/);
-                if (nextField !== -1) {
-                    summaryText = summaryText.substring(0, nextField);
-                } else {
-                    summaryText = summaryText.replace(/["}]+$/, "");
-                }
-
-                summaryText = summaryText
-                    .replace(/\\n/g, "\n")
-                    .replace(/\\"/g, '"')
-                    .replace(/\\\\/g, "\\");
-            } else {
-                summaryText = "Failed to parse content. Raw output:\n" + responseText;
-            }
-
-            data = {
-                title: titleMatch ? titleMatch[1] : "Generated Content (Partial)",
-                summary: summaryText,
-                quiz: { title: "Quiz Generation Failed", questions: [] },
-                flashcards: []
-            };
-        }
-
-        return {
-            title: data.title || "Untitled Note",
-            summary: data.summary || "",
-            quiz: {
-                noteId: "",
-                userId: "",
-                title: data.quiz?.title || "Quiz",
-                questions: Array.isArray(data.quiz?.questions) ? data.quiz.questions : [],
-            },
-            flashcards: Array.isArray(data.flashcards)
-                ? data.flashcards.map((f: any) => ({
-                    noteId: "",
-                    userId: "",
-                    ...f,
-                    reviewCount: 0,
-                }))
-                : [],
-        }
     } catch (error: any) {
         console.error("Error generating content from text with Gemini:", error)
         throw error
+    }
+}
+
+// --- Helper Functions ---
+
+function buildPromptContext(options?: GenerationOptions): string {
+    if (!options) return ""
+
+    const level = options.understandingLevel || "Menengah"
+    let styleGuide = "Penjelasan seimbang untuk pemahaman umum"
+
+    if (["Pemula", "Dasar"].includes(level)) {
+        styleGuide = "Penjelasan detail dengan analogi sederhana, hindari jargon rumit."
+    } else if (level === "Menengah") {
+        styleGuide = "Penjelasan seimbang, informatif, dan mudah dipahami."
+    } else if (["Mahir", "Ahli"].includes(level)) {
+        styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
+    }
+
+    // Map writing style to prompt instruction
+    const styleMap: Record<string, string> = {
+        "relaxed": "Gunakan bahasa yang santai, ramah, dan seperti teman belajar (conversational). Boleh menggunakan sapaan akrab.",
+        "formal": "Gunakan bahasa yang formal, akademis, dan baku. Hindari slang.",
+        "concise": "Langsung pada poinnya (to-the-point), bullet points, tanpa basa-basi.",
+        "humorous": "Gunakan gaya yang lucu, menyenangkan, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
+    }
+    const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
+
+    return `
+    KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
+    - Tingkat Pemahaman: ${level}
+    - Kompleksitas Penjelasan: ${styleGuide}
+    - Gaya Penulisan & Tone: ${toneInstruction}
+    `
+}
+
+function parseGeminiResponse(responseText: string) {
+    let data;
+    try {
+        const cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        data = JSON.parse(cleanText);
+    } catch (e) {
+        console.warn("JSON parse failed, attempting regex fallback", e);
+
+        const titleMatch = responseText.match(/"title":\s*"([^"]+)"/);
+        const summaryStart = responseText.indexOf('"summary": "');
+        let summaryText = "";
+
+        if (summaryStart !== -1) {
+            const startContent = summaryStart + 12;
+            summaryText = responseText.substring(startContent);
+
+            // Heuristic to find end of summary field
+            const nextField = summaryText.search(/",\s*"\w+":/);
+            if (nextField !== -1) {
+                summaryText = summaryText.substring(0, nextField);
+            } else {
+                summaryText = summaryText.replace(/["}]+$/, "");
+            }
+
+            // Basic unescape
+            summaryText = summaryText
+                .replace(/\\n/g, "\n")
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, "\\");
+        } else {
+            summaryText = "Failed to parse content. Raw output:\n" + responseText;
+        }
+
+        // Construct fallback object
+        data = {
+            title: titleMatch ? titleMatch[1] : "Generated Content (Partial)",
+            summary: summaryText,
+            quiz: { title: "Quiz Generation Failed", questions: [] },
+            flashcards: []
+        };
+    }
+
+    return {
+        title: data.title || "Untitled Note",
+        summary: data.summary || "",
+        quiz: {
+            noteId: "",
+            userId: "",
+            title: data.quiz?.title || "Quiz",
+            questions: Array.isArray(data.quiz?.questions) ? data.quiz.questions : [],
+        },
+        flashcards: Array.isArray(data.flashcards)
+            ? data.flashcards.map((f: any) => ({
+                noteId: "",
+                userId: "",
+                ...f,
+                reviewCount: 0,
+            }))
+            : [],
     }
 }
 
