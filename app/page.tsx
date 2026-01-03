@@ -39,20 +39,21 @@ export default function LandingPage() {
   const desktopScreenshots = [
     { src: "/image/demo desktop/dashboard.png", title: "Dashboard", description: "Overview aktivitas belajar Anda" },
     { src: "/image/demo desktop/allnotes.png", title: "All Notes", description: "Semua catatan dalam satu tempat" },
+    { src: "/image/demo desktop/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
     { src: "/image/demo desktop/note.png", title: "Smart Notes", description: "Catatan AI yang terstruktur" },
     { src: "/image/demo desktop/flashcard.png", title: "Flashcards", description: "Review cepat dengan flashcard" },
     { src: "/image/demo desktop/quiz.png", title: "Quiz", description: "Test pemahaman Anda" },
     { src: "/image/demo desktop/upload.png", title: "Upload", description: "Upload catatan Anda" },
-    { src: "/image/demo desktop/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
+
   ]
 
   const mobileScreenshots = [
     { src: "/image/demo mobile/dashboard1.png", title: "Dashboard", description: "Overview aktivitas belajar Anda" },
     { src: "/image/demo mobile/dashboard2.png", title: "Dashboard Detail", description: "Detail statistik belajar" },
     { src: "/image/demo mobile/allnote.png", title: "All Notes", description: "Semua catatan dalam satu tempat" },
+    { src: "/image/demo mobile/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
     { src: "/image/demo mobile/upload1.png", title: "Upload", description: "Upload materi belajar" },
     { src: "/image/demo mobile/upload2.png", title: "Upload Process", description: "Proses upload file" },
-    { src: "/image/demo mobile/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
   ]
 
   const demoScreenshots = isMobile ? mobileScreenshots : desktopScreenshots
@@ -140,22 +141,22 @@ export default function LandingPage() {
               {/* Screenshot/Demo Carousel */}
               <div className="relative bg-background overflow-hidden">
                 {/* Main Image Container - Auto height based on image */}
-                <div className="relative w-full">
-                  <AnimatePresence mode="wait">
+                <div className={`relative w-full ${isMobile ? 'aspect-390/844' : 'aspect-2/1'} rounded-xl`}>
+                  <AnimatePresence initial={false} custom={currentSlide}>
                     <motion.div
                       key={currentSlide}
                       initial={{ opacity: 0, x: 100 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -100 }}
                       transition={{ duration: 0.3 }}
-                      className="relative w-full"
+                      className="absolute inset-0 w-full h-full flex items-start justify-center"
                     >
                       <Image
                         src={demoScreenshots[currentSlide].src}
                         alt={demoScreenshots[currentSlide].title}
                         width={isMobile ? 390 : 1920}
                         height={isMobile ? 844 : 1080}
-                        className="w-full h-auto"
+                        className="w-full h-full object-contain object-top"
                         priority={currentSlide === 0}
                       />
                     </motion.div>
@@ -179,11 +180,12 @@ export default function LandingPage() {
                 </div>
 
                 {/* Bottom Info & Dots */}
-                <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 z-10">
+                {/* Bottom Info & Dots */}
+                <div className="flex flex-col items-center gap-4 py-4 border-t bg-muted/10">
                   {/* Title & Description */}
-                  <div className="px-4 py-2 rounded-full bg-background/90 backdrop-blur-sm border">
-                    <p className="text-sm font-medium">{demoScreenshots[currentSlide].title}</p>
-                    <p className="text-xs text-muted-foreground">{demoScreenshots[currentSlide].description}</p>
+                  <div className="text-center space-y-1 px-4">
+                    <p className="font-semibold text-base">{demoScreenshots[currentSlide].title}</p>
+                    <p className="text-sm text-muted-foreground">{demoScreenshots[currentSlide].description}</p>
                   </div>
 
                   {/* Dots Indicator */}
@@ -192,7 +194,7 @@ export default function LandingPage() {
                       <button
                         key={index}
                         onClick={() => setCurrentSlide(index)}
-                        className={`h-2 rounded-full transition-all ${index === currentSlide ? 'w-8 bg-primary' : 'w-2 bg-muted-foreground/50'
+                        className={`h-2 rounded-full transition-all ${index === currentSlide ? 'w-8 bg-primary' : 'w-2 bg-muted-foreground/30'
                           }`}
                         aria-label={`Go to slide ${index + 1}`}
                       />
