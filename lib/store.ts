@@ -40,6 +40,9 @@ interface AppState {
     noteId?: string
   }[]
 
+  // Effects
+  showDailyLoginEffect: boolean
+
   // Actions - User
   setUser: (user: AppState['user']) => void
   addXP: (amount: number) => void
@@ -86,6 +89,7 @@ interface AppState {
   // Actions - UI
   toggleSidebar: () => void
   toggleChatPanel: () => void
+  resetDailyLoginEffect: () => void
 
   // Actions - Clear all data
   clearAll: () => void
@@ -114,6 +118,7 @@ export const useStore = create<AppState>()(
       sidebarOpen: true,
       chatPanelOpen: false,
       hasInitialized: false,
+      showDailyLoginEffect: false,
 
       setHasInitialized: (value) => set({ hasInitialized: value }),
 
@@ -204,7 +209,8 @@ export const useStore = create<AppState>()(
           }
 
           set(s => ({
-            user: s.user ? { ...s.user, lastLoginDate: todayStr } : null
+            user: s.user ? { ...s.user, lastLoginDate: todayStr } : null,
+            showDailyLoginEffect: true
           }))
 
           // Cek Streak 7 Hari
@@ -446,6 +452,7 @@ export const useStore = create<AppState>()(
       // UI actions
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       toggleChatPanel: () => set((state) => ({ chatPanelOpen: !state.chatPanelOpen })),
+      resetDailyLoginEffect: () => set({ showDailyLoginEffect: false }),
 
       // Clear all data (but preserve activeUploads to maintain processing status)
       clearAll: () => set((state) => ({
