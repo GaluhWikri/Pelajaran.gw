@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 export default function DashboardPage() {
+  const router = useRouter()
   const { user: storeUser, notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats, clearAll, setUser, sidebarOpen, hasInitialized } = useStore()
   const { user } = useAuth()
   const stats = getActivityStats()
@@ -40,6 +42,7 @@ export default function DashboardPage() {
         // User not logged in, clear all data and show empty state
         clearAll()
         setIsLoading(false)
+        router.push('/login')
         return
       }
 
