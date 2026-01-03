@@ -107,10 +107,20 @@ export async function generateLearningContent(file: File, options?: GenerationOp
                 styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
             }
 
+            // Map writing style to prompt instruction
+            const styleMap: Record<string, string> = {
+                "relaxed": "Gunakan bahasa yang santai, ramah, dan seperti teman belajar (conversational). Boleh menggunakan sapaan akrab.",
+                "formal": "Gunakan bahasa yang formal, akademis, dan baku. Hindari slang.",
+                "concise": "Langsung pada poinnya (to-the-point), bullet points, tanpa basa-basi.",
+                "humorous": "Gunakan gaya yang lucu, menyenangkan, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
+            }
+            const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
+
             promptContext = `
     KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
     - Tingkat Pemahaman: ${level}
-    - Gaya Bahasa: ${styleGuide}
+    - Kompleksitas Penjelasan: ${styleGuide}
+    - Gaya Penulisan & Tone: ${toneInstruction}
     `
         }
 
@@ -242,10 +252,20 @@ export async function generateLearningContentFromText(text: string, options?: Ge
                 styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
             }
 
+            // Map writing style to prompt instruction
+            const styleMap: Record<string, string> = {
+                "relaxed": "Gunakan bahasa yang santai, ramah, dan seperti teman belajar (conversational). Boleh menggunakan sapaan akrab.",
+                "formal": "Gunakan bahasa yang formal, akademis, dan baku. Hindari slang.",
+                "concise": "Langsung pada poinnya (to-the-point), bullet points, tanpa basa-basi.",
+                "humorous": "Gunakan gaya yang lucu, menyenangkan, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
+            }
+            const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
+
             promptContext = `
     KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
     - Tingkat Pemahaman: ${level}
-    - Gaya Bahasa: ${styleGuide}
+    - Kompleksitas Penjelasan: ${styleGuide}
+    - Gaya Penulisan & Tone: ${toneInstruction}
     `
         }
 
