@@ -142,7 +142,8 @@ export const useStore = create<AppState>()(
           if (state.user.id && state.user.id !== 'demo-user') {
             supabase.from('profiles').update({
               level: newLevel,
-              current_xp: newXP
+              current_xp: newXP,
+              updated_at: new Date().toISOString()
             }).eq('id', state.user.id).then(({ error }) => {
               if (error) console.error("Failed to sync XP to DB:", error)
             })
@@ -161,47 +162,60 @@ export const useStore = create<AppState>()(
 
 
       checkDailyLogin: (userId: string) => {
+        console.log('[Store] checkDailyLogin triggered for:', userId)
         const state = get()
 
-        // Safety check: Pastikan user yang dicek sama dengan user yang ada di state
-        // Ini mencegah "Demo User" atau user yang salah mendapatkan XP/Data
-        if (!state.user || state.user.id !== userId) return
+        // Safety check
+        if (!state.user) {
+          console.log('[Store] checkDailyLogin aborted: state.user is null')
+          return
+        }
+        if (state.user.id !== userId) {
+          console.log('[Store] checkDailyLogin aborted: ID mismatch', state.user.id, userId)
+          return
+        }
 
-        // Gunakan Locale Date String agar sesuai zona waktu user, bukan UTC
         const now = new Date()
-        const todayStr = now.toLocaleDateString('en-CA') // Format YYYY-MM-DD local time
-
-        // Ambil data tanggal terakhir dari state (sudah dalam bentuk string YYYY-MM-DD)
+        const todayStr = now.toLocaleDateString('en-CA') // YYYY-MM-DD
         const lastLoginStr = state.user?.lastLoginDate || ""
 
+        console.log('[Store] Date check:', { todayStr, lastLoginStr })
+
         if (lastLoginStr !== todayStr) {
-          // Double check memory untuk mencegah race condition
+          console.log('[Store] New daily login detected! Updating DB...')
+
+          // Double check memory
           if (state.user?.lastLoginDate === todayStr) return
 
-          // 1. Ini adalah login baru hari ini!
           get().addXP(10) // Daily Login Reward
 
           // SYNC DATE TO SUPABASE
           if (userId && userId !== 'demo-user') {
             supabase.from('profiles').update({
-              last_login_date: todayStr
+              last_login_date: todayStr,
+              updated_at: new Date().toISOString()
             }).eq('id', userId).then(({ error }) => {
-              if (error) console.error("Failed to sync Login Date to DB:", error)
+              if (error) {
+                console.error("Failed to sync Login Date to DB:", error)
+              } else {
+                console.log("Successfully synced Login Date to DB")
+              }
             })
           }
 
-          // Update last login date ke hari ini
           set(s => ({
             user: s.user ? { ...s.user, lastLoginDate: todayStr } : null
           }))
 
           // Cek Streak 7 Hari
           const stats = state.getActivityStats()
-          const currentStreak = stats.streak // Streak sudah dihitung otomatis oleh getActivityStats
+          const currentStreak = stats.streak
 
           if (currentStreak > 0 && currentStreak % 7 === 0) {
-            get().addXP(100) // Weekly Streak Bonus
+            get().addXP(100)
           }
+        } else {
+          console.log('[Store] Already logged in today.')
         }
       },
 

@@ -874,12 +874,12 @@ export default function UploadPage() {
                     {youtubeUrl && (
                         <div className="space-y-2">
                             <Label>Link YouTube yang akan diproses</Label>
-                            <div className="flex items-center justify-between p-3 border rounded-lg bg-red-500/10 border-red-200">
-                                <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="flex items-center justify-between p-3 border rounded-lg bg-red-500/10 border-red-200 max-w-full">
+                                <div className="flex-1 w-0 flex items-center gap-3 overflow-hidden">
                                     <div className="h-8 w-8 rounded bg-red-500 text-white flex items-center justify-center shrink-0">
                                         <Youtube className="h-4 w-4" />
                                     </div>
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <p className="text-sm font-medium truncate">YouTube Video</p>
                                         <p className="text-xs text-muted-foreground truncate">{youtubeUrl}</p>
                                     </div>
@@ -887,7 +887,7 @@ export default function UploadPage() {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                                    className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive ml-2"
                                     onClick={() => {
                                         setYoutubeUrl("")
                                         if (pendingFiles.length === 0) setShowConfigDialog(false)
@@ -904,13 +904,13 @@ export default function UploadPage() {
                             <Label>File yang akan diproses</Label>
                             <div className="space-y-2">
                                 {pendingFiles.map((file, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/10">
-                                        <div className="flex items-center gap-3 overflow-hidden">
+                                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-secondary/10 max-w-full">
+                                        <div className="flex-1 w-0 flex items-center gap-3 overflow-hidden">
                                             <div className="h-8 w-8 rounded bg-red-500/10 flex items-center justify-center shrink-0">
                                                 <FileText className="h-4 w-4 text-red-500" />
                                             </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium truncate">{file.name}</p>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm truncate" title={file.name}>{file.name}</p>
                                                 <p className="text-xs text-muted-foreground">
                                                     {(file.size / (1024 * 1024)).toFixed(2)} MB
                                                 </p>
@@ -919,7 +919,7 @@ export default function UploadPage() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                                            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive ml-2"
                                             onClick={() => {
                                                 setPendingFiles(prev => prev.filter((_, i) => i !== index))
                                                 if (pendingFiles.length <= 1) setShowConfigDialog(false) // Close if no files left

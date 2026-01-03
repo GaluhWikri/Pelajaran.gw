@@ -31,12 +31,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsMounted(true)
-    // Panggil sekali saat dashboard dimuat. Validasi tanggal sudah ada di dalam fungsi store.
-    // Hanya panggil jika user valid untuk mencegah XP farming saat logout/login guest
-    if (user?.id) {
-      useStore.getState().checkDailyLogin(user.id)
-    }
-  }, [user])
+  }, [])
 
   // Fetch user's data from Supabase when logged in
   useEffect(() => {
@@ -74,8 +69,13 @@ export default function DashboardPage() {
             // Load Gamification Data from DB
             level: profileData.level || 1,
             currentXP: profileData.current_xp || 0,
-            lastLoginDate: profileData.last_login_date || undefined
+            lastLoginDate: profileData.last_login_date || ""
           })
+
+          // Check daily login AFTER syncing user data from DB to Store
+          if (user?.id) {
+            useStore.getState().checkDailyLogin(user.id)
+          }
         }
 
         // Fetch notes from Supabase

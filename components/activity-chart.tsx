@@ -16,8 +16,8 @@ export function ActivityChart() {
   }, [])
 
   const data = useMemo(() => {
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = subDays(new Date(), 6 - i)
+    const last14Days = Array.from({ length: 14 }, (_, i) => {
+      const d = subDays(new Date(), 13 - i)
       return {
         date: d,
         label: format(d, "EEE", { locale: id }), // Mon, Tue, etc. in Indonesian
@@ -32,7 +32,7 @@ export function ActivityChart() {
 
     const getDayItem = (date: Date | string) => {
       const d = new Date(date)
-      return last7Days.find((day) =>
+      return last14Days.find((day) =>
         format(day.date, "yyyy-MM-dd") === format(d, "yyyy-MM-dd")
       )
     }
@@ -103,14 +103,14 @@ export function ActivityChart() {
       }
     })
 
-    return last7Days
+    return last14Days
   }, [notes, quizzes, flashcards, studySessions])
 
   if (!mounted) {
     return (
       <Card className="col-span-1">
         <CardHeader>
-          <CardTitle>Aktivitas Harian (7 Hari Terakhir)</CardTitle>
+          <CardTitle>Aktivitas Harian (2 Minggu Terakhir)</CardTitle>
         </CardHeader>
         <CardContent className="pl-2">
           <div className="h-[240px] w-full flex items-center justify-center text-muted-foreground text-sm">
@@ -124,7 +124,7 @@ export function ActivityChart() {
   return (
     <Card className="col-span-1 h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Aktivitas Harian (7 Hari Terakhir)</CardTitle>
+        <CardTitle>Aktivitas Harian (2 Minggu Terakhir)</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 min-h-[350px] pb-4 pl-2">
         <div className="h-full w-full">
@@ -210,3 +210,4 @@ export function ActivityChart() {
     </Card>
   )
 }
+
