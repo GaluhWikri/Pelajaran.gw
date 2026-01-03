@@ -27,7 +27,7 @@ import {
 export default function DashboardPage() {
   const router = useRouter()
   const { user: storeUser, notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats, clearAll, setUser, sidebarOpen, hasInitialized, showDailyLoginEffect, resetDailyLoginEffect } = useStore()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth() 
   const stats = getActivityStats()
   const [isMounted, setIsMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -73,8 +73,9 @@ export default function DashboardPage() {
   // Fetch user's data from Supabase when logged in
   useEffect(() => {
     async function fetchUserData() {
+      if (authLoading || !useStore.getState().hasInitialized) return
+
       if (!user) {
-        // User not logged in, clear all data and show empty state
         clearAll()
         setIsLoading(false)
         router.push('/login')
