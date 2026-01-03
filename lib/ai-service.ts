@@ -240,19 +240,21 @@ function parseGeminiResponse(responseText: string) {
         console.warn("JSON parse failed, attempting regex fallback", e);
 
         const titleMatch = responseText.match(/"title":\s*"([^"]+)"/);
-        const summaryStart = responseText.indexOf('"summary": "');
+
+        // Robust Summary Extraction
         let summaryText = "";
-
+        const summaryStart = responseText.indexOf('"summary": "');
         if (summaryStart !== -1) {
-            const startContent = summaryStart + 12;
-            summaryText = responseText.substring(startContent);
+            const startContent = summaryStart + 12; // Length of '"summary": "'
+            // Find the next top-level key (quiz or flashcards)
+            // We search for ", "key": pattern
+            const nextKeyIndex = responseText.substring(startContent).search(/",\s*"(quiz|flashcards)":/);
 
-            // Heuristic to find end of summary field
-            const nextField = summaryText.search(/",\s*"\w+":/);
-            if (nextField !== -1) {
-                summaryText = summaryText.substring(0, nextField);
+            if (nextKeyIndex !== -1) {
+                summaryText = responseText.substring(startContent, startContent + nextKeyIndex);
             } else {
-                summaryText = summaryText.replace(/["}]+$/, "");
+                // If not found, take until the end but strip typical JSON closing chars
+                summaryText = responseText.substring(startContent).replace(/["}\]\s]+$/, "");
             }
 
             // Basic unescape
@@ -261,15 +263,59 @@ function parseGeminiResponse(responseText: string) {
                 .replace(/\\"/g, '"')
                 .replace(/\\\\/g, "\\");
         } else {
-            summaryText = "Failed to parse content. Raw output:\n" + responseText;
+            summaryText = "Summary generation incomplete.";
+        }
+
+        // Extract Quiz Object (Partial support)
+        let quizData = { title: "Generated Quiz", questions: [] };
+        try {
+            // Attempt to find the full quiz object first
+            const quizMatch = responseText.match(/"quiz":\s*({[\s\S]*?})(,\s*"flashcards"|}$)/);
+            if (quizMatch && quizMatch[1]) {
+                quizData = JSON.parse(quizMatch[1]);
+            }
+        } catch (err) {
+            // If object parse fails, try extracting questions array directly
+            const questionsMatch = responseText.match(/"questions":\s*(\[[\s\S]*?\])/);
+            if (questionsMatch && questionsMatch[1]) {
+                try {
+                    const parsedQuestions = JSON.parse(questionsMatch[1]);
+                    if (Array.isArray(parsedQuestions)) {
+                        quizData.questions = parsedQuestions as any;
+                    }
+                } catch (qErr) {
+                    console.log("Failed to parse questions array");
+                }
+            }
+        }
+
+        // Extract Flashcards (Partial support)
+        let flashcardsData: any[] = [];
+        try {
+            const fcMatch = responseText.match(/"flashcards":\s*(\[[\s\S]*?\])/);
+            if (fcMatch && fcMatch[1]) {
+                flashcardsData = JSON.parse(fcMatch[1]);
+            } else {
+                // Try manual object matching for flashcards if array is broken
+                const regex = /{\s*"question":\s*"(.*?)",\s*"answer":\s*"(.*?)"\s*}/g;
+                let match;
+                while ((match = regex.exec(responseText)) !== null) {
+                    flashcardsData.push({
+                        question: match[1],
+                        answer: match[2]
+                    });
+                }
+            }
+        } catch (err) {
+            console.log("Failed to extract flashcards");
         }
 
         // Construct fallback object
         data = {
             title: titleMatch ? titleMatch[1] : "Generated Content (Partial)",
             summary: summaryText,
-            quiz: { title: "Quiz Generation Failed", questions: [] },
-            flashcards: []
+            quiz: quizData,
+            flashcards: flashcardsData
         };
     }
 
