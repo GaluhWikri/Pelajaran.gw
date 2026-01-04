@@ -274,7 +274,7 @@ export function LeaderboardPage() {
             <DashboardHeader />
             <Sidebar />
 
-            <main className={cn("pt-20 pb-10 px-4 md:px-8 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+            <main className={cn("pt-28 pb-10 px-4 md:px-8 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
                 <div className="max-w-4xl mx-auto space-y-8">
 
                     {/* Header Section */}

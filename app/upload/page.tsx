@@ -486,7 +486,7 @@ export default function UploadPage() {
             <DashboardHeader />
             <Sidebar />
 
-            <main className={cn("pt-14 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+            <main className={cn("pt-24 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
                 <div className="p-8 space-y-8 max-w-6xl mx-auto">
 
                     {/* Header */}

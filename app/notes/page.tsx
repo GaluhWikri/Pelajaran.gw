@@ -66,7 +66,7 @@ function NotesContent() {
       <DashboardHeader />
       <Sidebar />
 
-      <main className={cn("pt-14 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+      <main className={cn("pt-20 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>

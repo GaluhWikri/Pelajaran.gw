@@ -270,8 +270,8 @@ export default function DashboardPage() {
       <DashboardHeader />
       <Sidebar />
 
-      <main className={cn("pt-14 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
-        <div className="p-6 space-y-4">
+      <main className={cn("pt-20 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+        <div className="p-8 space-y-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-balance">Welcome back, {storeUser?.name} !</h2>
             <p className="text-muted-foreground">Here's what's happening with your learning today.</p>
