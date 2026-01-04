@@ -325,7 +325,7 @@ export function LeaderboardPage() {
                         <Card className="border-primary/50 bg-primary/5">
                             <CardContent className="flex items-center justify-between p-3 md:p-6">
                                 <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                                    <div className="flex flex-col items-center justify-center min-w-[3rem] md:min-w-12">
+                                    <div className="flex flex-col items-center justify-center min-w-12">
                                         <span className="text-[10px] md:text-xs font-semibold uppercase text-muted-foreground">Your Rank</span>
                                         <span className="text-xl md:text-2xl font-bold text-primary">
                                             {displayUserStats.rank > 0 ? `#${displayUserStats.rank}` : "NEW"}
