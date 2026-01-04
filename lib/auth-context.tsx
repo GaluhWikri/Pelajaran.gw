@@ -3,7 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
 interface AuthContextType {
     user: User | null
@@ -57,6 +58,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => subscription.unsubscribe()
     }, [])
 
+    // Route Protection Logic
+    const pathname = usePathname()
+    const protectedRoutes = [
+        '/dashboard',
+        '/notes',
+        '/note',
+        '/upload',
+        '/leaderboard',
+        '/profile',
+        '/premium'
+    ]
+
+    useEffect(() => {
+        if (loading) return
+
+        const isProtectedRoute = protectedRoutes.some(route => pathname?.startsWith(route))
+
+        if (isProtectedRoute && !session) {
+            router.push('/login')
+        }
+
+        if ((pathname === '/login' || pathname === '/register') && session) {
+            router.push('/dashboard')
+        }
+    }, [pathname, session, loading, router])
+
     const signUp = async (email: string, password: string, fullName?: string) => {
         try {
             const { data, error } = await supabase.auth.signUp({
@@ -109,6 +136,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signOut,
+    }
+
+    if (loading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
+    // Check for redirect conditions to prevent flashing content
+    const isProtectedRoute = protectedRoutes.some(route => pathname?.startsWith(route))
+    const isAuthRoute = pathname === '/login' || pathname === '/register'
+
+    if ((isProtectedRoute && !session) || (isAuthRoute && session)) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
