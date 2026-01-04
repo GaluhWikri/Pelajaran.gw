@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useStore } from "@/lib/store"
 import { subDays, format } from "date-fns"
 import { id } from "date-fns/locale"
@@ -10,17 +11,19 @@ import { id } from "date-fns/locale"
 export function ActivityChart() {
   const { notes, quizzes, flashcards, studySessions } = useStore()
   const [mounted, setMounted] = useState(false)
+  const [timeRange, setTimeRange] = useState("14")
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   const data = useMemo(() => {
-    const last14Days = Array.from({ length: 14 }, (_, i) => {
-      const d = subDays(new Date(), 13 - i)
+    const range = parseInt(timeRange)
+    const daysData = Array.from({ length: range }, (_, i) => {
+      const d = subDays(new Date(), (range - 1) - i)
       return {
         date: d,
-        label: format(d, "EEE", { locale: id }), // Mon, Tue, etc. in Indonesian
+        label: range === 30 ? format(d, "dd", { locale: id }) : format(d, "EEE", { locale: id }),
         fullDate: format(d, "dd MMM yyyy", { locale: id }),
         notesCount: 0,
         editsCount: 0,
@@ -32,7 +35,7 @@ export function ActivityChart() {
 
     const getDayItem = (date: Date | string) => {
       const d = new Date(date)
-      return last14Days.find((day) =>
+      return daysData.find((day) =>
         format(day.date, "yyyy-MM-dd") === format(d, "yyyy-MM-dd")
       )
     }
@@ -103,14 +106,14 @@ export function ActivityChart() {
       }
     })
 
-    return last14Days
-  }, [notes, quizzes, flashcards, studySessions])
+    return daysData
+  }, [notes, quizzes, flashcards, studySessions, timeRange])
 
   if (!mounted) {
     return (
       <Card className="col-span-1">
         <CardHeader>
-          <CardTitle>Aktivitas Harian (2 Minggu Terakhir)</CardTitle>
+          <CardTitle className="text-base">Aktivitas Harian (2 Minggu Terakhir)</CardTitle>
         </CardHeader>
         <CardContent className="pl-2">
           <div className="h-[240px] w-full flex items-center justify-center text-muted-foreground text-sm">
@@ -121,10 +124,26 @@ export function ActivityChart() {
     )
   }
 
+  const rangeLabel = {
+    "7": "1 Minggu Terakhir",
+    "14": "2 Minggu Terakhir",
+    "30": "1 Bulan Terakhir",
+  }[timeRange]
+
   return (
     <Card className="col-span-1 h-full flex flex-col">
-      <CardHeader>
-        <CardTitle>Aktivitas Harian (2 Minggu Terakhir)</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-base">Aktivitas Harian ({rangeLabel})</CardTitle>
+        <Select value={timeRange} onValueChange={setTimeRange}>
+          <SelectTrigger className="w-[130px] h-8 text-xs">
+            <SelectValue placeholder="Pilih Periode" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7">1 Minggu</SelectItem>
+            <SelectItem value="14">2 Minggu</SelectItem>
+            <SelectItem value="30">1 Bulan</SelectItem>
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent className="flex-1 min-h-[350px] pb-4 pl-2">
         <div className="h-full w-full">
@@ -136,6 +155,7 @@ export function ActivityChart() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                interval={0}
               />
               <YAxis
                 stroke="#888888"
