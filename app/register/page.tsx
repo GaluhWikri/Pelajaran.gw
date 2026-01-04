@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, Eye, EyeOff, User, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Loader2, Mail, Lock, Eye, EyeOff, User, CheckCircle2, ArrowRight, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -66,9 +66,14 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            <LandingNavbar />
-
-            <main className="flex-1 flex items-center justify-center px-4 py-8">
+            <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+                <div className="w-full max-w-md mb-4 flex items-center">
+                    <LandingNavbar />
+                    <Link href="/login" className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Sudah punya akun? Login
+                    </Link>
+                </div>
                 <Card className="border-border bg-card w-full max-w-md">
                     <CardHeader className="space-y-1 text-center">
                         <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
