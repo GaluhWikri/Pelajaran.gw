@@ -7,7 +7,7 @@ import Image from "next/image"
 export function LandingNavbar() {
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-lg">
-            <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                 {/* Logo - Same as DashboardHeader */}
                 <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <Image

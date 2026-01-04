@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { AuthHeader } from '@/components/auth-header'
+import { LandingNavbar } from '@/components/landing-navbar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -66,7 +66,7 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            <AuthHeader currentPage="register" />
+            <LandingNavbar />
 
             <main className="flex-1 flex items-center justify-center px-4 py-8">
                 <Card className="border-border bg-card w-full max-w-md">
