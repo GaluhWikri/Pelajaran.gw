@@ -88,7 +88,7 @@ export default function DashboardPage() {
       setIsLoading(true)
 
       try {
-        // Fetch user profile from Supabase
+        // 1. Fetch user profile from Supabase
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -99,109 +99,18 @@ export default function DashboardPage() {
           console.error('Error fetching profile:', profileError)
         }
 
-        if (profileData) {
-          // Calculate Streak Logic Locally to ensure immediate UI update
-          // This avoids the "flash of old content" or race conditions with store updates
-          const today = new Date()
-          const todayStr = today.toLocaleDateString('en-CA')
-          const yesterday = new Date(today)
-          yesterday.setDate(yesterday.getDate() - 1)
-          const yesterdayStr = yesterday.toLocaleDateString('en-CA')
-
-          let currentStreak = profileData.streak || 0
-          let lastLoginDate = profileData.last_login_date || ""
-
-          // Prepare XP and Level variables based on current profile data
-          let currentXP = profileData.current_xp || 0
-          let currentLevel = profileData.level || 1
-
-          let hasUpdated = false
-
-          if (lastLoginDate !== todayStr) {
-            console.log('[Dashboard] New daily login detected locally.')
-            hasUpdated = true
-
-            // Logic Streak
-            if (lastLoginDate === yesterdayStr) {
-              currentStreak += 1
-            } else {
-              // Reset unless it is the very first login (streak 0 and no date)
-              if (currentStreak === 0 && lastLoginDate === "") {
-                currentStreak = 1
-              } else {
-                currentStreak = 1
-              }
-            }
-
-            lastLoginDate = todayStr
-
-            // Logic XP Reward
-            let earnedXP = 10 // Daily Login Reward
-
-            // Weekly Bonus Check
-            if (currentStreak > 0 && currentStreak % 7 === 0) {
-              earnedXP += 100
-            }
-
-            // Calculate new XP and Level
-            currentXP += earnedXP
-            const xpNeeded = currentLevel * 300
-
-            if (currentXP >= xpNeeded) {
-              currentLevel += 1
-              currentXP -= xpNeeded
-            }
-
-            // Sync to DB immediately in background
-            supabase.from('profiles').update({
-              last_login_date: lastLoginDate,
-              streak: currentStreak,
-              current_xp: currentXP,
-              level: currentLevel,
-              updated_at: new Date().toISOString()
-            }).eq('id', user.id).then(({ error }) => {
-              if (error) console.error("Failed to sync local streak & XP to DB:", error)
-            })
-
-            // Trigger Effects
-            useStore.setState({ showDailyLoginEffect: true })
-          }
-
-          // Update store with users data (using the potentially updated streak/date/XP)
-          setUser({
-            id: profileData.id,
-            name: profileData.full_name || profileData.email,
-            email: profileData.email,
-            avatar: profileData.avatar_url,
-            isPremium: profileData.is_premium || false,
-            // Load and apply Gamification Data
-            level: currentLevel,
-            currentXP: currentXP,
-            lastLoginDate: lastLoginDate,
-            streak: currentStreak
-          })
-
-          // Note: We handled checkDailyLogin logic inline above, so no need to call the store action separately
-        }
-
-        // Fetch notes from Supabase
-        const { data: notesData, error: notesError } = await supabase
+        // 2. Fetch Content (Notes, Flashcards, Quizzes) to populate store for Streak Calculation
+        const { data: notesData } = await supabase
           .from('notes')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
-        if (notesError) throw notesError
-
-        // Add fetched notes to store
-        if (notesData && notesData.length > 0) {
-          // Get current local notes to preserve 'lastAccessedAt' since it's not in DB
-          const currentNotes = useStore.getState().notes;
-
-          const mappedNotes = notesData.map((note) => {
+        // Add fetched notes to store (preserves local lastAccessedAt)
+        const currentNotes = useStore.getState().notes
+        if (notesData) {
+          useStore.getState().setNotes(notesData.map((note) => {
             const existingNote = currentNotes.find(n => n.id === note.id);
-            // Prioritize local lastAccessedAt if it exists (since DB doesn't track it)
-            // Otherwise fallback to server update time
             let lastAccessedAt = existingNote?.lastAccessedAt
               ? new Date(existingNote.lastAccessedAt)
               : (note.updated_at ? new Date(note.updated_at) : undefined);
@@ -217,65 +126,133 @@ export default function DashboardPage() {
               updatedAt: new Date(note.updated_at),
               lastAccessedAt: lastAccessedAt
             };
-          })
-          useStore.getState().setNotes(mappedNotes)
+          }))
         } else {
           useStore.getState().setNotes([])
         }
 
-        // Fetch flashcards from Supabase
-        const { data: flashcardsData, error: flashcardsError } = await supabase
+        const { data: flashcardsData } = await supabase
           .from('flashcards')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
-        if (flashcardsError) {
-          console.error('Error fetching flashcards:', flashcardsError)
+        if (flashcardsData) {
+          useStore.getState().setFlashcards(flashcardsData.map((card) => ({
+            id: card.id,
+            noteId: card.note_id,
+            userId: card.user_id,
+            question: card.question,
+            answer: card.answer,
+            difficulty: card.difficulty || 'medium',
+            nextReview: card.next_review ? new Date(card.next_review) : undefined,
+            reviewCount: card.review_count || 0,
+            createdAt: new Date(card.created_at),
+          })))
         } else {
-          if (flashcardsData && flashcardsData.length > 0) {
-            const mappedFlashcards = flashcardsData.map((card) => ({
-              id: card.id,
-              noteId: card.note_id,
-              userId: card.user_id,
-              question: card.question,
-              answer: card.answer,
-              difficulty: card.difficulty || 'medium',
-              nextReview: card.next_review ? new Date(card.next_review) : undefined,
-              reviewCount: card.review_count || 0,
-              createdAt: new Date(card.created_at),
-            }))
-            useStore.getState().setFlashcards(mappedFlashcards)
-          } else {
-            useStore.getState().setFlashcards([])
-          }
+          useStore.getState().setFlashcards([])
         }
 
-        // Fetch quizzes from Supabase
-        const { data: quizzesData, error: quizzesError } = await supabase
+        const { data: quizzesData } = await supabase
           .from('quizzes')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
-        if (quizzesError) {
-          console.error('Error fetching quizzes:', quizzesError)
+        if (quizzesData) {
+          useStore.getState().setQuizzes(quizzesData.map((quiz) => ({
+            id: quiz.id,
+            noteId: quiz.note_id,
+            userId: quiz.user_id,
+            title: quiz.title,
+            questions: quiz.questions,
+            score: quiz.score,
+            completedAt: quiz.completed_at ? new Date(quiz.completed_at) : undefined,
+            createdAt: new Date(quiz.created_at),
+          })))
         } else {
-          if (quizzesData && quizzesData.length > 0) {
-            const mappedQuizzes = quizzesData.map((quiz) => ({
-              id: quiz.id,
-              noteId: quiz.note_id,
-              userId: quiz.user_id,
-              title: quiz.title,
-              questions: quiz.questions,
-              score: quiz.score,
-              completedAt: quiz.completed_at ? new Date(quiz.completed_at) : undefined,
-              createdAt: new Date(quiz.created_at),
-            }))
-            useStore.getState().setQuizzes(mappedQuizzes)
-          } else {
-            useStore.getState().setQuizzes([])
+          useStore.getState().setQuizzes([])
+        }
+
+        // 3. LOGIC: Calculate Streak & Daily Login AFTER content is loaded
+        if (profileData) {
+          // Calculate Streak based on ACTUAL ACTIVITY (not just login)
+          // We need to temporarily force the store to update its stats calculation
+          const currentActivityStats = useStore.getState().getActivityStats()
+          const calculatedStreak = currentActivityStats.streak
+
+          // Daily Login Logic
+          const today = new Date()
+          const todayStr = today.toLocaleDateString('en-CA')
+          let lastLoginDate = profileData.last_login_date || ""
+          let currentXP = profileData.current_xp || 0
+          let currentLevel = profileData.level || 1
+
+          let updatesToSync: any = {}
+          let hasUpdates = false
+
+          // CHECK: Daily Login Reward (Only gives XP, DOES NOT increment streak)
+          if (lastLoginDate !== todayStr) {
+            console.log('[Dashboard] New daily login! Awarding XP.')
+            // Award XP
+            currentXP += 10
+            updatesToSync.last_login_date = todayStr
+            updatesToSync.current_xp = currentXP
+
+            useStore.setState({ showDailyLoginEffect: true })
+            hasUpdates = true
           }
+
+          // CHECK: Streak Sync
+          // If the calculated activity streak differs from DB, or we just want to ensure it's up to date
+          if (calculatedStreak !== profileData.streak) {
+            console.log('[Dashboard] Activity Streak updated:', calculatedStreak)
+            updatesToSync.streak = calculatedStreak
+            hasUpdates = true
+
+            // Optional: 7-Day Streak Bonus Check
+            // Only award if it's a NEW milestone reached today
+            if (calculatedStreak > 0 && calculatedStreak % 7 === 0 && calculatedStreak > (profileData.streak || 0)) {
+              currentXP += 100
+              updatesToSync.current_xp = currentXP
+              console.log('[Dashboard] 7-Day Streak Bonus Attempted')
+            }
+          }
+
+          // Calculate Level Up (based on potentially new XP)
+          const xpNeeded = currentLevel * 300
+          if (currentXP >= xpNeeded) {
+            currentLevel += 1
+            currentXP -= xpNeeded
+            updatesToSync.level = currentLevel
+            updatesToSync.current_xp = currentXP
+            hasUpdates = true
+          }
+
+          // Sync to DB
+          if (hasUpdates) {
+            await supabase.from('profiles').update({
+              ...updatesToSync,
+              updated_at: new Date().toISOString()
+            }).eq('id', user.id).then(({ error }) => {
+              if (error) console.error("Failed to sync updates:", error)
+            })
+          }
+
+          // Update Local Store User
+          setUser({
+            id: profileData.id,
+            name: profileData.full_name || profileData.email,
+            email: profileData.email,
+            avatar: profileData.avatar_url,
+            isPremium: profileData.is_premium || false,
+            level: currentLevel,
+            currentXP: currentXP,
+            // Use the new login date if updated, else old
+            lastLoginDate: updatesToSync.last_login_date || lastLoginDate,
+            // Use calculated streak as source of truth
+            streak: calculatedStreak
+          })
         }
 
       } catch (error) {
@@ -508,13 +485,13 @@ export default function DashboardPage() {
               title="Streak Stats"
               value={
                 <div className="flex items-center gap-2">
-                  <span>{isMounted && storeUser ? (storeUser.streak || 0) : 0} days</span>
+                  <span>{isMounted ? stats.streak : 0} days</span>
                   <Flame className="h-6 w-6 text-orange-500 fill-orange-500 animate-[pulse_1.5s_ease-in-out_infinite]" />
                 </div>
               }
               icon={TrendingUp}
               trend={{
-                value: `Best Record: ${isMounted && storeUser ? Math.max(stats.longestStreak, (storeUser.streak || 0)) : 0} days`,
+                value: `Best Record: ${isMounted ? stats.longestStreak : 0} days`,
                 positive: true
               }}
               className="border-primary/50 bg-primary/5"
