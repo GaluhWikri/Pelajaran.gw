@@ -330,10 +330,10 @@ export default function UploadPage() {
                             difficulty: card.difficulty || 'medium',
                             reviewCount: 0,
                         })
-                        addFlashcard({ ...card, id: cardId, noteId, userId: user.id })
+                        addFlashcard({ ...card, id: cardId, noteId, userId: user.id }, { fromBundle: true })
                     }
                 } else {
-                    flashcards.forEach(card => addFlashcard({ ...card, noteId, userId: user?.id || "demo-user" }))
+                    flashcards.forEach(card => addFlashcard({ ...card, noteId, userId: user?.id || "demo-user" }, { fromBundle: true }))
                 }
 
 
@@ -445,10 +445,10 @@ export default function UploadPage() {
                         difficulty: card.difficulty || 'medium',
                         reviewCount: 0,
                     })
-                    addFlashcard({ ...card, id: cardId, noteId, userId: user.id })
+                    addFlashcard({ ...card, id: cardId, noteId, userId: user.id }, { fromBundle: true })
                 }
             } else {
-                flashcards.forEach(card => addFlashcard({ ...card, noteId, userId: user?.id || "demo-user" }))
+                flashcards.forEach(card => addFlashcard({ ...card, noteId, userId: user?.id || "demo-user" }, { fromBundle: true }))
             }
 
 

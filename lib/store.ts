@@ -14,6 +14,7 @@ interface AppState {
     level?: number
     currentXP?: number
     lastLoginDate?: string // YYYY-MM-DD format for robustness
+    streak?: number
   } | null
 
   // Data
@@ -65,7 +66,7 @@ interface AppState {
 
   // Actions - Flashcards
   setFlashcards: (flashcards: Flashcard[]) => void
-  addFlashcard: (flashcard: Omit<Flashcard, "id" | "createdAt"> & { id?: string; createdAt?: Date }) => void
+  addFlashcard: (flashcard: Omit<Flashcard, "id" | "createdAt"> & { id?: string; createdAt?: Date }, options?: { fromBundle?: boolean }) => void
   updateFlashcard: (id: string, updates: Partial<Flashcard>) => void
   deleteFlashcard: (id: string) => void
 
@@ -171,57 +172,87 @@ export const useStore = create<AppState>()(
         const state = get()
 
         // Safety check
-        if (!state.user) {
-          console.log('[Store] checkDailyLogin aborted: state.user is null')
-          return
-        }
-        if (state.user.id !== userId) {
-          console.log('[Store] checkDailyLogin aborted: ID mismatch', state.user.id, userId)
-          return
-        }
+        if (!state.user) return
+        if (state.user.id !== userId) return
 
         const now = new Date()
         const todayStr = now.toLocaleDateString('en-CA') // YYYY-MM-DD
-        const lastLoginStr = state.user?.lastLoginDate || ""
+        const lastLoginStr = state.user.lastLoginDate || ""
 
-        console.log('[Store] Date check:', { todayStr, lastLoginStr })
+        // Calculate Yesterday
+        const yesterday = new Date(now)
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = yesterday.toLocaleDateString('en-CA')
+
+        let newStreak = state.user.streak || 0
+
+        // MIGRATION / RECOVERY: If persistent streak is 0, check if we have a calculated activity streak
+        if (newStreak === 0) {
+          const calculatedStats = get().getActivityStats()
+          if (calculatedStats.streak > 0) {
+            console.log('[Store] Recovering streak from activity history:', calculatedStats.streak)
+            newStreak = calculatedStats.streak
+          }
+        }
 
         if (lastLoginStr !== todayStr) {
           console.log('[Store] New daily login detected! Updating DB...')
 
-          // Double check memory
-          if (state.user?.lastLoginDate === todayStr) return
+          // Logic Streak
+          if (lastLoginStr === yesterdayStr) {
+            newStreak += 1
+            console.log('[Store] Consecutive login! Streak incremented to:', newStreak)
+          } else {
+            // Only reset if it wasn't a brand new 0-streak or empty
+            // If lastLoginStr is empty (first ever), streak becomes 1.
+            // If lastLoginStr is old (broken), streak becomes 1.
+            if (newStreak === 0 && lastLoginStr === "") {
+              newStreak = 1
+            } else {
+              console.log('[Store] Streak broken (Last login: ' + lastLoginStr + '). Reset to 1.')
+              newStreak = 1
+            }
+          }
 
           get().addXP(10) // Daily Login Reward
 
-          // SYNC DATE TO SUPABASE
+          // Cek 7-day Weekly Bonus
+          if (newStreak > 0 && newStreak % 7 === 0) {
+            get().addXP(100)
+          }
+
+          set(s => ({
+            user: s.user ? { ...s.user, lastLoginDate: todayStr, streak: newStreak } : null,
+            showDailyLoginEffect: true
+          }))
+
+          // SYNC DATE & STREAK TO SUPABASE
           if (userId && userId !== 'demo-user') {
             supabase.from('profiles').update({
               last_login_date: todayStr,
+              streak: newStreak,
               updated_at: new Date().toISOString()
             }).eq('id', userId).then(({ error }) => {
               if (error) {
-                console.error("Failed to sync Login Date to DB:", error)
+                console.error("Failed to sync Login/Streak to DB:", error)
               } else {
-                console.log("Successfully synced Login Date to DB")
+                console.log("Successfully synced Login/Streak to DB:", newStreak)
               }
             })
           }
 
-          set(s => ({
-            user: s.user ? { ...s.user, lastLoginDate: todayStr } : null,
-            showDailyLoginEffect: true
-          }))
-
-          // Cek Streak 7 Hari
-          const stats = state.getActivityStats()
-          const currentStreak = stats.streak
-
-          if (currentStreak > 0 && currentStreak % 7 === 0) {
-            get().addXP(100)
-          }
         } else {
-          console.log('[Store] Already logged in today.')
+          console.log('[Store] Already logged in today. Current Streak:', newStreak)
+
+          // Ensure DB is consistent even if already logged in locally
+          if (userId && userId !== 'demo-user') {
+            supabase.from('profiles').update({
+              streak: newStreak,
+              updated_at: new Date().toISOString()
+            }).eq('id', userId).then(({ error }) => {
+              if (error) console.error("Failed to sync Streak consistency:", error)
+            })
+          }
         }
       },
 
@@ -246,7 +277,8 @@ export const useStore = create<AppState>()(
             ...user,
             level: user?.level ?? existingUser.level ?? 1,
             currentXP: user?.currentXP ?? existingUser.currentXP ?? 0,
-            lastLoginDate: user?.lastLoginDate ?? existingUser.lastLoginDate // JAGA FIELD INI AGAR TIDAK HILANG
+            lastLoginDate: user?.lastLoginDate ?? existingUser.lastLoginDate, // JAGA FIELD INI AGAR TIDAK HILANG
+            streak: user?.streak ?? existingUser.streak ?? 0
           } as AppState['user']
         };
       }),
@@ -292,12 +324,14 @@ export const useStore = create<AppState>()(
 
       // Flashcards actions
       setFlashcards: (flashcards) => set({ flashcards }),
-      addFlashcard: (flashcard) => {
+      addFlashcard: (flashcard, options) => {
         const { flashcards } = get()
         if (flashcard.id && flashcards.some((f) => f.id === flashcard.id)) return
 
         // Reward +10 XP point for manual creation (only if NOT created by system/bundled)
-        get().addXP(10)
+        if (!options?.fromBundle) {
+          get().addXP(10)
+        }
 
         set((state) => ({
           flashcards: [

@@ -49,10 +49,11 @@ const navigation = [
   { name: "All Notes", icon: FileText, href: "/notes" },
   { name: "Favorites", icon: Star, href: "/notes?filter=favorites" },
   { name: "Upload Material", icon: Upload, href: "/upload" },
+  { name: "Leaderboard", icon: Trophy, href: "/leaderboard" },
 ]
 
 function SidebarContent() {
-  const { sidebarOpen, notes, updateNote, deleteNote } = useStore()
+  const { sidebarOpen, notes, updateNote, deleteNote, toggleSidebar } = useStore()
   const { user } = useAuth()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -82,10 +83,16 @@ function SidebarContent() {
 
   const hasResults = filteredNotes.length > 0 || filteredQuizzes.length > 0 || filteredFlashcards.length > 0
 
+  const handleMobileNav = () => {
+    if (window.innerWidth < 1024 && sidebarOpen) {
+      toggleSidebar()
+    }
+  }
+
   const handleNavigate = (path: string) => {
     router.push(path)
     setSearchQuery("") // Clear search after navigation
-    // Optional: close sidebar if we had a toggle for mobile that isn't automatic
+    handleMobileNav()
   }
 
   useEffect(() => setMounted(true), [])
@@ -232,7 +239,7 @@ function SidebarContent() {
                     asChild
                     title={!sidebarOpen ? item.name : undefined}
                   >
-                    <Link href={item.href}>
+                    <Link href={item.href} onClick={handleMobileNav}>
                       <item.icon className="h-4 w-4" />
                       <span className={cn(
                         "transition-all duration-300",
@@ -350,7 +357,7 @@ function SidebarContent() {
             asChild
             title={!sidebarOpen ? "Upgrade to Premium" : undefined}
           >
-            <Link href="/premium">
+            <Link href="/premium" onClick={handleMobileNav}>
               <Crown className="h-4 w-4 shrink-0" />
               <span className={cn(
                 "transition-all duration-300 font-semibold whitespace-nowrap overflow-hidden",
@@ -362,6 +369,14 @@ function SidebarContent() {
           </Button>
         </div>
       </aside>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm lg:hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+          onClick={toggleSidebar}
+        />
+      )}
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

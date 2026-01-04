@@ -27,7 +27,7 @@ import {
 export default function DashboardPage() {
   const router = useRouter()
   const { user: storeUser, notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats, clearAll, setUser, sidebarOpen, hasInitialized, showDailyLoginEffect, resetDailyLoginEffect } = useStore()
-  const { user, loading: authLoading } = useAuth() 
+  const { user, loading: authLoading } = useAuth()
   const stats = getActivityStats()
   const [isMounted, setIsMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -97,24 +97,72 @@ export default function DashboardPage() {
 
         if (profileError) {
           console.error('Error fetching profile:', profileError)
-        } else if (profileData) {
-          // Update store with real user data
+        }
+
+        if (profileData) {
+          // Calculate Streak Logic Locally to ensure immediate UI update
+          // This avoids the "flash of old content" or race conditions with store updates
+          const today = new Date()
+          const todayStr = today.toLocaleDateString('en-CA')
+          const yesterday = new Date(today)
+          yesterday.setDate(yesterday.getDate() - 1)
+          const yesterdayStr = yesterday.toLocaleDateString('en-CA')
+
+          let currentStreak = profileData.streak || 0
+          let lastLoginDate = profileData.last_login_date || ""
+
+          let hasUpdated = false
+
+          if (lastLoginDate !== todayStr) {
+            console.log('[Dashboard] New daily login detected locally.')
+            hasUpdated = true
+
+            // Logic Streak
+            if (lastLoginDate === yesterdayStr) {
+              currentStreak += 1
+            } else {
+              // Reset unless it is the very first login (streak 0 and no date)
+              if (currentStreak === 0 && lastLoginDate === "") {
+                currentStreak = 1
+              } else {
+                currentStreak = 1
+              }
+            }
+
+            lastLoginDate = todayStr
+
+            // Sync to DB immediately in background
+            supabase.from('profiles').update({
+              last_login_date: lastLoginDate,
+              streak: currentStreak,
+              updated_at: new Date().toISOString()
+            }).eq('id', user.id).then(({ error }) => {
+              if (error) console.error("Failed to sync local streak calc to DB:", error)
+            })
+
+            // Trigger Effects
+            useStore.setState({ showDailyLoginEffect: true })
+            useStore.getState().addXP(10) // Daily Login
+            if (currentStreak > 0 && currentStreak % 7 === 0) {
+              useStore.getState().addXP(100) // Weekly Bonus
+            }
+          }
+
+          // Update store with users data (using the potentially updated streak/date)
           setUser({
             id: profileData.id,
             name: profileData.full_name || profileData.email,
             email: profileData.email,
             avatar: profileData.avatar_url,
             isPremium: profileData.is_premium || false,
-            // Load Gamification Data from DB
+            // Load and apply Gamification Data
             level: profileData.level || 1,
             currentXP: profileData.current_xp || 0,
-            lastLoginDate: profileData.last_login_date || ""
+            lastLoginDate: lastLoginDate,
+            streak: currentStreak
           })
 
-          // Check daily login AFTER syncing user data from DB to Store
-          if (user?.id) {
-            useStore.getState().checkDailyLogin(user.id)
-          }
+          // Note: We handled checkDailyLogin logic inline above, so no need to call the store action separately
         }
 
         // Fetch notes from Supabase
@@ -237,11 +285,12 @@ export default function DashboardPage() {
             {/* Level Progress Card - Spans 2 columns on large screens if needed, or just 1 */}
             <div className="col-span-full">
               <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold">Level {useStore(state => state.user?.level || 1)}</h3>
+                    <h3 className="text-lg font-semibold">Level {storeUser?.level || 1}</h3>
                     {(() => {
-                      const level = useStore(state => state.user?.level || 1)
+                      const level = storeUser?.level || 1
+                      const currentXP = storeUser?.currentXP || 0
                       let title = "Novice Learner"
                       let badgeImg = "/image/badges/novice learner.png"
 
@@ -254,25 +303,71 @@ export default function DashboardPage() {
                       }
 
                       return (
-                        <div className="flex items-center gap-3 mt-3">
-                          <img src={badgeImg} alt={title} className="w-12 h-12 object-contain drop-shadow-md" />
-                          <div className="flex flex-col">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Rank</p>
-                            <p className="text-base font-bold text-primary">{title}</p>
-                          </div>
-                        </div>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <div className="flex items-center gap-3 mt-3 cursor-pointer hover:bg-muted/50 p-2 -ml-2 rounded-lg transition-colors group" title="Click to view badge details">
+                              <div className="relative transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                                <img src={badgeImg} alt={title} className="w-12 h-12 object-contain drop-shadow-md" />
+                              </div>
+                              <div className="flex flex-col text-left">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider group-hover:text-primary transition-colors">Current Rank</p>
+                                <p className="text-base font-bold text-primary">{title}</p>
+                              </div>
+                            </div>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px] text-center bg-background/20 backdrop-blur-md border-white/10 shadow-2xl">
+                            <DialogHeader>
+                              <DialogTitle className="text-center text-xl">Badge Details</DialogTitle>
+                            </DialogHeader>
+                            <div className="py-8 flex flex-col items-center justify-center animate-in zoom-in-95 duration-300">
+                              <div className="relative group perspective-1000">
+                                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 opacity-60 animate-pulse" />
+                                <img
+                                  src={badgeImg}
+                                  alt={title}
+                                  className="relative w-48 h-48 object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-110 hover:-rotate-2"
+                                />
+                              </div>
+                              <h3 className="text-3xl font-bold mt-8 text-transparent bg-clip-text bg-linear-to-r from-primary to-orange-500">
+                                {title}
+                              </h3>
+                              <div className="mt-4 space-y-1 text-muted-foreground bg-muted/30 p-4 rounded-xl w-full max-w-[280px]">
+                                <div className="flex justify-between text-sm">
+                                  <span>Current Level</span>
+                                  <span className="font-bold text-foreground">{level}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span>Total XP</span>
+                                  <span className="font-bold text-foreground">{currentXP.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm border-t border-white/10 pt-2 mt-2">
+                                  <span>To Next Level</span>
+                                  <span className="font-bold text-primary">{(level * 300) - currentXP} XP</span>
+                                </div>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       )
                     })()}
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex flex-row md:flex-col justify-between items-center md:items-end gap-2 w-full md:w-auto bg-muted/30 md:bg-transparent p-3 md:p-0 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Trophy className="h-5 w-5 text-yellow-500" />
-                      <span className="font-bold">{useStore(state => state.user?.currentXP || 0)} XP</span>
-                      <span className="text-muted-foreground text-sm"> / {(useStore(state => state.user?.level || 1)) * 300} XP</span>
+                      <span className="font-bold">{storeUser?.currentXP || 0} XP</span>
+                      <span className="text-muted-foreground text-sm"> / {(storeUser?.level || 1) * 300} XP</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {((useStore(state => state.user?.level || 1)) * 300) - (useStore(state => state.user?.currentXP || 0))} XP to next level
-                    </p>
+                    <div className="flex flex-col items-end">
+                      <p className="text-xs text-muted-foreground">
+                        {((storeUser?.level || 1) * 300) - (storeUser?.currentXP || 0)} XP to next level
+                      </p>
+                      <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <span className="font-medium">Total XP :</span>
+                        <span className="font-bold text-foreground">
+                          {(150 * (storeUser?.level || 1) * ((storeUser?.level || 1) - 1)) + (storeUser?.currentXP || 0)} XP
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 {/* Progress Bar */}
@@ -280,7 +375,7 @@ export default function DashboardPage() {
                   <div
                     className="h-full bg-primary transition-all duration-500 ease-out"
                     style={{
-                      width: `${Math.min(100, ((useStore(state => state.user?.currentXP || 0)) / ((useStore(state => state.user?.level || 1)) * 300)) * 100)}%`
+                      width: `${Math.min(100, ((storeUser?.currentXP || 0) / ((storeUser?.level || 1) * 300)) * 100)}%`
                     }}
                   />
                 </div>
@@ -291,7 +386,7 @@ export default function DashboardPage() {
                         How to level up?
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
+                    <DialogContent className="sm:max-w-md bg-background/20 backdrop-blur-md border-white/10 shadow-2xl">
                       <DialogHeader>
                         <DialogTitle>Level Up Guide 🚀</DialogTitle>
                         <DialogDescription>
@@ -354,7 +449,7 @@ export default function DashboardPage() {
                       </div>
                       <DialogFooter className="sm:justify-end">
                         <DialogClose asChild>
-                          <Button type="button" variant="secondary">Got it!</Button>
+                          <Button type="button" variant="default">Got it!</Button>
                         </DialogClose>
                       </DialogFooter>
                     </DialogContent>
@@ -394,13 +489,13 @@ export default function DashboardPage() {
               title="Streak Stats"
               value={
                 <div className="flex items-center gap-2">
-                  <span>{isMounted ? stats.streak : 0} days</span>
+                  <span>{isMounted && storeUser ? (storeUser.streak || 0) : 0} days</span>
                   <Flame className="h-6 w-6 text-orange-500 fill-orange-500 animate-[pulse_1.5s_ease-in-out_infinite]" />
                 </div>
               }
               icon={TrendingUp}
               trend={{
-                value: `Best Record: ${isMounted ? stats.longestStreak : 0} days`,
+                value: `Best Record: ${isMounted && storeUser ? Math.max(stats.longestStreak, (storeUser.streak || 0)) : 0} days`,
                 positive: true
               }}
               className="border-primary/50 bg-primary/5"

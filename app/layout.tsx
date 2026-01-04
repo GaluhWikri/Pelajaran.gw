@@ -10,9 +10,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Pelajaran AI - AI-Powered Learning Platform",
+  title: "Pelajaran gw - Learning Platform",
   description: "Transform your learning materials into interactive notes, flashcards, and quizzes with AI assistance",
-  generator: "v0.app",
   icons: {
     icon: [
       { url: "/favicon/favicon.ico", sizes: "any" },
