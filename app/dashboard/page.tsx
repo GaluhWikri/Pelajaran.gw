@@ -111,6 +111,10 @@ export default function DashboardPage() {
           let currentStreak = profileData.streak || 0
           let lastLoginDate = profileData.last_login_date || ""
 
+          // Prepare XP and Level variables based on current profile data
+          let currentXP = profileData.current_xp || 0
+          let currentLevel = profileData.level || 1
+
           let hasUpdated = false
 
           if (lastLoginDate !== todayStr) {
@@ -131,24 +135,39 @@ export default function DashboardPage() {
 
             lastLoginDate = todayStr
 
+            // Logic XP Reward
+            let earnedXP = 10 // Daily Login Reward
+
+            // Weekly Bonus Check
+            if (currentStreak > 0 && currentStreak % 7 === 0) {
+              earnedXP += 100
+            }
+
+            // Calculate new XP and Level
+            currentXP += earnedXP
+            const xpNeeded = currentLevel * 300
+
+            if (currentXP >= xpNeeded) {
+              currentLevel += 1
+              currentXP -= xpNeeded
+            }
+
             // Sync to DB immediately in background
             supabase.from('profiles').update({
               last_login_date: lastLoginDate,
               streak: currentStreak,
+              current_xp: currentXP,
+              level: currentLevel,
               updated_at: new Date().toISOString()
             }).eq('id', user.id).then(({ error }) => {
-              if (error) console.error("Failed to sync local streak calc to DB:", error)
+              if (error) console.error("Failed to sync local streak & XP to DB:", error)
             })
 
             // Trigger Effects
             useStore.setState({ showDailyLoginEffect: true })
-            useStore.getState().addXP(10) // Daily Login
-            if (currentStreak > 0 && currentStreak % 7 === 0) {
-              useStore.getState().addXP(100) // Weekly Bonus
-            }
           }
 
-          // Update store with users data (using the potentially updated streak/date)
+          // Update store with users data (using the potentially updated streak/date/XP)
           setUser({
             id: profileData.id,
             name: profileData.full_name || profileData.email,
@@ -156,8 +175,8 @@ export default function DashboardPage() {
             avatar: profileData.avatar_url,
             isPremium: profileData.is_premium || false,
             // Load and apply Gamification Data
-            level: profileData.level || 1,
-            currentXP: profileData.current_xp || 0,
+            level: currentLevel,
+            currentXP: currentXP,
             lastLoginDate: lastLoginDate,
             streak: currentStreak
           })
