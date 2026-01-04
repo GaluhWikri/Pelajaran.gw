@@ -43,9 +43,12 @@ export default function NotFound() {
                     <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-white drop-shadow-2xl">
                         404
                     </h1>
-                    <h2 className="text-xl md:text-2xl font-medium text-white/80">
-                        Page not found
+                    <h2 className="text-2xl md:text-3xl font-bold text-white/90">
+                        Ups, Halaman Hilang
                     </h2>
+                    <p className="text-white/60 max-w-lg text-sm md:text-base leading-relaxed">
+                        Entah kesedot lubang hitam digital atau diculik alien, yang jelas halaman yang kamu tuju tidak ada di sini.
+                    </p>
                 </div>
 
                 <div className="flex flex-row items-center justify-center gap-4 w-full pt-4">
