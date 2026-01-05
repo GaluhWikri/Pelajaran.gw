@@ -219,12 +219,13 @@ function buildPromptContext(options?: GenerationOptions): string {
         "relaxed": "Gunakan bahasa yang santai, ramah, dan seperti teman belajar (conversational). Boleh menggunakan sapaan akrab.",
         "formal": "Gunakan bahasa yang formal, akademis, dan baku. Hindari slang.",
         "concise": "Langsung pada poinnya (to-the-point), bullet points, tanpa basa-basi.",
-        "humorous": "Gunakan gaya yang lucu, menyenangkan, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
+        "humorous": "Gunakan gaya yang lucu, menyenangkan, slang, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
     }
     const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
 
     return `
-    KONTEKS PENGGUNA (Terapkan ini HANYA pada isi materi/ringkasan):
+    KONTEKS PENGGUNA (Gunakan informasi ini untuk menyesuaikan Ringkasan, Kuis, dan Flashcard):
+    - Mata Pelajaran/Topik: ${options.subject || "Umum"}
     - Tingkat Pemahaman: ${level}
     - Kompleksitas Penjelasan: ${styleGuide}
     - Gaya Penulisan & Tone: ${toneInstruction}
