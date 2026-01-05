@@ -331,6 +331,7 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
               className="w-full resize-none bg-transparent text-2xl md:text-3xl lg:text-4xl font-bold focus:outline-none"
               placeholder="Untitled Note"
               minRows={1}
+              spellCheck={false}
             />
 
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
