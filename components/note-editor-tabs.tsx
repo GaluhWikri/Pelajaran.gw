@@ -322,13 +322,13 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
   return (
     <div className="flex flex-col h-full">
       {/* ================= PRINTABLE AREA ================= */}
-      <div className="printable-note border-b border-border bg-card px-8 py-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-4 flex-1">
+      <div className="printable-note border-b border-border bg-card px-4 md:px-8 py-6">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div className="space-y-4 flex-1 w-full">
             <TextareaAutosize
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full resize-none bg-transparent text-4xl font-bold focus:outline-none"
+              className="w-full resize-none bg-transparent text-2xl md:text-3xl lg:text-4xl font-bold focus:outline-none"
               placeholder="Untitled Note"
               minRows={1}
             />
@@ -367,86 +367,84 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportPDF} disabled={isExporting}>
+          <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+            <Button variant="outline" onClick={handleExportPDF} disabled={isExporting} size="sm">
               <FileDown className="h-4 w-4 mr-2" />
               {isExporting ? "Exporting..." : "Export PDF"}
             </Button>
 
+            {/* ACTIONS */}
+            {saveStatus === 'saving' && (
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                <span>Saving...</span>
+              </div>
+            )}
+            {saveStatus === 'saved' && (
+              <div className="flex items-center text-sm text-green-600 font-medium px-2 py-2">
+                <Check className="h-3 w-3 mr-1" />
+                <span>Saved</span>
+              </div>
+            )}
+            {saveStatus === 'error' && (
+              <Button onClick={handleSave} size="sm" variant="destructive">
+                Retry
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={handleToggleFavorite}>
+              <Star
+                className={cn(
+                  "h-4 w-4",
+                  note.isFavorite && "fill-primary text-primary"
+                )}
+              />
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowDeleteDialog(true)
+                  }}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Note
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
 
 
-        {/* ACTIONS */}
-        <div className="mt-4 flex justify-end items-center gap-2">
-          {saveStatus === 'saving' && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-              Saving...
-            </div>
-          )}
-          {saveStatus === 'saved' && (
-            <div className="flex items-center text-sm text-green-600 font-medium px-3 py-2">
-              <Check className="h-3 w-3 mr-2" />
-              Saved
-            </div>
-          )}
-          {saveStatus === 'error' && (
-            <Button onClick={handleSave} size="sm" variant="destructive">
-              Retry Save
-            </Button>
-          )}
-          <Button variant="ghost" size="icon" onClick={handleToggleFavorite}>
-            <Star
-              className={cn(
-                "h-4 w-4",
-                note.isFavorite && "fill-primary text-primary"
-              )}
-            />
-          </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  setShowDeleteDialog(true)
-                }}
-                className="text-destructive focus:text-destructive cursor-pointer"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Note
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </div>
 
-      {/* ================= TABS ================= */}
-      <Tabs defaultValue="notes" className="flex-1 flex flex-col">
-        <TabsList className="border-b-0 px-1 mx-6 h-12 w-fit justify-start bg-muted/50 rounded-lg p-1">
-          <TabsTrigger value="notes" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-4 h-full">
-            <FileText className="h-4 w-4 mr-2" />
+      <Tabs defaultValue="notes" className="flex-1 flex flex-col min-w-0">
+        <TabsList className="border-b-0 px-1 mx-0 md:mx-6 h-auto w-full md:w-fit flex bg-muted/50 rounded-lg p-1 shrink-0">
+          <TabsTrigger value="notes" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-2 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+            <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Notes
           </TabsTrigger>
-          <TabsTrigger value="flashcards" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-4 h-full">
-            <CreditCard className="h-4 w-4 mr-2" />
+          <TabsTrigger value="flashcards" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-2 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+            <CreditCard className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Flashcards ({noteFlashcards.length})
           </TabsTrigger>
-          <TabsTrigger value="quiz" className="rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-4 h-full">
-            <Trophy className="h-4 w-4 mr-2" />
+          <TabsTrigger value="quiz" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-2 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+            <Trophy className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Quiz ({noteQuizzes.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="notes" className="flex-1 p-6">
+        <TabsContent value="notes" className="flex-1 p-4 md:p-6 min-w-0">
           <RichTextEditor content={content} onChange={setContent} />
         </TabsContent>
 

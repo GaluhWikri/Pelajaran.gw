@@ -1,6 +1,7 @@
 "use client"
 
 import { useEditor, EditorContent, type Editor } from "@tiptap/react"
+import { BubbleMenu } from "@tiptap/react/menus"
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
 import Link from "@tiptap/extension-link"
@@ -9,6 +10,9 @@ import { Table } from "@tiptap/extension-table"
 import { TableRow } from "@tiptap/extension-table-row"
 import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
+import { BubbleMenu as BubbleMenuExtension } from "@tiptap/extension-bubble-menu"
+import DragHandle from '@tiptap/extension-drag-handle-react'
+import AutoJoiner from 'tiptap-extension-auto-joiner'
 import {
     Bold,
     Italic,
@@ -29,7 +33,15 @@ import {
     AlignRight,
     GripVertical,
     Table as TableIcon,
-    Unlink
+    Unlink,
+    Trash2,
+    ArrowUp,
+    ArrowDown,
+    ArrowLeft,
+    ArrowRight,
+    Merge,
+    Split,
+    Trash
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -61,12 +73,21 @@ const extensions = [
     Table.configure({
         resizable: true,
         HTMLAttributes: {
-            class: 'border-collapse table-auto w-full my-4',
+            class: 'border-collapse table-auto w-full my-4 prose-table:border prose-th:border prose-td:border prose-th:p-2 prose-td:p-2',
         },
     }),
     TableRow,
     TableHeader,
     TableCell,
+    TableHeader,
+    TableCell,
+    BubbleMenuExtension,
+    TableHeader,
+    TableCell,
+    BubbleMenuExtension,
+    AutoJoiner.configure({
+        elementsToJoin: ['bulletList', 'orderedList'],
+    }),
 ]
 
 const ToolbarButton = ({
@@ -132,7 +153,7 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
     }, [editor])
 
     return (
-        <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-card/50 backdrop-blur sticky top-0 z-10">
+        <div className="flex flex-wrap items-center gap-1 p-2 w-full">
             <div className="flex items-center gap-1 mr-2 pr-2 border-r border-border">
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -281,7 +302,8 @@ export function RichTextEditor({ content, onChange, editable = true }: RichTextE
         editable: editable,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm dark:prose-invert max-w-none w-full focus:outline-none min-h-[500px] p-6',
+                class: 'prose prose-sm dark:prose-invert max-w-none w-full focus:outline-none p-4 md:p-6 pb-20 break-words',
+                spellcheck: 'false',
             },
         },
         onUpdate: ({ editor }) => {
@@ -301,15 +323,95 @@ export function RichTextEditor({ content, onChange, editable = true }: RichTextE
     if (!isMounted) return null
 
     return (
-        <div className="flex flex-col border rounded-md overflow-hidden bg-background">
-            {editable && <Toolbar editor={editor} />}
-            <div className="relative">
-                {/* Grip handle visual simulation as requested */}
-                <div className="absolute left-2 top-8 opacity-20 hover:opacity-100 cursor-grab transition-opacity">
-                    <GripVertical className="h-5 w-5" />
+        <div className="flex flex-col border rounded-md bg-background w-full max-w-full">
+            {editable && (
+                <div className="sticky top-[72px] z-20 bg-background border-b rounded-t-md">
+                    <Toolbar editor={editor} />
                 </div>
+            )}
+            <div className="relative w-full max-w-full overflow-x-auto">
+                <EditorContent editor={editor} className="pl-0 md:pl-6" />
 
-                <EditorContent editor={editor} className="pl-6" />
+                {editor && (
+                    <>
+                        <DragHandle
+                            editor={editor}
+                            className="drag-handle hidden md:block"
+                            onNodeChange={(data) => {
+                                // console.log('Drag node:', data.node.type.name)
+                            }}
+                        >
+                            <div className="text-muted-foreground cursor-grab active:cursor-grabbing">
+                                <GripVertical size={24} />
+                            </div>
+                        </DragHandle>
+
+                        <BubbleMenu
+                            editor={editor}
+                            shouldShow={({ editor }: { editor: Editor }) => {
+                                // Only show if table is active
+                                return editor.isActive('table')
+                            }}
+                            className="flex items-center gap-1 p-1 bg-popover text-popover-foreground border rounded-lg shadow-md overflow-hidden animate-in fade-in zoom-in-95"
+                        >
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().addColumnBefore().run()}
+                                icon={ArrowLeft}
+                                label="Add Column Before"
+                            />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().addColumnAfter().run()}
+                                icon={ArrowRight}
+                                label="Add Column After"
+                            />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().deleteColumn().run()}
+                                icon={Trash}
+                                label="Delete Column"
+                            />
+                            <div className="w-px h-4 bg-border mx-1" />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().addRowBefore().run()}
+                                icon={ArrowUp}
+                                label="Add Row Before"
+                            />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().addRowAfter().run()}
+                                icon={ArrowDown}
+                                label="Add Row After"
+                            />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().deleteRow().run()}
+                                icon={Trash}
+                                label="Delete Row"
+                            />
+                            <div className="w-px h-4 bg-border mx-1" />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().mergeCells().run()}
+                                icon={Merge}
+                                label="Merge Cells"
+                            />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().splitCell().run()}
+                                icon={Split}
+                                label="Split Cell"
+                            />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+                                isActive={editor.isActive('tableHeader')}
+                                icon={TableIcon}
+                                label="Toggle Header"
+                            />
+                            <div className="w-px h-4 bg-border mx-1" />
+                            <ToolbarButton
+                                onClick={() => editor.chain().focus().deleteTable().run()}
+                                icon={Trash2}
+                                label="Delete Table"
+                                disabled={!editor.can().deleteTable()}
+                            />
+                        </BubbleMenu>
+                    </>
+                )}
             </div>
         </div>
     )

@@ -104,7 +104,13 @@ export async function generateLearningContent(file: File, options?: GenerationOp
 
     INSTRUKSI KONTEN:
     1. RINGKASAN (Summary): Tulis rangkuman materi di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
-       - Gunakan format Markdown (Header #, ##, ###).
+       - Gunakan format Markdown LLENGKAP & KAYA (Rich Markdown) JIKA DIPERLUKAN/RELEVAN:
+         * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
+         * CODE BLOCK: Gunakan untuk kode program, command line, atau rumus matematika kompleks.
+         * BLOCKQUOTE (>): Gunakan untuk definisi penting, rumus singkat, atau kesimpulan utama.
+         * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
+         * LIST: Gunakan bullet points atau numbering untuk langkah-langkah atau poin materi.
+       - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
        - JANGAN pakai pembuka/penutup basa-basi.
     2. KUIS (Quiz): Wajib buat 10 soal pilihan ganda yang relevan.
     3. FLASHCARDS: Wajib buat minimal 5 flashcards.
@@ -165,7 +171,13 @@ export async function generateLearningContentFromText(text: string, options?: Ge
 
     INSTRUKSI KONTEN:
     1. RINGKASAN (Summary): Tulis rangkuman materi di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
-       - Gunakan format Markdown (Header #, ##, ###).
+       - Gunakan format Markdown LLENGKAP & KAYA (Rich Markdown) JIKA DIPERLUKAN/RELEVAN:
+         * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
+         * CODE BLOCK: Gunakan untuk kode program, command line, atau rumus matematika kompleks.
+         * BLOCKQUOTE (>): Gunakan untuk definisi penting, rumus singkat, atau kesimpulan utama.
+         * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
+         * LIST: Gunakan bullet points atau numbering untuk langkah-langkah atau poin materi.
+       - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
        - JANGAN pakai pembuka/penutup basa-basi.
     2. KUIS (Quiz): Wajib buat 10 soal pilihan ganda yang relevan.
     3. FLASHCARDS: Wajib buat minimal 5 flashcards.
