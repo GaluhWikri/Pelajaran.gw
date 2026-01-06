@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { PanelRightClose, Send, Sparkles, Lightbulb, HelpCircle, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import TextareaAutosize from "react-textarea-autosize"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -177,23 +178,31 @@ export function AIAssistantPanel({ noteId }: AIAssistantPanelProps) {
       </ScrollArea>
 
       <div className="p-4 border-t border-border">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleSend()
-          }}
-          className="flex gap-2"
-        >
-          <Input
+        <div className="relative flex items-end gap-2">
+          <TextareaAutosize
+            minRows={1}
+            maxRows={5}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about your notes..."
             disabled={isThinking}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSend()
+              }
+            }}
+            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
           />
-          <Button type="submit" size="icon" disabled={!input.trim() || isThinking}>
+          <Button
+            onClick={() => handleSend()}
+            size="icon"
+            className="shrink-0 h-9 w-9 mb-0.5" // Adjust alignment to match single line height
+            disabled={!input.trim() || isThinking}
+          >
             <Send className="h-4 w-4" />
           </Button>
-        </form>
+        </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
           AI responses are context-aware based on your notes
         </p>
