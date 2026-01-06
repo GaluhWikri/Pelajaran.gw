@@ -362,7 +362,7 @@ export async function generateChatResponse(message: string, context: Note): Prom
             history: [
                 {
                     role: "user",
-                    parts: [{ text: `Context Materi (Notes):\n${context.content}\n\n${AI_SYSTEM_PROMPT}` }],
+                    parts: [{ text: `Judul Materi/Topik Utama: ${context.title}\n\nIsi Materi (Notes):\n${context.content}\n\n${AI_SYSTEM_PROMPT}` }],
                 },
                 {
                     role: "model",
