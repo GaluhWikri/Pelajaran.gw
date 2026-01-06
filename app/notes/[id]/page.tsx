@@ -41,7 +41,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
       <DashboardHeader />
       <Sidebar />
 
-      <main className={cn("pt-20 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+      <main className={cn("pt-[72px] transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
         <div className="flex min-h-[calc(100vh-6rem)]">
           <div className={`flex-1 w-full min-w-0 transition-all ${chatPanelOpen ? "mr-0 lg:mr-96" : "mr-0"}`}>
             <NoteEditorTabs noteId={id} />
