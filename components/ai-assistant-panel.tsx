@@ -8,7 +8,7 @@ import TextareaAutosize from "react-textarea-autosize"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
-import { formatDistanceToNow } from "date-fns"
+import { format } from "date-fns"
 import { generateChatResponse } from "@/lib/ai-service"
 
 interface AIAssistantPanelProps {
@@ -145,12 +145,14 @@ export function AIAssistantPanel({ noteId }: AIAssistantPanelProps) {
               )}
               <div
                 className={cn(
-                  "max-w-[80%] rounded-lg px-4 py-2",
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-accent",
+                  "max-w-[80%] rounded-2xl px-4 py-3 shadow-sm",
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground rounded-tr-none" // Corrected: Sharp top-right for user
+                    : "bg-accent rounded-tl-none", // Corrected: Sharp top-left for assistant
                 )}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                <p className="text-xs opacity-70 mt-1">{formatDistanceToNow(message.timestamp, { addSuffix: true })}</p>
+                <p className="text-xs opacity-70 mt-1 text-right">{format(new Date(message.timestamp), "HH:mm")}</p>
               </div>
               {message.role === "user" && (
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent">
