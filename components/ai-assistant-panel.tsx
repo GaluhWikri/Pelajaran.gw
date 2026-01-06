@@ -87,7 +87,7 @@ export function AIAssistantPanel({ noteId }: AIAssistantPanelProps) {
   if (!chatPanelOpen) return null
 
   return (
-    <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-96 border-l border-border bg-card z-40 flex flex-col">
+    <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-full md:w-96 border-l border-border bg-card z-40 flex flex-col">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
