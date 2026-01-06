@@ -300,7 +300,7 @@ export function LeaderboardPage() {
                                     Total XP
                                 </TabsTrigger>
                                 <TabsTrigger value="streak" className="flex items-center gap-2">
-                                    <Flame className="h-4 w-4 text-orange-500" />
+                                    <Flame className={cn("h-4 w-4", sortBy === 'streak' ? "text-orange-500" : "")} />
                                     Top Streak
                                 </TabsTrigger>
                             </TabsList>
