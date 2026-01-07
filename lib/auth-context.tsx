@@ -96,6 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
             })
 
+            if (data.session) {
+                await supabase.auth.signOut()
+            }
+
             if (error) return { error }
 
             return { error: null }
