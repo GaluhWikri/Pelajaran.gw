@@ -990,26 +990,26 @@ export default function UploadPage() {
 
             {/* Processing Modal - UX Improvement */}
             <Dialog open={showProcessingModal} onOpenChange={setShowProcessingModal}>
-                <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-0 shadow-2xl bg-background/95 backdrop-blur-md">
+                <DialogContent className="w-[85vw] sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-2xl bg-background/95 backdrop-blur-md rounded-2xl">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-orange-500 to-amber-500 animate-gradient-x" />
 
-                    <DialogHeader className="px-6 pt-6 pb-2">
+                    <DialogHeader className="px-4 pt-10 pb-2 sm:px-6">
                         <DialogTitle className="text-center text-xl font-bold tracking-tight">
                             {activeUploads.every(u => u.status === 'complete') ? "Selesai!" : "Memproses Materi"}
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="px-6 py-4 flex flex-col items-center">
+                    <div className="px-4 py-4 md:px-6 flex flex-col items-center">
                         {/* Dynamic Icon Status */}
                         <div className="relative mb-6">
                             {activeUploads.every(u => u.status === 'complete') ? (
-                                <div className="h-24 w-24 bg-green-500/10 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ring-1 ring-green-500/20">
+                                <div className="h-16 w-16 md:h-24 md:w-24 bg-green-500/10 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ring-1 ring-green-500/20">
                                     <CheckCircle className="h-10 w-10 text-green-500" />
                                 </div>
                             ) : (
                                 <>
                                     <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse" />
-                                    <div className="h-24 w-24 bg-surface rounded-full flex items-center justify-center relative border border-white/5 shadow-inner">
+                                    <div className="h-16 w-16 md:h-24 md:w-24 bg-surface rounded-full flex items-center justify-center relative border border-white/5 shadow-inner">
                                         <Sparkles className="h-10 w-10 text-primary animate-spin-slow" />
                                     </div>
                                 </>
