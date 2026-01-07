@@ -311,37 +311,69 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="relative rounded-3xl bg-linear-to-r from-orange-500 to-orange-600 p-12 text-center text-white overflow-hidden">
-            <div className="absolute inset-0 bg-grid-white/10" />
-            <div className="relative z-10 space-y-6">
-              <h2 className="text-4xl font-bold">Siap Belajar Lebih Cerdas?</h2>
-              <p className="text-xl opacity-90">Mulai gratis sekarang, tidak perlu kartu kredit</p>
-              <div className="flex items-center justify-center gap-4 pt-4">
+      {/* CTA Section */}
+      <section className="py-24 px-4 relative">
+        <div className="container mx-auto max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="relative rounded-[2.5rem] overflow-hidden bg-background/40 backdrop-blur-2xl border border-white/10 shadow-2xl"
+          >
+            {/* Background Effects */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/25 rounded-full blur-[100px] -z-10 animate-pulse" />
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-100 contrast-150 mix-blend-overlay" />
+
+            <div className="relative z-10 flex flex-col items-center justify-center text-center p-12 md:p-20 space-y-8">
+
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 backdrop-blur-md border border-orange-500/20 text-orange-600 dark:text-orange-400 font-medium shadow-inner">
+                <Sparkles className="h-4 w-4 text-orange-500 fill-orange-500" />
+                <span className="text-sm">Teknologi AI Terbaru 2025</span>
+              </div>
+
+              {/* Typography */}
+              <div className="space-y-6 max-w-3xl">
+                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+                  Revolusi Cara Belajarmu <br className="hidden md:block" />
+                  <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-amber-500">Jadi Lebih Mudah</span>
+                </h2>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                  Tinggalkan cara lama yang membosankan. Biarkan AI membantu Anda merangkum, membuat kuis, dan menghafal materi dalam hitungan detik.
+                </p>
+              </div>
+
+              {/* Call to Action Button */}
+              <div className="pt-4 w-full sm:w-auto">
                 <Link href="/register">
-                  <Button size="lg" variant="secondary" className="gap-2 text-lg h-12 px-8">
-                    Mulai Gratis
-                    <ArrowRight className="h-5 w-5" />
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg h-14 px-10 rounded-full shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-300"
+                  >
+                    Mulai Gratis Sekarang
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               </div>
-              <div className="flex items-center justify-center gap-8 pt-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>Gratis selamanya</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>Unlimited notes</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>AI powered</span>
-                </div>
+
+              {/* Feature Highlights Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 gap-y-8 w-full border-t border-border/50 pt-10 mt-8">
+                {[
+                  { icon: Zap, label: "Proses Cepat" },
+                  { icon: CheckCircle2, label: "Gratis Selamanya" },
+                  { icon: Brain, label: "AI Cerdas" },
+                  { icon: FileText, label: "Unlimited Notes" },
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 text-foreground/80">
+                    <item.icon className="h-6 w-6 text-orange-500" />
+                    <span className="text-sm font-semibold">{item.label}</span>
+                  </div>
+                ))}
               </div>
+
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
