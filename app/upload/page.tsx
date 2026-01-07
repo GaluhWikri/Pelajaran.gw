@@ -990,119 +990,110 @@ export default function UploadPage() {
 
             {/* Processing Modal - UX Improvement */}
             <Dialog open={showProcessingModal} onOpenChange={setShowProcessingModal}>
-                <DialogContent className="sm:max-w-[500px] sm:max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            {activeUploads.every(u => u.status === 'complete') ? (
-                                <>
-                                    <CheckCircle className="h-5 w-5 text-green-500" />
-                                    <span>Pemrosesan Selesai!</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                                    <span>Sedang Memproses Materi...</span>
-                                </>
-                            )}
+                <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-0 shadow-2xl bg-background/95 backdrop-blur-md">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-orange-500 to-amber-500 animate-gradient-x" />
+
+                    <DialogHeader className="px-6 pt-6 pb-2">
+                        <DialogTitle className="text-center text-xl font-bold tracking-tight">
+                            {activeUploads.every(u => u.status === 'complete') ? "Selesai!" : "Memproses Materi"}
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="py-6 space-y-6">
-                        {/* Status Animation Logic */}
-                        <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                    <div className="px-6 py-4 flex flex-col items-center">
+                        {/* Dynamic Icon Status */}
+                        <div className="relative mb-6">
                             {activeUploads.every(u => u.status === 'complete') ? (
-                                <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
-                                    <CheckCircle className="h-10 w-10 text-green-600" />
-                                </div>
-                            ) : activeUploads.some(u => u.status === 'processing') ? (
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
-                                    <div className="h-20 w-20 bg-background border-2 border-primary/20 rounded-full flex items-center justify-center relative shadow-lg">
-                                        <Sparkles className="h-8 w-8 text-primary animate-pulse" />
-                                    </div>
+                                <div className="h-24 w-24 bg-green-500/10 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ring-1 ring-green-500/20">
+                                    <CheckCircle className="h-10 w-10 text-green-500" />
                                 </div>
                             ) : (
-                                <div className="h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <Upload className="h-8 w-8 text-blue-600 animate-bounce" />
-                                </div>
+                                <>
+                                    <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse" />
+                                    <div className="h-24 w-24 bg-surface rounded-full flex items-center justify-center relative border border-white/5 shadow-inner">
+                                        <Sparkles className="h-10 w-10 text-primary animate-spin-slow" />
+                                    </div>
+                                </>
                             )}
+                        </div>
 
-                            <p className="text-center text-sm text-muted-foreground max-w-[80%]">
+                        {/* Status Message */}
+                        <div className="text-center space-y-1 mb-6">
+                            <p className="font-medium text-lg">
                                 {activeUploads.every(u => u.status === 'complete')
-                                    ? "Semua materi berhasil diproses! Catatan, kuis, dan flashcard sudah siap."
-                                    : activeUploads.some(u => u.status === 'processing')
-                                        ? "AI sedang menganalisis konten Anda untuk membuat ringkasan cerdas..."
-                                        : "Sedang mengupload file ke server aman kami..."
-                                }
+                                    ? "Materi Siap Dipelajari"
+                                    : "AI Sedang Bekerja..."}
+                            </p>
+                            <p className="text-sm text-muted-foreground px-4">
+                                {activeUploads.every(u => u.status === 'complete')
+                                    ? "Ringkasan, flashcard, dan kuis telah berhasil dibuat untuk Anda."
+                                    : "Kami sedang menganalisis file Anda untuk membuat konten pembelajaran interaktif."}
                             </p>
                         </div>
 
-                        {/* Progress List */}
+                        {/* Progress Cards */}
                         {activeUploads.length > 0 && (
-                            <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                            <div className="w-full space-y-3">
                                 {activeUploads.map((upload) => (
-                                    <div key={upload.id} className="space-y-2">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="font-medium truncate max-w-[200px]">{upload.fileName}</span>
-                                            <span className={cn(
-                                                "text-xs font-medium",
-                                                upload.status === 'complete' ? "text-green-600" :
-                                                    upload.status === 'error' ? "text-red-600" :
-                                                        "text-primary"
-                                            )}>
-                                                {upload.status === 'uploading' && `${upload.progress}%`}
-                                                {upload.status === 'processing' && "Menganalisis..."}
-                                                {upload.status === 'complete' && "Selesai"}
-                                                {upload.status === 'error' && "Gagal"}
-                                            </span>
+                                    <div key={upload.id} className="group relative overflow-hidden bg-muted/40 rounded-xl p-3 transition-all">
+                                        {/* Progress Bar Background */}
+                                        {upload.status === 'processing' && (
+                                            <div className="absolute bottom-0 left-0 h-1 bg-primary/20 w-full">
+                                                <div
+                                                    className="h-full bg-primary transition-all duration-500 ease-out"
+                                                    style={{ width: `${upload.progress}%` }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-between items-center relative z-10">
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                <div className={cn(
+                                                    "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                                                    upload.status === 'complete' ? "bg-green-500/10 text-green-500" : "bg-primary/10 text-primary"
+                                                )}>
+                                                    {upload.status === 'complete' ? <CheckCircle className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium truncate">{upload.fileName}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {upload.status === 'complete' ? "Berhasil" : `${upload.progress}%`}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <Progress value={upload.progress} className={cn(
-                                            "h-2 transition-all",
-                                            upload.status === 'processing' && "animate-pulse"
-                                        )} />
                                     </div>
                                 ))}
                             </div>
                         )}
+
+                        {/* Background Hint (Only when processing) */}
+                        {!activeUploads.every(u => u.status === 'complete') && (
+                            <p className="text-[10px] text-muted-foreground/60 mt-4 text-center">
+                                Tip: Anda dapat menutup jendela ini. Proses akan tetap berjalan di latar belakang.
+                            </p>
+                        )}
                     </div>
 
-                    <DialogFooter className="sm:justify-between gap-2">
+                    <DialogFooter className="px-6 pb-6 pt-2 sm:justify-center">
                         {activeUploads.every(u => u.status === 'complete') ? (
-                            <>
-                                <Button variant="outline" onClick={() => setShowProcessingModal(false)}>
-                                    Tutup
-                                </Button>
-                                <Button
-                                    className="w-full sm:w-auto"
-                                    onClick={() => {
-                                        setShowProcessingModal(false)
-                                        // Priority 1: Use local state captured at completion time
-                                        if (completedNoteId) {
-                                            router.push(`/notes/${completedNoteId}`)
-                                            return
-                                        }
-
-                                        // Priority 2: Search in active uploads
-                                        const lastCompleted = activeUploads.findLast(u => u.status === 'complete' && u.noteId);
-                                        if (lastCompleted && lastCompleted.noteId) {
-                                            router.push(`/notes/${lastCompleted.noteId}`)
-                                        } else {
-                                            // Fallback
-                                        }
-                                    }}
-                                >
-                                    Lihat Catatan
-                                </Button>
-                            </>
-                        ) : (
                             <Button
-                                variant="outline"
-                                className="w-full hover:bg-accent hover:text-accent-foreground text-muted-foreground"
-                                onClick={() => setShowProcessingModal(false)}
+                                size="lg"
+                                className="w-full font-semibold shadow-lg shadow-primary/20"
+                                onClick={() => {
+                                    setShowProcessingModal(false)
+                                    if (completedNoteId) {
+                                        router.push(`/notes/${completedNoteId}`)
+                                        return
+                                    }
+                                    const lastCompleted = activeUploads.findLast(u => u.status === 'complete' && u.noteId);
+                                    if (lastCompleted && lastCompleted.noteId) {
+                                        router.push(`/notes/${lastCompleted.noteId}`)
+                                    }
+                                }}
                             >
-                                Sembunyikan (Proses Berjalan di Background)
+                                Lihat Catatan
                             </Button>
-                        )}
+                        ) : null}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
