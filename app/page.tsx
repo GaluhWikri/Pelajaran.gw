@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { ProcessDemo } from "@/components/landing/process-demo"
 import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -76,7 +77,7 @@ export default function LandingPage() {
       <LandingNavbar />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
+      <section className="pt-24 pb-12 md:pt-32 md:pb-20 px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -116,8 +117,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Demo Section with Scroll Animation */}
-      <section id="demo" ref={containerRef} className="py-20 px-4 relative">
+      {/* App Screenshot Demo */}
+      <section id="demo" ref={containerRef} className="py-12 md:py-20 px-4 relative">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             style={{ scale, opacity }}
@@ -182,15 +183,12 @@ export default function LandingPage() {
                 </div>
 
                 {/* Bottom Info & Dots */}
-                {/* Bottom Info & Dots */}
                 <div className="flex flex-col items-center gap-4 py-4 border-t bg-muted/10">
-                  {/* Title & Description */}
                   <div className="text-center space-y-1 px-4">
                     <p className="font-semibold text-base">{demoScreenshots[currentSlide].title}</p>
                     <p className="text-sm text-muted-foreground">{demoScreenshots[currentSlide].description}</p>
                   </div>
 
-                  {/* Dots Indicator */}
                   <div className="flex gap-2">
                     {demoScreenshots.map((_, index) => (
                       <button
@@ -209,8 +207,28 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Process Animation Section */}
+      <section className="py-12 md:py-20 px-4 relative">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+              Cara Kerja <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-amber-500">AI</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Otomatisasi proses belajar Anda dalam 3 langkah mudah
+            </p>
+          </div>
+
+          <div className="relative z-10">
+            {/* Background Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-orange-500/20 rounded-full blur-[100px] -z-10" />
+            <ProcessDemo />
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-24 px-4 relative overflow-hidden">
+      <section className="py-16 md:py-24 px-4 relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-linear-to-tr from-orange-500/5 to-transparent rounded-full blur-3xl -z-10" />
 
@@ -329,7 +347,7 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       {/* CTA Section */}
-      <section className="py-24 px-4 relative">
+      <section className="py-16 md:py-24 px-4 relative">
         <div className="container mx-auto max-w-5xl">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
