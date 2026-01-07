@@ -44,7 +44,7 @@ export default function LandingPage() {
     { src: "/image/demo desktop/flashcard.png", title: "Flashcards", description: "Review cepat dengan flashcard" },
     { src: "/image/demo desktop/quiz.png", title: "Quiz", description: "Test pemahaman Anda" },
     { src: "/image/demo desktop/upload.png", title: "Upload", description: "Upload catatan Anda" },
-
+    { src: "/image/demo desktop/leaderboard.png", title: "LeaderBoard", description: "LeaderBoard Anda" },
   ]
 
   const mobileScreenshots = [
@@ -54,6 +54,7 @@ export default function LandingPage() {
     { src: "/image/demo mobile/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
     { src: "/image/demo mobile/upload1.png", title: "Upload", description: "Upload materi belajar" },
     { src: "/image/demo mobile/upload2.png", title: "Upload Process", description: "Proses upload file" },
+    { src: "/image/demo mobile/leaderboard.png", title: "LeaderBoard", description: "LeaderBoard Anda" }, 
   ]
 
   const demoScreenshots = isMobile ? mobileScreenshots : desktopScreenshots
