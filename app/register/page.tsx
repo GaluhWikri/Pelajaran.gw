@@ -74,11 +74,26 @@ export default function RegisterPage() {
                         Sudah punya akun? Login
                     </Link>
                 </div>
-                <Card className="border-border bg-card w-full max-w-md">
-                    <CardHeader className="space-y-1 text-center">
-                        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+                <Card className="border-border bg-card/80 backdrop-blur-sm w-full max-w-md shadow-2xl">
+                    <CardHeader className="space-y-1 text-center pb-2">
+                        {/* Branding Header */}
+                        <div className="flex flex-col items-center justify-center gap-3 mb-2">
+                            <div className="flex items-center gap-3">
+                                <img
+                                    src="/favicon/android-chrome-512x512.png"
+                                    alt="Logo"
+                                    className="w-16 h-16 object-contain"
+                                />
+                                <div className="text-4xl font-bold tracking-tight">
+                                    <span className="text-foreground">Pelajaran</span>
+                                    <span className="text-orange-500">.gw</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <CardTitle className="text-lg text-muted-foreground font-medium">Buat Akun Baru</CardTitle>
                         <CardDescription>
-                            Enter your information to get started
+                            Masukkan data diri Anda untuk memulai
                         </CardDescription>
                     </CardHeader>
 
@@ -167,7 +182,7 @@ export default function RegisterPage() {
                                         placeholder="••••••••"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="pl-10 pr-10"
+                                        className="pl-10 pr-10 h-11 bg-background"
                                         disabled={loading}
                                         required
                                     />
