@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -54,7 +55,7 @@ export default function LandingPage() {
     { src: "/image/demo mobile/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
     { src: "/image/demo mobile/upload1.png", title: "Upload", description: "Upload materi belajar" },
     { src: "/image/demo mobile/upload2.png", title: "Upload Process", description: "Proses upload file" },
-    { src: "/image/demo mobile/leaderboard.png", title: "LeaderBoard", description: "LeaderBoard Anda" }, 
+    { src: "/image/demo mobile/leaderboard.png", title: "LeaderBoard", description: "LeaderBoard Anda" },
   ]
 
   const demoScreenshots = isMobile ? mobileScreenshots : desktopScreenshots
@@ -250,6 +251,62 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -z-10" />
+
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/70">
+              Pertanyaan Umum
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Temukan jawaban untuk pertanyaan yang paling sering diajukan oleh pengguna kami.
+            </p>
+          </div>
+
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            {[
+              {
+                id: "item-1",
+                q: "Apa itu Pelajaran.gw?",
+                a: "Pelajaran.gw adalah asisten belajar berbasis AI yang membantu Anda mengubah materi pelajaran (PDF, dokumen, video) menjadi ringkasan interaktif, flashcard, dan kuis secara otomatis. Tujuannya agar proses belajar Anda lebih efisien dan menyenangkan."
+              },
+              {
+                id: "item-2",
+                q: "Apakah aplikasi ini gratis?",
+                a: "Ya! Pelajaran.gw menyediakan paket gratis yang memungkinkan Anda menggunakan fitur dasar selamanya. Kami juga menawarkan fitur premium bagi pengguna yang membutuhkan kapasitas lebih besar dan fitur AI lanjutan."
+              },
+              {
+                id: "item-3",
+                q: "Bagaimana cara kerjanya?",
+                a: "Cukup upload file materi Anda atau tempel link YouTube. AI kami akan memprosesnya dalam hitungan detik untuk menghasilkan ringkasan lengkap, kartu hafalan (flashcard), dan kuis latihan."
+              },
+              {
+                id: "item-4",
+                q: "Apakah data saya aman?",
+                a: "Tentu saja. Privasi Anda adalah prioritas kami. Materi yang Anda upload hanya digunakan untuk keperluan belajar Anda sendiri dan tidak dibagikan kepada pihak ketiga."
+              }
+            ].map((faq, index) => (
+              <AccordionItem
+                key={faq.id}
+                value={faq.id}
+                className="group border border-border/50 bg-card/50 backdrop-blur-sm px-6 rounded-2xl hover:border-orange-500/50 hover:bg-card/80 transition-all duration-300 shadow-sm"
+              >
+                <AccordionTrigger className="text-lg font-semibold py-6 hover:no-underline group-data-[state=open]:text-orange-500 transition-colors">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-base pb-6 leading-relaxed">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
 
