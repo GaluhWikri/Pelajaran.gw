@@ -1038,30 +1038,32 @@ export default function UploadPage() {
                         </div>
 
                         {/* Progress List */}
-                        <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
-                            {activeUploads.map((upload) => (
-                                <div key={upload.id} className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-medium truncate max-w-[200px]">{upload.fileName}</span>
-                                        <span className={cn(
-                                            "text-xs font-medium",
-                                            upload.status === 'complete' ? "text-green-600" :
-                                                upload.status === 'error' ? "text-red-600" :
-                                                    "text-primary"
-                                        )}>
-                                            {upload.status === 'uploading' && `${upload.progress}%`}
-                                            {upload.status === 'processing' && "Menganalisis..."}
-                                            {upload.status === 'complete' && "Selesai"}
-                                            {upload.status === 'error' && "Gagal"}
-                                        </span>
+                        {activeUploads.length > 0 && (
+                            <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                                {activeUploads.map((upload) => (
+                                    <div key={upload.id} className="space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-medium truncate max-w-[200px]">{upload.fileName}</span>
+                                            <span className={cn(
+                                                "text-xs font-medium",
+                                                upload.status === 'complete' ? "text-green-600" :
+                                                    upload.status === 'error' ? "text-red-600" :
+                                                        "text-primary"
+                                            )}>
+                                                {upload.status === 'uploading' && `${upload.progress}%`}
+                                                {upload.status === 'processing' && "Menganalisis..."}
+                                                {upload.status === 'complete' && "Selesai"}
+                                                {upload.status === 'error' && "Gagal"}
+                                            </span>
+                                        </div>
+                                        <Progress value={upload.progress} className={cn(
+                                            "h-2 transition-all",
+                                            upload.status === 'processing' && "animate-pulse"
+                                        )} />
                                     </div>
-                                    <Progress value={upload.progress} className={cn(
-                                        "h-2 transition-all",
-                                        upload.status === 'processing' && "animate-pulse"
-                                    )} />
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter className="sm:justify-between gap-2">
