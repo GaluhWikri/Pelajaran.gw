@@ -130,10 +130,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error("Error signing out:", error)
         } finally {
-            // Clear global store state immediately
+            // 1. Clear global store (Zustand)
             const { clearAll } = (await import('@/lib/store')).useStore.getState()
             clearAll()
-            router.push('/login')
+
+            // 2. Manually clear Supabase tokens from LocalStorage
+            // This is critical if the API call fails (403) and doesn't clear them automatically
+            Object.keys(localStorage).forEach((key) => {
+                if (key.startsWith('sb-') || key.includes('supabase')) {
+                    localStorage.removeItem(key)
+                }
+            })
+
+            // 3. Force hard redirect to clear memory state
+            window.location.href = '/login'
         }
     }
 
