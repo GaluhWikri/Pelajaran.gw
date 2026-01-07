@@ -991,7 +991,7 @@ export default function UploadPage() {
             {/* Processing Modal - UX Improvement */}
             <Dialog open={showProcessingModal} onOpenChange={setShowProcessingModal}>
                 <DialogContent className="w-[85vw] sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-2xl bg-background/95 backdrop-blur-md rounded-2xl">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-orange-500 to-amber-500 animate-gradient-x" />
+                    <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary via-orange-500 to-amber-500 animate-gradient-x" />
 
                     <DialogHeader className="px-4 pt-10 pb-2 sm:px-6">
                         <DialogTitle className="text-center text-xl font-bold tracking-tight">

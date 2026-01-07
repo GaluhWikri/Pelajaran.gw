@@ -34,12 +34,12 @@ export function ProcessDemo() {
                 {/* Top Progress / Stepper Header */}
                 <div className="flex items-center justify-between px-6 md:px-12 pt-8 pb-12 relative z-20 bg-[#0f1219]/50 backdrop-blur-sm border-b border-white/5">
                     {/* Connector Line Background */}
-                    <div className="absolute top-[3.25rem] left-11 md:left-17 right-11 md:right-17 h-0.5 bg-white/10 -z-10 -translate-y-1/2" />
+                    <div className="absolute top-13 left-11 md:left-17 right-11 md:right-17 h-0.5 bg-white/10 -z-10 -translate-y-1/2" />
 
                     {/* Active Progress Line */}
                     <div
                         className={cn(
-                            "absolute top-[3.25rem] left-11 md:left-17 h-0.5 bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-700 ease-in-out -z-10 -translate-y-1/2",
+                            "absolute top-13 left-11 md:left-17 h-0.5 bg-linear-to-r from-orange-500 to-amber-500 transition-all duration-700 ease-in-out -z-10 -translate-y-1/2",
                             step === 0 ? "w-0" : step === 1 ? "w-[calc(50%-2.75rem)] md:w-[calc(50%-4.25rem)]" : "w-[calc(100%-5.5rem)] md:w-[calc(100%-8.5rem)]"
                         )}
                     />
@@ -111,7 +111,7 @@ export function ProcessDemo() {
                                     {/* Progress Bar Container */}
                                     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden relative">
                                         <motion.div
-                                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-500 to-orange-300"
+                                            className="absolute inset-y-0 left-0 bg-linear-to-r from-orange-500 to-orange-300"
                                             initial={{ width: "0%" }}
                                             animate={{ width: "100%" }}
                                             transition={{ duration: 3.5, ease: "easeInOut" }}
@@ -162,7 +162,7 @@ export function ProcessDemo() {
                                 </div>
 
                                 <motion.h3
-                                    className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-white mb-2"
+                                    className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-orange-400 to-white mb-2"
                                     animate={{ opacity: [0.5, 1, 0.5] }}
                                     transition={{ duration: 2, repeat: Infinity }}
                                 >
