@@ -187,10 +187,12 @@ export function DashboardHeader() {
                   <Button variant="ghost" className="gap-2">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {storeUser?.name.charAt(0) || authUser.email?.charAt(0).toUpperCase() || "U"}
+                        {(authUser?.user_metadata?.full_name?.[0] || storeUser?.name?.[0] || authUser?.email?.[0] || "U").toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden md:inline text-sm">{storeUser?.name || authUser.email}</span>
+                    <span className="hidden md:inline text-sm">
+                      {authUser?.user_metadata?.full_name || storeUser?.name || authUser?.email}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">

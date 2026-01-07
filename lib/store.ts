@@ -103,12 +103,7 @@ export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Initial state
-      user: {
-        id: "demo-user",
-        name: "Demo User",
-        email: "demo@pelajarin.ai",
-        isPremium: false,
-      },
+      user: null,
       notes: [],
       flashcards: [],
       quizzes: [],
@@ -490,6 +485,7 @@ export const useStore = create<AppState>()(
 
       // Clear all data (but preserve activeUploads to maintain processing status)
       clearAll: () => set((state) => ({
+        user: null,
         notes: [],
         flashcards: [],
         quizzes: [],
@@ -497,6 +493,10 @@ export const useStore = create<AppState>()(
         chatMessages: [],
         studySessions: [],
         activeNoteId: null,
+        sidebarOpen: true,
+        chatPanelOpen: false,
+        hasInitialized: false,
+        showDailyLoginEffect: false,
         // Keep activeUploads so processing status persists across navigation
       })),
 

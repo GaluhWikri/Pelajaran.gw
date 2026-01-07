@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // 2. Manually clear Supabase tokens from LocalStorage
             // This is critical if the API call fails (403) and doesn't clear them automatically
             Object.keys(localStorage).forEach((key) => {
-                if (key.startsWith('sb-') || key.includes('supabase')) {
+                if (key.startsWith('sb-') || key.includes('supabase') || key === 'pelajarin-storage') {
                     localStorage.removeItem(key)
                 }
             })
