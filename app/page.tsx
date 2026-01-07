@@ -210,11 +210,18 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4">
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Background Decoration */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-linear-to-tr from-orange-500/5 to-transparent rounded-full blur-3xl -z-10" />
+
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Fitur Unggulan</h2>
-            <p className="text-xl text-muted-foreground">Semua yang Anda butuhkan untuk belajar lebih efektif</p>
+          <div className="text-center mb-20 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Fitur <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-amber-500">Unggulan</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Platform belajar all-in-one yang didukung AI untuk memaksimalkan potensi akademis Anda.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -222,17 +229,17 @@ export default function LandingPage() {
               {
                 icon: FileText,
                 title: "Smart Notes",
-                description: "Upload PDF, DOCX, atau link YouTube. AI akan membuat catatan terstruktur otomatis."
+                description: "Upload materi apapun (PDF/Web/YouTube), AI akan merangkum poin penting secara otomatis."
               },
               {
                 icon: Brain,
-                title: "AI Assistant",
-                description: "Tanya jawab langsung dengan AI tentang materi yang sedang Anda pelajari."
+                title: "AI Tutor 24/7",
+                description: "Bingung dengan materi? Chat langsung dengan AI yang paham konteks catatan Anda."
               },
               {
                 icon: Zap,
-                title: "Auto Generate",
-                description: "Flashcard dan quiz dibuat otomatis dari catatan Anda untuk review cepat."
+                title: "Instant Quiz & Flashcard",
+                description: "Review pemahaman materi secara instan dengan kuis dan kartu hafalan yang dibuatkan AI."
               }
             ].map((feature, i) => (
               <motion.div
@@ -241,13 +248,23 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 viewport={{ once: true }}
-                className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow"
+                className="group relative p-8 rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/10"
               >
-                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-white" />
+                <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
+
+                <div className="relative z-10 space-y-4">
+                  <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                    <feature.icon className="h-7 w-7 text-orange-600 group-hover:text-white transition-colors duration-300" />
+                  </div>
+
+                  <h3 className="text-2xl font-bold group-hover:text-orange-600 transition-colors duration-300">
+                    {feature.title}
+                  </h3>
+
+                  <p className="text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
               </motion.div>
             ))}
           </div>
