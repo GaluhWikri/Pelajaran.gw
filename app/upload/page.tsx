@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Upload, FileText, Video, Mic, Youtube, Plus, Search, Tag, Star, Trash2, X, Loader2, CheckCircle } from "lucide-react"
+import { Upload, FileText, Video, Mic, Youtube, Plus, Search, Tag, Star, Trash2, X, Loader2, CheckCircle, Sparkles } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
@@ -82,6 +82,8 @@ export default function UploadPage() {
 
     // Configuration State
     const [showConfigDialog, setShowConfigDialog] = useState(false)
+    const [showProcessingModal, setShowProcessingModal] = useState(false)
+    const [completedNoteId, setCompletedNoteId] = useState<string | null>(null)
     const [pendingFiles, setPendingFiles] = useState<File[]>([])
     const [config, setConfig] = useState({
         subject: "",
@@ -189,6 +191,8 @@ export default function UploadPage() {
     // --- AI Processing Flow ---
     const startProcessing = async () => {
         setShowConfigDialog(false)
+        setShowProcessingModal(true)
+        setCompletedNoteId(null)
         const fileList = pendingFiles
         const currentYoutubeUrl = youtubeUrl
 
@@ -458,6 +462,7 @@ export default function UploadPage() {
                 fileName: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
                 noteId: noteId
             })
+            setCompletedNoteId(noteId) // Store for navigation
 
             // Remove from active uploads after a delay to show success state
             setTimeout(() => {
@@ -982,6 +987,123 @@ export default function UploadPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
+
+            {/* Processing Modal - UX Improvement */}
+            <Dialog open={showProcessingModal} onOpenChange={setShowProcessingModal}>
+                <DialogContent className="sm:max-w-[500px] sm:max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {activeUploads.every(u => u.status === 'complete') ? (
+                                <>
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                    <span>Pemrosesan Selesai!</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                    <span>Sedang Memproses Materi...</span>
+                                </>
+                            )}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="py-6 space-y-6">
+                        {/* Status Animation Logic */}
+                        <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                            {activeUploads.every(u => u.status === 'complete') ? (
+                                <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+                                    <CheckCircle className="h-10 w-10 text-green-600" />
+                                </div>
+                            ) : activeUploads.some(u => u.status === 'processing') ? (
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
+                                    <div className="h-20 w-20 bg-background border-2 border-primary/20 rounded-full flex items-center justify-center relative shadow-lg">
+                                        <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <Upload className="h-8 w-8 text-blue-600 animate-bounce" />
+                                </div>
+                            )}
+
+                            <p className="text-center text-sm text-muted-foreground max-w-[80%]">
+                                {activeUploads.every(u => u.status === 'complete')
+                                    ? "Semua materi berhasil diproses! Catatan, kuis, dan flashcard sudah siap."
+                                    : activeUploads.some(u => u.status === 'processing')
+                                        ? "AI sedang menganalisis konten Anda untuk membuat ringkasan cerdas..."
+                                        : "Sedang mengupload file ke server aman kami..."
+                                }
+                            </p>
+                        </div>
+
+                        {/* Progress List */}
+                        <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                            {activeUploads.map((upload) => (
+                                <div key={upload.id} className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="font-medium truncate max-w-[200px]">{upload.fileName}</span>
+                                        <span className={cn(
+                                            "text-xs font-medium",
+                                            upload.status === 'complete' ? "text-green-600" :
+                                                upload.status === 'error' ? "text-red-600" :
+                                                    "text-primary"
+                                        )}>
+                                            {upload.status === 'uploading' && `${upload.progress}%`}
+                                            {upload.status === 'processing' && "Menganalisis..."}
+                                            {upload.status === 'complete' && "Selesai"}
+                                            {upload.status === 'error' && "Gagal"}
+                                        </span>
+                                    </div>
+                                    <Progress value={upload.progress} className={cn(
+                                        "h-2 transition-all",
+                                        upload.status === 'processing' && "animate-pulse"
+                                    )} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <DialogFooter className="sm:justify-between gap-2">
+                        {activeUploads.every(u => u.status === 'complete') ? (
+                            <>
+                                <Button variant="outline" onClick={() => setShowProcessingModal(false)}>
+                                    Tutup
+                                </Button>
+                                <Button
+                                    className="w-full sm:w-auto"
+                                    onClick={() => {
+                                        setShowProcessingModal(false)
+                                        // Priority 1: Use local state captured at completion time
+                                        if (completedNoteId) {
+                                            router.push(`/notes/${completedNoteId}`)
+                                            return
+                                        }
+
+                                        // Priority 2: Search in active uploads
+                                        const lastCompleted = activeUploads.findLast(u => u.status === 'complete' && u.noteId);
+                                        if (lastCompleted && lastCompleted.noteId) {
+                                            router.push(`/notes/${lastCompleted.noteId}`)
+                                        } else {
+                                            // Fallback
+                                        }
+                                    }}
+                                >
+                                    Lihat Catatan
+                                </Button>
+                            </>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                className="w-full hover:bg-accent hover:text-accent-foreground text-muted-foreground"
+                                onClick={() => setShowProcessingModal(false)}
+                            >
+                                Sembunyikan (Proses Berjalan di Background)
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Login Required Modal */}
             <AlertDialog open={showLoginModal} onOpenChange={setShowLoginModal}>
