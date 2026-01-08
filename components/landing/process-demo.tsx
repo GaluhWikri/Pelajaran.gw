@@ -213,7 +213,7 @@ export function ProcessDemo() {
                                             animate={{ scale: 1 }}
                                             transition={{ delay: idx * 0.15 + 0.4, type: "spring" }}
                                         >
-                                            <CheckCircle2 className="h-5 w-5 text-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]" />
+                                            <CheckCircle2 className="h-5 w-5 text-orange-500" />
                                         </motion.div>
                                     </motion.div>
                                 ))}
