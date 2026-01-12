@@ -336,11 +336,11 @@ export function LeaderboardPage() {
                                         displayUserStats.rank > 0 && displayUserStats.rank <= 3 ? getRankBorderColor(displayUserStats.rank) : "border-primary"
                                     )}>
                                         <AvatarImage src={displayUserStats.avatar_url || ""} />
-                                        <AvatarFallback>{displayUserStats.full_name.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{(storeUser?.name || displayUserStats.full_name).charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="overflow-hidden">
                                         <div className="flex items-center gap-1.5 md:gap-2">
-                                            <p className="font-bold text-base md:text-lg truncate">{displayUserStats.full_name}</p>
+                                            <p className="font-bold text-base md:text-lg truncate">{storeUser?.name || displayUserStats.full_name}</p>
                                             <img
                                                 src={getBadgeInfo(displayUserStats.level).img}
                                                 alt={getBadgeInfo(displayUserStats.level).title}
