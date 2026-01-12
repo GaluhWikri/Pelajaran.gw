@@ -6,8 +6,18 @@ import { AuthProvider } from "@/lib/auth-context"
 import "./globals.css"
 import "./print.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const geist = Geist({
+  subsets: ["latin"],
+  display: 'swap',
+  preload: true,
+  variable: '--font-geist-sans',
+})
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  display: 'swap',
+  preload: true,
+  variable: '--font-geist-mono',
+})
 
 export const metadata: Metadata = {
   title: "Pelajaran gw - Learning Platform",
@@ -34,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`font-sans antialiased`}>
+      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
         <AuthProvider>
           {children}
         </AuthProvider>

@@ -1,16 +1,26 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, lazy, Suspense } from "react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ProcessDemo } from "@/components/landing/process-demo"
 import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { LandingNavbar } from "@/components/landing-navbar"
+import dynamic from "next/dynamic"
+
+// Dynamic import for heavy component
+const ProcessDemo = dynamic(() => import("@/components/landing/process-demo").then(mod => ({ default: mod.ProcessDemo })), {
+  loading: () => (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="animate-pulse text-muted-foreground">Loading...</div>
+    </div>
+  ),
+  ssr: false
+})
 
 export default function LandingPage() {
   const { user } = useAuth()
@@ -161,6 +171,8 @@ export default function LandingPage() {
                         height={isMobile ? 844 : 1080}
                         className="w-full h-full object-contain object-top"
                         priority={currentSlide === 0}
+                        loading={currentSlide === 0 ? "eager" : "lazy"}
+                        sizes="(max-width: 768px) 100vw, 80vw"
                       />
                     </motion.div>
                   </AnimatePresence>

@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, Eye, EyeOff, User, CheckCircle2, ArrowRight, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
@@ -79,10 +80,13 @@ export default function RegisterPage() {
                         {/* Branding Header */}
                         <div className="flex flex-col items-center justify-center gap-3 mb-2">
                             <div className="flex items-center gap-3">
-                                <img
-                                    src="/favicon/android-chrome-512x512.png"
+                                <Image
+                                    src="/favicon/android-chrome-192x192.png"
                                     alt="Logo"
+                                    width={64}
+                                    height={64}
                                     className="w-16 h-16 object-contain"
+                                    priority
                                 />
                                 <div className="text-4xl font-bold tracking-tight">
                                     <span className="text-foreground">Pelajaran</span>
