@@ -66,9 +66,9 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+            <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 pt-20">
+                <LandingNavbar />
                 <div className="w-full max-w-md mb-4 flex items-center">
-                    <LandingNavbar />
                     <Link href="/login" className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Sudah punya akun? Login
@@ -198,17 +198,17 @@ export default function RegisterPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                                className="w-full h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold"
                                 disabled={loading}
                             >
                                 {loading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Creating account...
+                                        Membuat akun...
                                     </>
                                 ) : (
                                     <>
-                                        Create Account
+                                        Buat Akun
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </>
                                 )}

@@ -62,9 +62,9 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden">
+            <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 pt-20 relative overflow-hidden">
                 {/* Background Blobs similar to landing/404 for consistency */}
-<LandingNavbar />
+                <LandingNavbar />
                 <div className="w-full max-w-md mb-4 flex items-center">
                     <Link href="/" className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -197,6 +197,7 @@ export default function LoginPage() {
                                 ) : (
                                     <>
                                         Masuk
+                                        <ArrowRight className="ml-2 h-4 w-4" />
                                     </>
                                 )}
                             </Button>
