@@ -78,6 +78,7 @@ export default function UploadPage() {
     const [youtubeUrl, setYoutubeUrl] = useState("")
     const [isDragActive, setIsDragActive] = useState(false)
     const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null)
+    const [showInvalidYoutubeModal, setShowInvalidYoutubeModal] = useState(false)
 
 
     // Configuration State
@@ -179,8 +180,21 @@ export default function UploadPage() {
         setPendingFiles((prev) => prev.filter((_, i) => i !== index))
     }
 
+    // Validate YouTube URL
+    const isValidYoutubeUrl = (url: string): boolean => {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)[\w-]+/
+        return youtubeRegex.test(url)
+    }
+
     const handleYoutubeSubmit = () => {
         if (!youtubeUrl) return
+
+        // Validate the URL before proceeding
+        if (!isValidYoutubeUrl(youtubeUrl)) {
+            setShowInvalidYoutubeModal(true)
+            return
+        }
+
         setActiveModal(null)
         setShowConfigDialog(true)
     }
@@ -1114,6 +1128,39 @@ export default function UploadPage() {
                             onClick={() => router.push('/login')}
                         >
                             Login Sekarang
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Invalid YouTube URL Modal */}
+            <AlertDialog open={showInvalidYoutubeModal} onOpenChange={setShowInvalidYoutubeModal}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <Youtube className="h-6 w-6 text-red-500" />
+                        </div>
+                        <AlertDialogTitle className="text-center">Link YouTube Tidak Valid</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div className="text-center space-y-3">
+                                <p>Link yang Anda masukkan bukan link YouTube yang valid. Pastikan link mengikuti format yang benar.</p>
+                                <div className="text-left bg-muted/50 rounded-lg p-3 text-xs space-y-1">
+                                    <p className="font-medium text-foreground">Contoh format yang benar:</p>
+                                    <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+                                        <li>https://www.youtube.com/watch?v=xxxxx</li>
+                                        <li>https://youtu.be/xxxxx</li>
+                                        <li>https://youtube.com/shorts/xxxxx</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="sm:justify-center">
+                        <AlertDialogAction
+                            className="bg-primary hover:bg-primary/90"
+                            onClick={() => setShowInvalidYoutubeModal(false)}
+                        >
+                            Mengerti
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
