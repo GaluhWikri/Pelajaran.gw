@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { YoutubeTranscript } from 'youtube-transcript';
+import { YoutubeTranscript } from 'youtube-transcript-plus';
 
 export async function POST(request: Request) {
     try {
@@ -14,47 +14,30 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
         }
 
+        console.log(`Fetching transcript for: ${url}`);
+
         try {
-            // Strategy: Try multiple language preferences
-            // 1. Try default (no config)
-            // 2. Try Indonesian ('id')
-            // 3. Try English ('en')
-
-            let transcriptItems: any[] = [];
-
-            try {
-                console.log(`Attempting default transcript for ${url}`);
-                transcriptItems = await YoutubeTranscript.fetchTranscript(url);
-                if (!transcriptItems || transcriptItems.length === 0) {
-                    throw new Error("Default transcript empty");
+            // Use youtube-transcript-plus with custom User-Agent
+            const transcriptItems = await YoutubeTranscript.fetchTranscript(url, {
+                // Custom user agent to avoid bot detection
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
-            } catch (e) {
-                console.log("Default fetch failed or empty, trying 'id' (Indonesian)...");
-                try {
-                    transcriptItems = await YoutubeTranscript.fetchTranscript(url, { lang: 'id' });
-                    if (!transcriptItems || transcriptItems.length === 0) {
-                        throw new Error("ID transcript empty");
-                    }
-                } catch (e2) {
-                    console.log("'id' fetch failed, trying 'en' (English)...");
-                    try {
-                        transcriptItems = await YoutubeTranscript.fetchTranscript(url, { lang: 'en' });
-                    } catch (e3) {
-                        console.log("'en' fetch failed");
-                    }
-                }
-            }
+            });
 
             if (!transcriptItems || transcriptItems.length === 0) {
-                throw new Error("No transcript found in supported languages.");
+                throw new Error("No transcript found");
             }
+
+            console.log(`Found ${transcriptItems.length} transcript items`);
 
             // Combine all parts into one string
             const fullTranscript = transcriptItems.map(item => item.text).join(' ');
 
             return NextResponse.json({ transcript: fullTranscript });
         } catch (error: any) {
-            console.error("Final Transcript fetch error:", error.message);
+            console.error("Transcript fetch error:", error.message);
+
             // Return more detailed error
             return NextResponse.json({
                 error: 'Gagal mengambil transkrip. Pastikan video memiliki caption/CC (Closed Captions) yang aktif.',
