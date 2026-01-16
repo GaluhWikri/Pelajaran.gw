@@ -1,6 +1,7 @@
 import { Note, Quiz, Flashcard } from "./types"
 import { AI_SYSTEM_PROMPT } from "./ai-prompt"
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import { extractTextFromPPTX } from "./ppt-parser"
 
 // Initialize Gemini
 // Note: In a real production app, you should proxy these requests through a backend
@@ -92,6 +93,38 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     }
 
     try {
+        // Handle PPTX files specifically
+        if (file.name.toLowerCase().endsWith(".pptx")) {
+            console.log("Detected PPTX file, extracting text...")
+            try {
+                const pptText = await extractTextFromPPTX(file)
+                if (pptText.length > 15) {
+                    console.log("PPTX text extracted successfully, using text generation pipeline. Length:", pptText.length)
+                    // Delegate to text-based generation
+
+                    // Add specific handling for very short content
+                    const isShortContent = pptText.length < 500;
+                    if (isShortContent) {
+                        console.log("Short content detected, adjusting options...");
+                    }
+
+                    const result = await generateLearningContentFromText(pptText, options)
+                    return result
+                }
+
+                // If text is too short, it's likely image-based or empty
+                console.warn("PPTX text extraction failed or empty (<15 chars). Likely image-based.");
+                throw new Error("PPT ini sepertinya hanya berisi gambar atau kosong. Sistem belum mendukung OCR untuk slide gambar.");
+            } catch (pptError: any) {
+                console.error("Failed to parse PPTX:", pptError)
+                // Rethrow if it's our custom error message
+                if (pptError.message?.includes("hanya berisi gambar")) {
+                    throw pptError;
+                }
+                // Otherwise fall through to default handling
+            }
+        }
+
         const filePart = await fileToGenerativePart(file)
         const promptContext = buildPromptContext(options)
 
@@ -162,9 +195,9 @@ export async function generateLearningContentFromText(text: string, options?: Ge
         const prompt = `
     ${AI_SYSTEM_PROMPT}
 
-    Tugas: Analisis TEKS TRANSKRIP berikut dan buat output JSON.
+    Tugas: Analisis TEKS/MATERI berikut (bisa berupa Transkrip Video atau Teks Slide Presentasi) dan buat output JSON.
 
-    TRANSKRIP:
+    MATERI:
     "${text.substring(0, 50000)}..."
 
     ${promptContext}
@@ -179,8 +212,12 @@ export async function generateLearningContentFromText(text: string, options?: Ge
          * LIST: Gunakan bullet points atau numbering untuk langkah-langkah atau poin materi.
        - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
        - JANGAN pakai pembuka/penutup basa-basi.
-    2. KUIS (Quiz): Wajib buat 10 soal pilihan ganda yang relevan.
-    3. FLASHCARDS: Wajib buat minimal 5 flashcards.
+    2. KUIS (Quiz): WAJIB ADA. Buat 10 soal pilihan ganda yang relevan. Jika materi SEDIKIT, buatlah minimal 5 soal.
+    3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards. Jika materi sedikit, sesuaikan dengan definisi yang ada.
+
+    PENTING:
+    - Kuis dan Flashcards TIDAK BOLEH KOSONG.
+    - Jika materi sangat singkat, fokus buat pertanyaan dari informasi kunci yang tersedua.
 
     FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
@@ -247,10 +284,19 @@ function buildPromptContext(options?: GenerationOptions): string {
 function parseGeminiResponse(responseText: string) {
     let data;
     try {
-        const cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        let cleanText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+
+        // Ensure we only have the JSON object if there's preamble text
+        const firstBrace = cleanText.indexOf('{');
+        const lastBrace = cleanText.lastIndexOf('}');
+
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+        }
+
         data = JSON.parse(cleanText);
     } catch (e) {
-        console.warn("JSON parse failed, attempting regex fallback", e);
+        console.warn("JSON parse failed, attempting regex fallback. Raw text:", responseText);
 
         const titleMatch = responseText.match(/"title":\s*"([^"]+)"/);
 

@@ -65,6 +65,7 @@
     "immer": "latest",
     "input-otp": "1.4.1",
     "jspdf": "^3.0.4",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.454.0",
     "marked": "^17.0.1",
     "next": "16.0.10",
