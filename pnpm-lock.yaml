@@ -236,6 +236,9 @@ importers:
       youtube-transcript-plus:
         specifier: ^1.1.2
         version: 1.1.2
+      youtubei.js:
+        specifier: ^16.0.1
+        version: 16.0.1
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -283,6 +286,9 @@ packages:
   '@babel/runtime@7.28.4':
     resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
+
+  '@bufbuild/protobuf@2.10.2':
+    resolution: {integrity: sha512-uFsRXwIGyu+r6AMdz+XijIIZJYpoWeYzILt5yZ2d3mCjQrWUTVpVD9WL/jZAbvp+Ed04rOhrsk7FiTcEDseB5A==}
 
   '@date-fns/tz@1.2.0':
     resolution: {integrity: sha512-LBrd7MiJZ9McsOgxqWX7AaxrDjcFVjWH/tIKJd7pnR7McaslGYOP1QmmiBXdJH/H/yLCT+rcQ7FaPBUxRGUtrg==}
@@ -2123,6 +2129,10 @@ packages:
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
 
+  meriyah@6.1.4:
+    resolution: {integrity: sha512-Sz8FzjzI0kN13GK/6MVEsVzMZEPvOhnmmI1lU5+/1cGOiK3QUahntrNNtdVeihrO7t9JpoH75iMNXg6R6uWflQ==}
+    engines: {node: '>=18.0.0'}
+
   motion-dom@12.23.23:
     resolution: {integrity: sha512-n5yolOs0TQQBRUFImrRfs/+6X4p3Q4n1dUEqt/H58Vx7OW6RF+foWEgmTVDhIWJIMXOuNNL0apKH2S16en9eiA==}
 
@@ -2574,6 +2584,9 @@ packages:
     resolution: {integrity: sha512-bLlqkA6gVVUorZpcc+THuECXyAwOpnHqW2lOav9g6gGovxAP3FCD8s9GBFVjmSl3cWWwwPPXtG/zY1nD+GvQ7A==}
     engines: {node: '>=18.0.0'}
 
+  youtubei.js@16.0.1:
+    resolution: {integrity: sha512-3802bCAGkBc2/G5WUTc0l/bO5mPYJbQAHL04d9hE9PnrDHoBUT8MN721Yqt4RCNncAXdHcfee9VdJy3Fhq1r5g==}
+
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
@@ -2600,6 +2613,8 @@ snapshots:
   '@alloc/quick-lru@5.2.0': {}
 
   '@babel/runtime@7.28.4': {}
+
+  '@bufbuild/protobuf@2.10.2': {}
 
   '@date-fns/tz@1.2.0': {}
 
@@ -4354,6 +4369,8 @@ snapshots:
 
   mdurl@2.0.0: {}
 
+  meriyah@6.1.4: {}
+
   motion-dom@12.23.23:
     dependencies:
       motion-utils: 12.23.6
@@ -4842,6 +4859,11 @@ snapshots:
       lib0: 0.2.117
 
   youtube-transcript-plus@1.1.2: {}
+
+  youtubei.js@16.0.1:
+    dependencies:
+      '@bufbuild/protobuf': 2.10.2
+      meriyah: 6.1.4
 
   zod@3.25.76: {}
 
