@@ -191,6 +191,7 @@ export default function UploadPage() {
 
         // Validate the URL before proceeding
         if (!isValidYoutubeUrl(youtubeUrl)) {
+            setActiveModal(null) // Close the input modal first to prevent overlay blocking
             setShowInvalidYoutubeModal(true)
             return
         }
@@ -1133,38 +1134,36 @@ export default function UploadPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Invalid YouTube URL Modal */}
-            <AlertDialog open={showInvalidYoutubeModal} onOpenChange={setShowInvalidYoutubeModal}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
+            {/* Invalid YouTube URL Modal - Using Dialog instead of AlertDialog to avoid pointer-events bug */}
+            <Dialog open={showInvalidYoutubeModal} onOpenChange={setShowInvalidYoutubeModal}>
+                <DialogContent className="sm:max-w-[400px]" showCloseButton={false}>
+                    <DialogHeader>
                         <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
                             <Youtube className="h-6 w-6 text-red-500" />
                         </div>
-                        <AlertDialogTitle className="text-center">Link YouTube Tidak Valid</AlertDialogTitle>
-                        <AlertDialogDescription asChild>
-                            <div className="text-center space-y-3">
-                                <p>Link yang Anda masukkan bukan link YouTube yang valid. Pastikan link mengikuti format yang benar.</p>
-                                <div className="text-left bg-muted/50 rounded-lg p-3 text-xs space-y-1">
-                                    <p className="font-medium text-foreground">Contoh format yang benar:</p>
-                                    <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
-                                        <li>https://www.youtube.com/watch?v=xxxxx</li>
-                                        <li>https://youtu.be/xxxxx</li>
-                                        <li>https://youtube.com/shorts/xxxxx</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="sm:justify-center">
-                        <AlertDialogAction
+                        <DialogTitle className="text-center">Link YouTube Tidak Valid</DialogTitle>
+                    </DialogHeader>
+                    <div className="text-center space-y-3 text-sm text-muted-foreground">
+                        <p>Link yang Anda masukkan bukan link YouTube yang valid. Pastikan link mengikuti format yang benar.</p>
+                        <div className="text-left bg-muted/50 rounded-lg p-3 text-xs space-y-1">
+                            <p className="font-medium text-foreground">Contoh format yang benar:</p>
+                            <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+                                <li>https://www.youtube.com/watch?v=xxxxx</li>
+                                <li>https://youtu.be/xxxxx</li>
+                                <li>https://youtube.com/shorts/xxxxx</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <DialogFooter className="sm:justify-center">
+                        <Button
                             className="bg-primary hover:bg-primary/90"
                             onClick={() => setShowInvalidYoutubeModal(false)}
                         >
                             Mengerti
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
         </div>
     )
