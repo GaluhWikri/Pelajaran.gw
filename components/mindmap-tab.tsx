@@ -116,9 +116,9 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
     calculateLevel(root.id, 0)
 
     // Layout constants
-    const ROOT_SPACING = 350        // Jarak khusus dari root ke level 1 (lebih besar)
-    const HORIZONTAL_SPACING = 250  // Jarak antar level lainnya (horizontal)
-    const VERTICAL_SPACING = 75     // Jarak antar sibling nodes (vertical)
+    const ROOT_SPACING = 450        // Jarak khusus dari root ke level 1 (diperbesar)
+    const HORIZONTAL_SPACING = 300  // Jarak antar level lainnya (horizontal)
+    const VERTICAL_SPACING = 85     // Jarak antar sibling nodes (vertical) (sedikit lega)
 
     // Calculate subtree leaf count (for balanced spacing)
     const subtreeLeafCount = new Map<string, number>()
@@ -175,7 +175,8 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
     }
 
     // First pass: position everything starting from Y=0
-    positionSubtree(root.id, 0, 0, 0)
+    // Start root at a negative X to shift the whole tree left and make room for children
+    positionSubtree(root.id, -100, 0, 0)
 
     // Second pass: shift everything so root is at Y=0
     const rootPos = nodePositions.get(root.id)
@@ -299,14 +300,11 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const hasMindmap = nodes.length > 0
 
     return (
-        <div className="h-full flex flex-col p-4 md:p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
+        <div className="h-full flex flex-col">
+            {/* Header with reduced padding */}
+            <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b">
                 <div>
-                    <h3 className="text-lg font-semibold">Mindmap</h3>
-                    <p className="text-sm text-muted-foreground">
-                        Visualisasi struktur materi dalam bentuk peta konsep
-                    </p>
+                    <h3 className="text-lg font-semibold leading-none">Mindmap</h3>
                 </div>
                 <div className="flex gap-2">
                     {hasMindmap && (
@@ -314,10 +312,10 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                             onClick={handleResetLayout}
                             variant="outline"
                             size="sm"
-                            className="gap-2"
+                            className="h-8 gap-2"
                             title="Reset posisi node ke layout asli"
                         >
-                            <LayoutGrid className="h-4 w-4" />
+                            <LayoutGrid className="h-3.5 w-3.5" />
                             Reset Layout
                         </Button>
                     )}
@@ -325,21 +323,22 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                         onClick={handleGenerateMindmap}
                         disabled={isGenerating}
                         variant={hasMindmap ? "outline" : "default"}
-                        className="gap-2"
+                        className="h-8 gap-2"
+                        size="sm"
                     >
                         {isGenerating ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                 Generating...
                             </>
                         ) : hasMindmap ? (
                             <>
-                                <RefreshCw className="h-4 w-4" />
+                                <RefreshCw className="h-3.5 w-3.5" />
                                 Regenerate
                             </>
                         ) : (
                             <>
-                                <Sparkles className="h-4 w-4" />
+                                <Sparkles className="h-3.5 w-3.5" />
                                 Generate Mindmap
                             </>
                         )}
@@ -348,64 +347,66 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
             </div>
 
             {error && (
-                <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
+                <div className="mx-4 md:mx-6 mt-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
                     {error}
                 </div>
             )}
 
-            {/* Mindmap Canvas */}
-            <Card className="flex-1 overflow-hidden border-none shadow-none bg-transparent">
-                <CardContent className="p-0 h-[650px] relative">
-                    {hasMindmap ? (
-                        <ReactFlow
-                            nodes={nodes}
-                            edges={edges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            nodeTypes={nodeTypes}
-                            fitView
-                            fitViewOptions={{
-                                padding: 0.1,
-                                includeHiddenNodes: true
-                            }}
-                            minZoom={0.05}
-                            maxZoom={1.5}
-                            className="bg-background"
-                        >
-                            <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-                            <Controls
-                                showZoom={true}
-                                showFitView={true}
-                                showInteractive={false}
-                                className="bg-card border rounded-lg"
-                            />
-                        </ReactFlow>
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                                <Sparkles className="h-8 w-8 text-muted-foreground" />
+            {/* Mindmap Canvas - Truly Full bleed */}
+            <div className="flex-1 flex flex-col min-h-[500px]">
+                <Card className="flex-1 overflow-hidden border-none shadow-none rounded-none py-0!">
+                    <CardContent className="p-0 h-full relative">
+                        {hasMindmap ? (
+                            <ReactFlow
+                                nodes={nodes}
+                                edges={edges}
+                                onNodesChange={onNodesChange}
+                                onEdgesChange={onEdgesChange}
+                                nodeTypes={nodeTypes}
+                                fitView
+                                fitViewOptions={{
+                                    padding: 0.1,
+                                    includeHiddenNodes: true
+                                }}
+                                minZoom={0.05}
+                                maxZoom={1.5}
+                                className="bg-background"
+                            >
+                                <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+                                <Controls
+                                    showZoom={true}
+                                    showFitView={true}
+                                    showInteractive={false}
+                                    className="bg-card border rounded-lg"
+                                />
+                            </ReactFlow>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                    <Sparkles className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                                <h4 className="text-lg font-medium mb-2">Belum Ada Mindmap</h4>
+                                <p className="text-muted-foreground max-w-sm mb-6">
+                                    Klik tombol "Generate Mindmap" untuk membuat peta konsep dari catatan Anda secara otomatis menggunakan AI.
+                                </p>
+                                <Button onClick={handleGenerateMindmap} disabled={isGenerating} className="gap-2">
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="h-4 w-4" />
+                                            Generate Mindmap
+                                        </>
+                                    )}
+                                </Button>
                             </div>
-                            <h4 className="text-lg font-medium mb-2">Belum Ada Mindmap</h4>
-                            <p className="text-muted-foreground max-w-sm mb-6">
-                                Klik tombol "Generate Mindmap" untuk membuat peta konsep dari catatan Anda secara otomatis menggunakan AI.
-                            </p>
-                            <Button onClick={handleGenerateMindmap} disabled={isGenerating} className="gap-2">
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Generating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="h-4 w-4" />
-                                        Generate Mindmap
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }
