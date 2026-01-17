@@ -1,5 +1,5 @@
-import { Note, Quiz, Flashcard } from "./types"
-import { AI_SYSTEM_PROMPT } from "./ai-prompt"
+import { Note, Quiz, Flashcard, MindmapNode } from "./types"
+import { AI_SYSTEM_PROMPT, MINDMAP_SYSTEM_PROMPT } from "./ai-prompt"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { extractTextFromPPTX } from "./ppt-parser"
 
@@ -17,6 +17,17 @@ const model = genAI.getGenerativeModel({
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 8192,
+    },
+})
+
+// Separate model for mindmap generation - lower temperature for consistent structure
+const mindmapModel = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+        temperature: 0.5, // Lower for more consistent JSON structure
+        topP: 0.9,
+        topK: 40,
+        maxOutputTokens: 8192, // Increased to accommodate detailed prompt output
     },
 })
 
@@ -685,3 +696,103 @@ async function mockGenerateFlashcardsFromNote(count: number) {
         reviewCount: 0
     }))
 }
+
+/**
+ * Generate mindmap structure from note content using AI
+ */
+export async function generateMindmapFromNote(
+    noteContent: string,
+    noteTitle: string
+): Promise<MindmapNode[]> {
+    if (!apiKey) {
+        console.warn("Gemini API Key is missing. Returning mock mindmap.")
+        return mockGenerateMindmap(noteTitle)
+    }
+
+    try {
+        // Limit content to reduce input tokens, leaving more room for output
+        const truncatedContent = noteContent.substring(0, 5000)
+
+        const prompt = `${MINDMAP_SYSTEM_PROMPT}
+
+TOPIK: "${noteTitle}"
+KONTEN: "${truncatedContent}"
+
+Buat mindmap JSON untuk konten di atas. Output HANYA JSON valid.`
+
+        const result = await retryGenAI(() => mindmapModel.generateContent(prompt))
+        const responseText = result.response.text()
+
+        let data
+        try {
+            // Clean up AI response - remove code blocks and extra whitespace
+            let cleanText = responseText.replace(/```json/gi, "").replace(/```/g, "").trim()
+
+            // Extract JSON object
+            const firstBrace = cleanText.indexOf('{')
+            let lastBrace = cleanText.lastIndexOf('}')
+
+            // Check if response is truncated (no closing brace or incomplete array)
+            if (firstBrace === -1) {
+                throw new Error("No valid JSON object found in response")
+            }
+
+            // If response seems truncated, try to fix it
+            if (lastBrace === -1 || lastBrace < firstBrace) {
+                console.warn("Response appears truncated, attempting to fix...")
+                // Find the last complete node in the array
+                const lastCompleteNode = cleanText.lastIndexOf('},')
+                if (lastCompleteNode > firstBrace) {
+                    cleanText = cleanText.substring(0, lastCompleteNode + 1) + ']}'
+                    lastBrace = cleanText.lastIndexOf('}')
+                } else {
+                    throw new Error("Cannot recover truncated JSON response")
+                }
+            }
+
+            let jsonStr = cleanText.substring(firstBrace, lastBrace + 1)
+
+            // Sanitize common JSON issues from AI responses
+            jsonStr = jsonStr
+                .replace(/,\s*}/g, '}')  // Remove trailing commas before }
+                .replace(/,\s*]/g, ']')  // Remove trailing commas before ]
+                .replace(/[\r\n]+/g, ' ') // Replace newlines with spaces
+                .replace(/\t/g, ' ')      // Replace tabs with spaces
+                .replace(/"\s+"/g, '" "') // Fix spacing between strings
+
+            data = JSON.parse(jsonStr)
+        } catch (e) {
+            console.error("Failed to parse mindmap JSON:", e)
+            console.error("Raw response:", responseText.substring(0, 500))
+            return mockGenerateMindmap(noteTitle)
+        }
+
+        if (data.nodes && Array.isArray(data.nodes)) {
+            return data.nodes.map((node: any) => ({
+                id: node.id || crypto.randomUUID(),
+                label: node.label || "Untitled",
+                parentId: node.parentId,
+                edgeLabel: node.edgeLabel || undefined,
+                position: undefined // Will be calculated by layout
+            }))
+        }
+
+        return mockGenerateMindmap(noteTitle)
+    } catch (error) {
+        console.error("Error generating mindmap:", error)
+        return mockGenerateMindmap(noteTitle)
+    }
+}
+
+function mockGenerateMindmap(title: string): MindmapNode[] {
+    return [
+        { id: "root", label: title || "Mindmap", parentId: null },
+        { id: "1", label: "Topik 1", parentId: "root", edgeLabel: "meliputi" },
+        { id: "1-1", label: "Sub-topik 1.1", parentId: "1", edgeLabel: "adalah" },
+        { id: "1-2", label: "Sub-topik 1.2", parentId: "1", edgeLabel: "yaitu" },
+        { id: "2", label: "Topik 2", parentId: "root", edgeLabel: "memiliki" },
+        { id: "2-1", label: "Sub-topik 2.1", parentId: "2", edgeLabel: "contohnya" },
+        { id: "3", label: "Topik 3", parentId: "root", edgeLabel: "termasuk" },
+    ]
+}
+

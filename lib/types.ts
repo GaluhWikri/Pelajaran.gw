@@ -97,3 +97,20 @@ export interface ActivityStats {
   }
   longestStreak: number
 }
+
+export interface MindmapNode {
+  id: string
+  label: string
+  parentId: string | null
+  edgeLabel?: string // Teks penghubung seperti "adalah", "yaitu", "meliputi"
+  position?: { x: number; y: number }
+}
+
+export interface Mindmap {
+  id: string
+  noteId: string
+  userId: string
+  nodes: MindmapNode[]
+  createdAt: Date
+  updatedAt: Date
+}

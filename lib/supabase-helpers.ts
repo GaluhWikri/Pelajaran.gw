@@ -207,3 +207,86 @@ export async function deleteQuizFromSupabase(quizId: string) {
         return { error }
     }
 }
+
+/**
+ * Save mindmap to Supabase database
+ */
+export async function saveMindmapToSupabase(mindmap: {
+    id: string
+    noteId: string
+    userId: string
+    nodes: any[]
+}) {
+    try {
+        console.log('Saving mindmap for note:', mindmap.noteId)
+
+        const { data, error } = await supabase
+            .from('mindmaps')
+            .upsert({
+                id: mindmap.id,
+                note_id: mindmap.noteId,
+                user_id: mindmap.userId,
+                nodes: mindmap.nodes,
+                updated_at: new Date().toISOString(),
+            })
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Error saving mindmap:', error)
+            throw error
+        }
+
+        console.log('Mindmap saved:', data?.id)
+        return { data, error: null }
+    } catch (error: any) {
+        console.error('Failed to save mindmap:', error)
+        return { data: null, error }
+    }
+}
+
+/**
+ * Get mindmap by note ID from Supabase
+ */
+export async function getMindmapByNoteIdFromSupabase(noteId: string) {
+    try {
+        const { data, error } = await supabase
+            .from('mindmaps')
+            .select('*')
+            .eq('note_id', noteId)
+            .single()
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+            console.error('Error fetching mindmap:', error)
+            throw error
+        }
+
+        return { data, error: null }
+    } catch (error) {
+        console.error('Failed to fetch mindmap:', error)
+        return { data: null, error }
+    }
+}
+
+/**
+ * Delete mindmap from Supabase database
+ */
+export async function deleteMindmapFromSupabase(mindmapId: string) {
+    try {
+        const { error } = await supabase
+            .from('mindmaps')
+            .delete()
+            .eq('id', mindmapId)
+
+        if (error) {
+            console.error('Error deleting mindmap from Supabase:', error)
+            throw error
+        }
+
+        return { error: null }
+    } catch (error) {
+        console.error('Failed to delete mindmap:', error)
+        return { error }
+    }
+}
+

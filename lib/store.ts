@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Flashcard, Quiz, Material, ChatMessage, StudySession, ActivityStats } from "./types"
+import type { Note, Flashcard, Quiz, Material, ChatMessage, StudySession, ActivityStats, Mindmap } from "./types"
 import { supabase } from "@/lib/supabase"
 
 interface AppState {
@@ -24,6 +24,7 @@ interface AppState {
   materials: Material[]
   chatMessages: ChatMessage[]
   studySessions: StudySession[]
+  mindmaps: Mindmap[]
 
   // UI state
   activeNoteId: string | null
@@ -87,6 +88,13 @@ interface AppState {
   // Actions - Study Sessions
   addStudySession: (session: Omit<StudySession, "id">) => void
 
+  // Actions - Mindmaps
+  setMindmaps: (mindmaps: Mindmap[]) => void
+  addMindmap: (mindmap: Omit<Mindmap, "id" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: Date; updatedAt?: Date }) => void
+  updateMindmap: (id: string, updates: Partial<Mindmap>) => void
+  deleteMindmap: (id: string) => void
+  getMindmapByNoteId: (noteId: string) => Mindmap | undefined
+
   // Actions - UI
   toggleSidebar: () => void
   toggleChatPanel: () => void
@@ -109,6 +117,7 @@ export const useStore = create<AppState>()(
       quizzes: [],
       materials: [],
       chatMessages: [],
+      mindmaps: [],
       studySessions: [],
       activeNoteId: null,
       sidebarOpen: true,
@@ -457,6 +466,60 @@ export const useStore = create<AppState>()(
           ],
         })),
 
+      // Mindmaps actions
+      setMindmaps: (mindmaps) => set({ mindmaps }),
+
+      addMindmap: (mindmap) => {
+        const { mindmaps } = get()
+        // Replace existing mindmap for same noteId
+        const existingIndex = mindmaps.findIndex((m) => m.noteId === mindmap.noteId)
+
+        if (existingIndex >= 0) {
+          // Update existing
+          set((state) => ({
+            mindmaps: state.mindmaps.map((m, idx) =>
+              idx === existingIndex
+                ? {
+                  ...mindmap,
+                  id: m.id,
+                  createdAt: m.createdAt,
+                  updatedAt: new Date(),
+                } as Mindmap
+                : m
+            ),
+          }))
+        } else {
+          // Add new
+          set((state) => ({
+            mindmaps: [
+              ...state.mindmaps,
+              {
+                ...mindmap,
+                id: mindmap.id || crypto.randomUUID(),
+                createdAt: mindmap.createdAt || new Date(),
+                updatedAt: mindmap.updatedAt || new Date(),
+              } as Mindmap,
+            ],
+          }))
+        }
+      },
+
+      updateMindmap: (id, updates) =>
+        set((state) => ({
+          mindmaps: state.mindmaps.map((m) =>
+            m.id === id ? { ...m, ...updates, updatedAt: new Date() } : m
+          ),
+        })),
+
+      deleteMindmap: (id) =>
+        set((state) => ({
+          mindmaps: state.mindmaps.filter((m) => m.id !== id),
+        })),
+
+      getMindmapByNoteId: (noteId) => {
+        return get().mindmaps.find((m) => m.noteId === noteId)
+      },
+
       activeUploads: [],
 
       addActiveUpload: (upload) => {
@@ -492,6 +555,7 @@ export const useStore = create<AppState>()(
         materials: [],
         chatMessages: [],
         studySessions: [],
+        mindmaps: [],
         activeNoteId: null,
         sidebarOpen: true,
         chatPanelOpen: false,
@@ -642,6 +706,7 @@ export const useStore = create<AppState>()(
           materials: state.materials,
           chatMessages: state.chatMessages,
           studySessions: state.studySessions,
+          mindmaps: state.mindmaps,
           activeNoteId: state.activeNoteId,
           sidebarOpen: state.sidebarOpen,
           chatPanelOpen: state.chatPanelOpen,
