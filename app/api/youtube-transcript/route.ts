@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { YoutubeTranscript } from 'youtube-transcript-plus';
-import { Innertube } from 'youtubei.js';
+
+// Use Edge Runtime to bypass YouTube IP blocking on Vercel
+export const runtime = 'edge';
 
 // Extract video ID from various YouTube URL formats
 function extractVideoId(url: string): string | null {
@@ -16,86 +17,9 @@ function extractVideoId(url: string): string | null {
     return null;
 }
 
-// Method 1: Use youtube-transcript-plus library
-async function fetchWithLibrary(url: string): Promise<string> {
-    const transcriptItems = await YoutubeTranscript.fetchTranscript(url, {
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    });
-
-    if (!transcriptItems || transcriptItems.length === 0) {
-        throw new Error('No transcript found');
-    }
-
-    return transcriptItems.map(item => item.text).join(' ');
-}
-
-// Method 2: Use youtubei.js (Innertube API - works better on serverless)
-async function fetchWithInnertube(videoId: string): Promise<string> {
-    const youtube = await Innertube.create({
-        retrieve_player: false,
-    });
-
-    const info = await youtube.getInfo(videoId);
-    const transcriptInfo = await info.getTranscript();
-
-    if (!transcriptInfo || !transcriptInfo.transcript || !transcriptInfo.transcript.content) {
-        throw new Error('No transcript available');
-    }
-
-    const content = transcriptInfo.transcript.content;
-
-    // Extract text from transcript body
-    if (content.body && content.body.initial_segments) {
-        const texts = content.body.initial_segments
-            .map((segment: any) => segment.snippet?.text || '')
-            .filter((text: string) => text.trim() !== '');
-
-        if (texts.length === 0) {
-            throw new Error('Transcript is empty');
-        }
-
-        return texts.join(' ');
-    }
-
-    throw new Error('Could not parse transcript structure');
-}
-
-// Method 3: Direct fetch from YouTube timedtext API
-async function fetchTranscriptDirect(videoId: string): Promise<string> {
-    const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-    const response = await fetch(videoPageUrl, {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-        }
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch video page: ${response.status}`);
-    }
-
-    const html = await response.text();
-
-    const timedtextMatch = html.match(/https:\/\/www\.youtube\.com\/api\/timedtext[^"\\]+/);
-    if (!timedtextMatch) {
-        throw new Error('Could not find caption URL');
-    }
-
-    let captionUrl = timedtextMatch[0].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
-
-    const transcriptResponse = await fetch(captionUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
-
-    if (!transcriptResponse.ok) {
-        throw new Error(`Failed to fetch transcript: ${transcriptResponse.status}`);
-    }
-
-    const transcriptData = await transcriptResponse.text();
-
-    // Parse XML format
-    const textMatches = transcriptData.matchAll(/<text[^>]*>([^<]*)<\/text>/g);
+// Parse transcript XML to text
+function parseTranscriptXml(xml: string): string {
+    const textMatches = xml.matchAll(/<text[^>]*>([^<]*)<\/text>/g);
     const texts: string[] = [];
 
     for (const match of textMatches) {
@@ -115,6 +39,97 @@ async function fetchTranscriptDirect(videoId: string): Promise<string> {
     }
 
     return texts.join(' ');
+}
+
+// Method 1: Fetch transcript using YouTube's player response (most reliable on Edge)
+async function fetchWithPlayerResponse(videoId: string): Promise<string> {
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch video page: ${response.status}`);
+    }
+
+    const html = await response.text();
+
+    // Try to find captions in the player response
+    const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*({.+?});\s*(?:var|const|let|<\/script>)/);
+    if (!playerResponseMatch) {
+        throw new Error('Could not find player response');
+    }
+
+    const playerResponse = JSON.parse(playerResponseMatch[1]);
+    const captions = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+
+    if (!captions || captions.length === 0) {
+        throw new Error('No captions available for this video');
+    }
+
+    // Prefer Indonesian, English, or auto-generated captions
+    const captionTrack = captions.find((c: any) => c.languageCode === 'id') ||
+        captions.find((c: any) => c.languageCode === 'en') ||
+        captions.find((c: any) => c.kind === 'asr') ||
+        captions[0];
+
+    if (!captionTrack?.baseUrl) {
+        throw new Error('No caption URL found');
+    }
+
+    // Fetch the transcript XML
+    const transcriptResponse = await fetch(captionTrack.baseUrl, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        }
+    });
+
+    if (!transcriptResponse.ok) {
+        throw new Error(`Failed to fetch transcript: ${transcriptResponse.status}`);
+    }
+
+    const transcriptXml = await transcriptResponse.text();
+    return parseTranscriptXml(transcriptXml);
+}
+
+// Method 2: Direct fetch from YouTube timedtext API (fallback)
+async function fetchTranscriptDirect(videoId: string): Promise<string> {
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch video page: ${response.status}`);
+    }
+
+    const html = await response.text();
+
+    const timedtextMatch = html.match(/https:\/\/www\.youtube\.com\/api\/timedtext[^"\\]+/);
+    if (!timedtextMatch) {
+        throw new Error('Could not find caption URL');
+    }
+
+    const captionUrl = timedtextMatch[0].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+
+    const transcriptResponse = await fetch(captionUrl, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        }
+    });
+
+    if (!transcriptResponse.ok) {
+        throw new Error(`Failed to fetch transcript: ${transcriptResponse.status}`);
+    }
+
+    const transcriptData = await transcriptResponse.text();
+    return parseTranscriptXml(transcriptData);
 }
 
 export async function POST(request: Request) {
@@ -139,36 +154,24 @@ export async function POST(request: Request) {
         let transcript: string | null = null;
         const errors: string[] = [];
 
-        // Method 1: youtube-transcript-plus (fast, but may be blocked on serverless)
+        // Method 1: Player response (most reliable on Edge)
         try {
-            console.log('[YouTube] Method 1: youtube-transcript-plus...');
-            transcript = await fetchWithLibrary(url);
+            console.log('[YouTube] Method 1: Player response...');
+            transcript = await fetchWithPlayerResponse(videoId);
             console.log('[YouTube] Method 1 succeeded!');
         } catch (error: any) {
             console.log('[YouTube] Method 1 failed:', error.message);
-            errors.push(`Library: ${error.message}`);
+            errors.push(`PlayerResponse: ${error.message}`);
         }
 
-        // Method 2: youtubei.js (Innertube - reliable on serverless)
+        // Method 2: Direct timedtext fetch (fallback)
         if (!transcript) {
             try {
-                console.log('[YouTube] Method 2: youtubei.js (Innertube)...');
-                transcript = await fetchWithInnertube(videoId);
+                console.log('[YouTube] Method 2: Direct timedtext fetch...');
+                transcript = await fetchTranscriptDirect(videoId);
                 console.log('[YouTube] Method 2 succeeded!');
             } catch (error: any) {
                 console.log('[YouTube] Method 2 failed:', error.message);
-                errors.push(`Innertube: ${error.message}`);
-            }
-        }
-
-        // Method 3: Direct timedtext fetch (last resort)
-        if (!transcript) {
-            try {
-                console.log('[YouTube] Method 3: Direct timedtext fetch...');
-                transcript = await fetchTranscriptDirect(videoId);
-                console.log('[YouTube] Method 3 succeeded!');
-            } catch (error: any) {
-                console.log('[YouTube] Method 3 failed:', error.message);
                 errors.push(`Direct: ${error.message}`);
             }
         }
