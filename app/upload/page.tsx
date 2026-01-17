@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { useStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { generateLearningContent, generateLearningContentFromText } from "@/lib/ai-service"
+import { generateLearningContent, generateLearningContentFromText, generateLearningContentFromYouTube } from "@/lib/ai-service"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -196,8 +196,130 @@ export default function UploadPage() {
             return
         }
 
+        // Close modal and show config dialog (same flow as PDF upload)
         setActiveModal(null)
         setShowConfigDialog(true)
+    }
+
+    // Process YouTube directly without config dialog
+    const startProcessingYoutube = async (url: string) => {
+        setShowProcessingModal(true)
+        setCompletedNoteId(null)
+
+        const ytId = crypto.randomUUID()
+
+        // Default config for YouTube processing
+        const defaultConfig = {
+            subject: "YouTube",
+            understandingLevel: "Menengah",
+            writingStyle: "relaxed"
+        }
+
+        addActiveUpload({
+            id: ytId,
+            file: null,
+            fileName: "Memproses Video YouTube...",
+            progress: 0,
+            status: "processing"
+        })
+
+        try {
+            updateActiveUpload(ytId, { status: "processing", progress: 20, fileName: "Mengirim ke AI..." })
+
+            // Send YouTube URL directly to Gemini AI (no transcript extraction needed)
+            const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContentFromYouTube(url, {
+                subject: defaultConfig.subject,
+                understandingLevel: defaultConfig.understandingLevel,
+                writingStyle: defaultConfig.writingStyle
+            })
+
+            updateActiveUpload(ytId, { progress: 80, fileName: generatedTitle || "YouTube Video" })
+
+            // Generate proper UUID for note ID
+            const noteId = crypto.randomUUID()
+            const htmlContent = await marked.parse(summary)
+
+            // Save to Supabase first
+            if (user) {
+                const { error: saveError } = await saveNoteToSupabase({
+                    id: noteId,
+                    userId: user.id,
+                    title: generatedTitle || "YouTube Summary",
+                    content: htmlContent as string,
+                    tags: [defaultConfig.subject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
+                    isFavorite: false,
+                })
+
+                if (saveError) {
+                    console.error('Error saving note to Supabase:', saveError)
+                }
+            }
+
+            // Then update local store
+            addNote({
+                id: noteId,
+                userId: user?.id || "demo-user",
+                title: generatedTitle || "YouTube Summary",
+                content: htmlContent as string,
+                tags: [defaultConfig.subject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
+                isFavorite: false,
+            })
+
+            // Save quiz to Supabase
+            if (user && quiz) {
+                const quizId = crypto.randomUUID()
+                await saveQuizToSupabase({
+                    id: quizId,
+                    noteId,
+                    userId: user.id,
+                    title: quiz.title,
+                    questions: quiz.questions,
+                })
+                addQuiz({ ...quiz, id: quizId, noteId, userId: user.id })
+            } else {
+                addQuiz({ ...quiz, noteId, userId: user?.id || "demo-user" })
+            }
+
+            // Save flashcards to Supabase
+            if (user && flashcards && flashcards.length > 0) {
+                for (const card of flashcards) {
+                    const cardId = crypto.randomUUID()
+                    await saveFlashcardToSupabase({
+                        id: cardId,
+                        noteId,
+                        userId: user.id,
+                        question: card.question,
+                        answer: card.answer,
+                        difficulty: card.difficulty || 'medium',
+                        reviewCount: 0,
+                    })
+                    addFlashcard({ ...card, id: cardId, noteId, userId: user.id }, { fromBundle: true })
+                }
+            } else {
+                flashcards.forEach(card => addFlashcard({ ...card, noteId, userId: user?.id || "demo-user" }, { fromBundle: true }))
+            }
+
+            // Mark complete
+            updateActiveUpload(ytId, {
+                status: "complete",
+                progress: 100,
+                fileName: generatedTitle || "YouTube Summary",
+                noteId: noteId
+            })
+
+            // Remove from active uploads after a delay
+            setTimeout(() => {
+                removeActiveUpload(ytId)
+            }, 3000)
+
+            // Clear YouTube URL after success
+            setYoutubeUrl("")
+
+        } catch (error: any) {
+            console.error("YouTube processing error:", error)
+            updateActiveUpload(ytId, { status: "error", progress: 100 })
+            alert(`Gagal memproses video: ${error.message}`)
+        }
     }
 
 
@@ -262,27 +384,10 @@ export default function UploadPage() {
         if (youtubeTask) {
             const ytId = youtubeTask.id
             try {
-                updateActiveUpload(ytId, { status: "processing", progress: 20 })
+                updateActiveUpload(ytId, { status: "processing", progress: 20, fileName: "Mengirim ke AI..." })
 
-                // Fetch Transcript
-                const res = await fetch("/api/youtube-transcript", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ url: youtubeTask.url }),
-                })
-
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.error || "Gagal mengambil transkrip video.")
-                }
-
-                const { transcript } = await res.json()
-                if (!transcript) throw new Error("Video tidak memiliki caption/transkrip.")
-
-                updateActiveUpload(ytId, { progress: 50 })
-
-                // Generate Content
-                const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContentFromText(transcript, {
+                // Send YouTube URL directly to Gemini AI (no transcript extraction needed)
+                const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContentFromYouTube(youtubeTask.url, {
                     subject: config.subject,
                     understandingLevel: getUnderstandingLabel(config.understandingLevel),
                     writingStyle: config.writingStyle
@@ -1061,15 +1166,15 @@ export default function UploadPage() {
                                         )}
 
                                         <div className="flex justify-between items-center relative z-10">
-                                            <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className="flex items-center gap-3 flex-1 min-w-0">
                                                 <div className={cn(
                                                     "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
                                                     upload.status === 'complete' ? "bg-green-500/10 text-green-500" : "bg-primary/10 text-primary"
                                                 )}>
                                                     {upload.status === 'complete' ? <CheckCircle className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium truncate">{upload.fileName}</p>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium truncate max-w-[250px]" title={upload.fileName}>{upload.fileName}</p>
                                                     <p className="text-xs text-muted-foreground">
                                                         {upload.status === 'complete' ? "Berhasil" : `${upload.progress}%`}
                                                     </p>

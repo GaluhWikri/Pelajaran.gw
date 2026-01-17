@@ -247,6 +247,80 @@ export async function generateLearningContentFromText(text: string, options?: Ge
     }
 }
 
+/**
+ * Generate learning content directly from a YouTube URL.
+ * Gemini will analyze the video content (audio, visuals, transcript if available).
+ */
+export async function generateLearningContentFromYouTube(youtubeUrl: string, options?: GenerationOptions): Promise<{
+    title?: string
+    summary: string
+    quiz: Omit<Quiz, "id" | "createdAt">
+    flashcards: Omit<Flashcard, "id" | "createdAt">[]
+}> {
+    if (!apiKey) {
+        console.warn("Gemini API Key is missing. Returning mock data.")
+        return mockGenerateLearningContent({ name: "YouTube Video.txt" } as File)
+    }
+
+    try {
+        const promptContext = buildPromptContext(options)
+
+        const prompt = `
+    ${AI_SYSTEM_PROMPT}
+
+    Tugas: Analisis VIDEO YOUTUBE berikut dan buat output JSON berisi ringkasan, kuis, dan flashcards.
+
+    URL Video: ${youtubeUrl}
+
+    ${promptContext}
+
+    INSTRUKSI KONTEN:
+    1. RINGKASAN (Summary): Tulis rangkuman lengkap dari isi video di field 'summary'. 
+       - Analisis konten audio/narasi dalam video
+       - Jika ada teks atau slide yang ditampilkan, sertakan informasinya
+       - Gunakan format Markdown yang kaya:
+         * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
+         * CODE BLOCK: Gunakan untuk kode program atau rumus.
+         * BLOCKQUOTE (>): Gunakan untuk definisi penting atau kesimpulan utama.
+         * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
+         * LIST: Gunakan bullet points atau numbering untuk langkah-langkah.
+       - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
+       - JANGAN pakai pembuka/penutup basa-basi.
+    2. KUIS (Quiz): WAJIB ADA. Buat 10 soal pilihan ganda yang relevan dengan isi video.
+    3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards berisi konsep penting dari video.
+
+    PENTING:
+    - Kuis dan Flashcards TIDAK BOLEH KOSONG.
+    - Fokus pada poin-poin pembelajaran utama dari video.
+
+    FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
+    {
+      "title": "Judul berdasarkan isi video (Max 5-7 kata)",
+      "summary": "String markdown ringkasan...",
+      "quiz": {
+        "title": "Judul Kuis",
+        "questions": [
+          { "id": "q1", "question": "...", "options": ["A","B","C","D"], "correctAnswer": 0, "explanation": "..." }
+        ]
+      },
+      "flashcards": [
+        { "question": "...", "answer": "..." }
+      ]
+    }
+    `
+
+        // Send prompt with YouTube URL directly to Gemini
+        const result = await retryGenAI(() => model.generateContent(prompt))
+        const responseText = result.response.text()
+
+        return parseGeminiResponse(responseText)
+
+    } catch (error: any) {
+        console.error("Error generating content from YouTube with Gemini:", error)
+        throw error
+    }
+}
+
 // --- Helper Functions ---
 
 function buildPromptContext(options?: GenerationOptions): string {

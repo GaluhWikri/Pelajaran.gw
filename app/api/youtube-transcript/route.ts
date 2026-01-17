@@ -68,6 +68,7 @@ async function fetchTranscriptDirect(videoId: string): Promise<string> {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'en-US,en;q=0.9',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         }
     });
 
@@ -77,15 +78,34 @@ async function fetchTranscriptDirect(videoId: string): Promise<string> {
 
     const html = await response.text();
 
+    // Try multiple patterns to find caption URL
+    let captionUrl: string | null = null;
+
+    // Pattern 1: Standard timedtext URL
     const timedtextMatch = html.match(/https:\/\/www\.youtube\.com\/api\/timedtext[^"\\]+/);
-    if (!timedtextMatch) {
-        throw new Error('Could not find caption URL');
+    if (timedtextMatch) {
+        captionUrl = timedtextMatch[0].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
     }
 
-    let captionUrl = timedtextMatch[0].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+    // Pattern 2: Look for captionTracks in playerCaptionsTracklistRenderer
+    if (!captionUrl) {
+        const captionTracksMatch = html.match(/"captionTracks":\s*\[([\s\S]*?)\]/);
+        if (captionTracksMatch) {
+            const baseUrlMatch = captionTracksMatch[1].match(/"baseUrl":\s*"([^"]+)"/);
+            if (baseUrlMatch) {
+                captionUrl = baseUrlMatch[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+            }
+        }
+    }
+
+    if (!captionUrl) {
+        throw new Error('Could not find caption URL - video may not have captions');
+    }
 
     const transcriptResponse = await fetch(captionUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
     });
 
     if (!transcriptResponse.ok) {
@@ -94,7 +114,7 @@ async function fetchTranscriptDirect(videoId: string): Promise<string> {
 
     const transcriptData = await transcriptResponse.text();
 
-    // Parse XML format
+    // Parse XML format - handle both formats
     const textMatches = transcriptData.matchAll(/<text[^>]*>([^<]*)<\/text>/g);
     const texts: string[] = [];
 
@@ -115,6 +135,80 @@ async function fetchTranscriptDirect(videoId: string): Promise<string> {
     }
 
     return texts.join(' ');
+}
+
+// Method 4: Alternative approach using youtube-transcript API format
+async function fetchTranscriptAlternative(videoId: string): Promise<string> {
+    // Try fetching video info first to check if captions exist
+    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+    const response = await fetch(watchUrl, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch video page: ${response.status}`);
+    }
+
+    const html = await response.text();
+
+    // Extract ytInitialPlayerResponse
+    const playerResponseMatch = html.match(/ytInitialPlayerResponse\s*=\s*({[\s\S]+?});/);
+    if (!playerResponseMatch) {
+        throw new Error('Could not find player response');
+    }
+
+    try {
+        const playerResponse = JSON.parse(playerResponseMatch[1]);
+        const captions = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+
+        if (!captions || captions.length === 0) {
+            throw new Error('No captions available for this video');
+        }
+
+        // Get first available caption (usually default language)
+        const captionUrl = captions[0].baseUrl;
+
+        const captionResponse = await fetch(captionUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+
+        if (!captionResponse.ok) {
+            throw new Error(`Failed to fetch captions: ${captionResponse.status}`);
+        }
+
+        const captionXml = await captionResponse.text();
+
+        // Parse the XML
+        const textMatches = captionXml.matchAll(/<text[^>]*>([^<]*)<\/text>/g);
+        const texts: string[] = [];
+
+        for (const match of textMatches) {
+            let text = match[1]
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/\n/g, ' ')
+                .trim();
+            if (text) texts.push(text);
+        }
+
+        if (texts.length === 0) {
+            throw new Error('Transcript is empty');
+        }
+
+        return texts.join(' ');
+    } catch (e: any) {
+        throw new Error(`Failed to parse captions: ${e.message}`);
+    }
 }
 
 export async function POST(request: Request) {
@@ -161,7 +255,7 @@ export async function POST(request: Request) {
             }
         }
 
-        // Method 3: Direct timedtext fetch (last resort)
+        // Method 3: Direct timedtext fetch
         if (!transcript) {
             try {
                 console.log('[YouTube] Method 3: Direct timedtext fetch...');
@@ -170,6 +264,18 @@ export async function POST(request: Request) {
             } catch (error: any) {
                 console.log('[YouTube] Method 3 failed:', error.message);
                 errors.push(`Direct: ${error.message}`);
+            }
+        }
+
+        // Method 4: Alternative player response parsing (last resort)
+        if (!transcript) {
+            try {
+                console.log('[YouTube] Method 4: Alternative player response...');
+                transcript = await fetchTranscriptAlternative(videoId);
+                console.log('[YouTube] Method 4 succeeded!');
+            } catch (error: any) {
+                console.log('[YouTube] Method 4 failed:', error.message);
+                errors.push(`Alternative: ${error.message}`);
             }
         }
 
