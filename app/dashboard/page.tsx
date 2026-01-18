@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FileText, CreditCard, Trophy, TrendingUp, Flame, Puzzle } from "lucide-react"
+import { FileText, CreditCard, Trophy, TrendingUp, Flame, Puzzle, Network } from "lucide-react"
 import confetti from "canvas-confetti"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog"
 export default function DashboardPage() {
   const router = useRouter()
-  const { user: storeUser, notes, flashcards, quizzes, addNote, addFlashcard, addQuiz, getActivityStats, clearAll, setUser, sidebarOpen, hasInitialized, showDailyLoginEffect, resetDailyLoginEffect } = useStore()
+  const { user: storeUser, notes, flashcards, quizzes, mindmaps, addNote, addFlashcard, addQuiz, getActivityStats, clearAll, setUser, sidebarOpen, hasInitialized, showDailyLoginEffect, resetDailyLoginEffect } = useStore()
   const { user, loading: authLoading } = useAuth()
   const stats = getActivityStats()
   const [isMounted, setIsMounted] = useState(false)
@@ -296,7 +296,7 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">Here's what's happening with your learning today.</p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {/* Level Progress Card - Spans 2 columns on large screens if needed, or just 1 */}
             <div className="col-span-full">
               <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
@@ -498,6 +498,15 @@ export default function DashboardPage() {
               trend={{
                 value: `${isMounted && stats.trends ? (stats.trends.quizzes > 0 ? "+" : "") + stats.trends.quizzes : 0}%`,
                 positive: isMounted && stats.trends ? stats.trends.quizzes >= 0 : true
+              }}
+            />
+            <StatsCard
+              title="Mindmaps"
+              value={isMounted ? mindmaps.length : 0}
+              icon={Network}
+              trend={{
+                value: "Peta Konsep",
+                positive: true
               }}
             />
             <StatsCard
