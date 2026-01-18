@@ -151,7 +151,7 @@ function SidebarContent() {
         {/* Scrollable Content (Navigation + Recent Notes) */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {/* Mobile Search - Visible only on mobile and when sidebar is open */}
-          <div className={cn("px-4 pt-4 pb-2 md:hidden", !sidebarOpen && "hidden")}>
+          <div className={cn("px-4 pt-8 md:hidden", !sidebarOpen && "hidden")}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
