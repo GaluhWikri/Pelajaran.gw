@@ -134,8 +134,8 @@ export default function LandingPage() {
             style={{ scale, opacity }}
             className="relative"
           >
-            {/* Background glow - reduced opacity */}
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-3xl -z-10" />
+            {/* Background glow - only on desktop */}
+            <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-3xl -z-10" />
 
             {/* Demo Container */}
             <div className={`relative rounded-3xl border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-[280px] mx-auto' : ''
