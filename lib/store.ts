@@ -619,6 +619,11 @@ export const useStore = create<AppState>()(
           addDate(q.completedAt)
         })
         state.studySessions.forEach(s => addDate(s.completedAt))
+        // Track mindmap activities (create and regenerate/edit)
+        state.mindmaps.forEach(m => {
+          addDate(m.createdAt)
+          addDate(m.updatedAt)
+        })
 
         const sortedDates = Array.from(activityDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
 

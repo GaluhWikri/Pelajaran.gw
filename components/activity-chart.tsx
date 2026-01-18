@@ -9,7 +9,7 @@ import { subDays, format } from "date-fns"
 import { id } from "date-fns/locale"
 
 export function ActivityChart() {
-  const { notes, quizzes, flashcards, studySessions } = useStore()
+  const { notes, quizzes, flashcards, studySessions, mindmaps } = useStore()
   const [mounted, setMounted] = useState(false)
   const [timeRange, setTimeRange] = useState("14")
 
@@ -29,6 +29,8 @@ export function ActivityChart() {
         editsCount: 0,
         quizzesTakenCount: 0,
         flashcardsCount: 0,
+        mindmapsCreatedCount: 0,
+        mindmapsEditedCount: 0,
         total: 0,
       }
     })
@@ -106,8 +108,35 @@ export function ActivityChart() {
       }
     })
 
+    // Count mindmaps (creation and regenerate/edits)
+    mindmaps.forEach((mindmap) => {
+      // Count creation
+      const createdDay = getDayItem(mindmap.createdAt)
+      if (createdDay) {
+        createdDay.mindmapsCreatedCount += 1
+        createdDay.total += 1
+      }
+
+      // Count edits/regenerates
+      // If updatedAt is more than 1 minute after createdAt, it means a regenerate happened
+      if (mindmap.updatedAt) {
+        const createdTime = new Date(mindmap.createdAt).getTime()
+        const updatedTime = new Date(mindmap.updatedAt).getTime()
+        const timeDiff = updatedTime - createdTime
+
+        // If more than 1 minute difference, count as regenerate
+        if (timeDiff > 60 * 1000) {
+          const updatedDay = getDayItem(mindmap.updatedAt)
+          if (updatedDay) {
+            updatedDay.mindmapsEditedCount += 1
+            updatedDay.total += 1
+          }
+        }
+      }
+    })
+
     return daysData
-  }, [notes, quizzes, flashcards, studySessions, timeRange])
+  }, [notes, quizzes, flashcards, studySessions, mindmaps, timeRange])
 
   if (!mounted) {
     return (
@@ -182,7 +211,7 @@ export function ActivityChart() {
                             </span>
                           </div>
 
-                          {(data.notesCount > 0 || data.editsCount > 0 || data.quizzesTakenCount > 0 || data.flashcardsCount > 0) && (
+                          {(data.notesCount > 0 || data.editsCount > 0 || data.quizzesTakenCount > 0 || data.flashcardsCount > 0 || data.mindmapsCreatedCount > 0 || data.mindmapsEditedCount > 0) && (
                             <div className="border-t pt-2 space-y-1 text-xs">
                               {data.notesCount > 0 && (
                                 <div className="flex justify-between">
@@ -206,6 +235,18 @@ export function ActivityChart() {
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Flashcards:</span>
                                   <span className="font-medium">{data.flashcardsCount}</span>
+                                </div>
+                              )}
+                              {data.mindmapsCreatedCount > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Mindmaps Created:</span>
+                                  <span className="font-medium">{data.mindmapsCreatedCount}</span>
+                                </div>
+                              )}
+                              {data.mindmapsEditedCount > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Mindmaps Regenerated:</span>
+                                  <span className="font-medium">{data.mindmapsEditedCount}</span>
                                 </div>
                               )}
                             </div>

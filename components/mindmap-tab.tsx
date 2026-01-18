@@ -224,7 +224,7 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
 }
 
 export function MindmapTab({ noteId }: MindmapTabProps) {
-    const { notes, getMindmapByNoteId, addMindmap } = useStore()
+    const { notes, getMindmapByNoteId, addMindmap, updateMindmap, addXP } = useStore()
     const { user } = useAuth()
     const note = notes.find((n) => n.id === noteId)
 
@@ -325,15 +325,25 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
             // Generate mindmap using AI
             const mindmapNodes = await generateMindmapFromNote(note.content, note.title)
 
+            const isNewMindmap = !existingMindmap
             const mindmapId = existingMindmap?.id || crypto.randomUUID()
 
-            // Save to store
-            addMindmap({
-                id: mindmapId,
-                noteId: noteId,
-                userId: user?.id || "demo-user",
-                nodes: mindmapNodes,
-            })
+            // Save to store (differentiate create vs regenerate)
+            if (isNewMindmap) {
+                addMindmap({
+                    id: mindmapId,
+                    noteId: noteId,
+                    userId: user?.id || "demo-user",
+                    nodes: mindmapNodes,
+                })
+                // Award XP for creating new mindmap
+                addXP(20)
+            } else {
+                // Update existing mindmap (regenerate = edit activity)
+                updateMindmap(existingMindmap.id, {
+                    nodes: mindmapNodes,
+                })
+            }
 
             // Save to Supabase
             if (user) {
