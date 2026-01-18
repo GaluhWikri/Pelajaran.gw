@@ -417,6 +417,10 @@ export default function DashboardPage() {
                               <span className="font-bold text-foreground">+100 XP</span>
                             </li>
                             <li className="flex justify-between border-b pb-1">
+                              <span>🗺️ Create Mindmap</span>
+                              <span className="font-bold text-foreground">+20 XP</span>
+                            </li>
+                            <li className="flex justify-between border-b pb-1">
                               <span>🧠 Finish a Quiz</span>
                               <span className="font-bold text-foreground">+20 XP</span>
                             </li>
