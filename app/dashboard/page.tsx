@@ -174,6 +174,25 @@ export default function DashboardPage() {
           useStore.getState().setQuizzes([])
         }
 
+        // Fetch mindmaps
+        const { data: mindmapsData } = await supabase
+          .from('mindmaps')
+          .select('*')
+          .eq('user_id', user.id)
+
+        if (mindmapsData) {
+          useStore.getState().setMindmaps(mindmapsData.map((mindmap) => ({
+            id: mindmap.id,
+            noteId: mindmap.note_id,
+            userId: mindmap.user_id,
+            nodes: mindmap.nodes || [],
+            createdAt: new Date(mindmap.created_at),
+            updatedAt: new Date(mindmap.updated_at),
+          })))
+        } else {
+          useStore.getState().setMindmaps([])
+        }
+
         // 3. LOGIC: Calculate Streak & Daily Login AFTER content is loaded
         if (profileData) {
           // Calculate Streak based on ACTUAL ACTIVITY (not just login)
