@@ -19,7 +19,7 @@ import { useStore } from "@/lib/store"
 import { useAuth } from "@/lib/auth-context"
 import { generateMindmapFromNote } from "@/lib/ai-service"
 import { saveMindmapToSupabase } from "@/lib/supabase-helpers"
-import { Loader2, Sparkles, RefreshCw, LayoutGrid } from "lucide-react"
+import { Loader2, Sparkles, RefreshCw, LayoutGrid, Undo2, Redo2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MindmapNode } from "@/lib/types"
 
@@ -231,6 +231,11 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const [isGenerating, setIsGenerating] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
+    // History state for undo/redo
+    const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([])
+    const [historyIndex, setHistoryIndex] = useState(-1)
+    const [isDragging, setIsDragging] = useState(false)
+
     // Get existing mindmap from store
     const existingMindmap = getMindmapByNoteId(noteId)
 
@@ -245,6 +250,70 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+
+    // Save current state to history
+    const saveToHistory = useCallback((currentNodes: Node[], currentEdges: Edge[]) => {
+        setHistory(prev => {
+            // Remove any redo states after current index
+            const newHistory = prev.slice(0, historyIndex + 1)
+            // Add new state
+            newHistory.push({
+                nodes: currentNodes.map(n => ({ ...n, position: { ...n.position } })),
+                edges: [...currentEdges]
+            })
+            // Limit history to 50 states
+            if (newHistory.length > 50) {
+                newHistory.shift()
+                return newHistory
+            }
+            return newHistory
+        })
+        setHistoryIndex(prev => Math.min(prev + 1, 49))
+    }, [historyIndex])
+
+    // Handle node changes with history tracking
+    const handleNodesChange = useCallback((changes: any) => {
+        // Check if any change is a position change (dragging)
+        const positionChanges = changes.filter((c: any) => c.type === 'position')
+
+        // Track drag start
+        if (positionChanges.some((c: any) => c.dragging === true) && !isDragging) {
+            setIsDragging(true)
+            // Save state before drag starts
+            saveToHistory(nodes, edges)
+        }
+
+        // Track drag end
+        if (positionChanges.some((c: any) => c.dragging === false) && isDragging) {
+            setIsDragging(false)
+        }
+
+        onNodesChange(changes)
+    }, [onNodesChange, isDragging, nodes, edges, saveToHistory])
+
+    // Undo function
+    const handleUndo = useCallback(() => {
+        if (historyIndex > 0) {
+            const prevState = history[historyIndex - 1]
+            setNodes(prevState.nodes)
+            setEdges(prevState.edges)
+            setHistoryIndex(prev => prev - 1)
+        }
+    }, [history, historyIndex, setNodes, setEdges])
+
+    // Redo function
+    const handleRedo = useCallback(() => {
+        if (historyIndex < history.length - 1) {
+            const nextState = history[historyIndex + 1]
+            setNodes(nextState.nodes)
+            setEdges(nextState.edges)
+            setHistoryIndex(prev => prev + 1)
+        }
+    }, [history, historyIndex, setNodes, setEdges])
+
+    // Check if undo/redo is available
+    const canUndo = historyIndex > 0
+    const canRedo = historyIndex < history.length - 1
 
     const handleGenerateMindmap = async () => {
         if (!note) return
@@ -280,6 +349,10 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
             const { nodes: newNodes, edges: newEdges } = convertToReactFlow(mindmapNodes)
             setNodes(newNodes)
             setEdges(newEdges)
+
+            // Reset history when generating new mindmap
+            setHistory([{ nodes: newNodes, edges: newEdges }])
+            setHistoryIndex(0)
         } catch (err: any) {
             console.error("Error generating mindmap:", err)
             setError(err.message || "Gagal generate mindmap")
@@ -291,6 +364,9 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     // Reset layout to original calculated positions
     const handleResetLayout = () => {
         if (existingMindmap?.nodes && existingMindmap.nodes.length > 0) {
+            // Save current state before reset
+            saveToHistory(nodes, edges)
+
             const { nodes: resetNodes, edges: resetEdges } = convertToReactFlow(existingMindmap.nodes)
             setNodes(resetNodes)
             setEdges(resetEdges)
@@ -308,16 +384,41 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                 </div>
                 <div className="flex gap-2">
                     {hasMindmap && (
-                        <Button
-                            onClick={handleResetLayout}
-                            variant="outline"
-                            size="sm"
-                            className="h-8 gap-2"
-                            title="Reset posisi node ke layout asli"
-                        >
-                            <LayoutGrid className="h-3.5 w-3.5" />
-                            Reset Layout
-                        </Button>
+                        <>
+                            {/* Undo/Redo Buttons */}
+                            <div className="flex gap-1">
+                                <Button
+                                    onClick={handleUndo}
+                                    disabled={!canUndo}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    title="Undo (Batalkan drag terakhir)"
+                                >
+                                    <Undo2 className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    onClick={handleRedo}
+                                    disabled={!canRedo}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    title="Redo (Ulangi drag yang dibatalkan)"
+                                >
+                                    <Redo2 className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
+                            <Button
+                                onClick={handleResetLayout}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-2"
+                                title="Reset posisi node ke layout asli"
+                            >
+                                <LayoutGrid className="h-3.5 w-3.5" />
+                                Reset Layout
+                            </Button>
+                        </>
                     )}
                     <Button
                         onClick={handleGenerateMindmap}
@@ -360,7 +461,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                             <ReactFlow
                                 nodes={nodes}
                                 edges={edges}
-                                onNodesChange={onNodesChange}
+                                onNodesChange={handleNodesChange}
                                 onEdgesChange={onEdgesChange}
                                 nodeTypes={nodeTypes}
                                 fitView
