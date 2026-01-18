@@ -128,16 +128,17 @@ export default function LandingPage() {
       </section>
 
       {/* App Screenshot Demo */}
-      <section id="demo" ref={containerRef} className="py-12 md:py-20 px-4 relative">
+      <section id="demo" ref={containerRef} className="py-12 md:py-20 px-4 relative scroll-mt-24">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             style={{ scale, opacity }}
             className="relative"
           >
-            <div className="absolute inset-0 bg-linear-to-r from-orange-500/20 to-orange-600/20 blur-3xl -z-10" />
+            {/* Background glow - reduced opacity */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-3xl -z-10" />
 
             {/* Demo Container */}
-            <div className={`relative rounded-3xl border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-sm mx-auto' : ''
+            <div className={`relative rounded-3xl border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-[280px] mx-auto' : ''
               }`}>
               {/* Browser/Phone Header - Only show on desktop */}
               {!isMobile && (
