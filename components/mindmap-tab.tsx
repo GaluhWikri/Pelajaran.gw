@@ -115,10 +115,10 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
 
     calculateLevel(root.id, 0)
 
-    // Layout constants
-    const ROOT_SPACING = 450        // Jarak khusus dari root ke level 1 (diperbesar)
-    const HORIZONTAL_SPACING = 300  // Jarak antar level lainnya (horizontal)
-    const VERTICAL_SPACING = 85     // Jarak antar sibling nodes (vertical) (sedikit lega)
+    // Layout constants - increased for better spacing
+    const ROOT_SPACING = 550        // Jarak khusus dari root ke level 1 (diperbesar)
+    const HORIZONTAL_SPACING = 350  // Jarak antar level lainnya (horizontal)
+    const VERTICAL_SPACING = 100    // Jarak antar sibling nodes (vertical)
 
     // Calculate subtree leaf count (for balanced spacing)
     const subtreeLeafCount = new Map<string, number>()
