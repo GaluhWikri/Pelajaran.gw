@@ -19,7 +19,7 @@ import { useStore } from "@/lib/store"
 import { useAuth } from "@/lib/auth-context"
 import { generateMindmapFromNote } from "@/lib/ai-service"
 import { saveMindmapToSupabase } from "@/lib/supabase-helpers"
-import { Loader2, Sparkles, RefreshCw, LayoutGrid, Undo2, Redo2 } from "lucide-react"
+import { Loader2, Sparkles, RefreshCw, LayoutGrid, Undo2, Redo2, Maximize2, Minimize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MindmapNode } from "@/lib/types"
 
@@ -285,6 +285,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([])
     const [historyIndex, setHistoryIndex] = useState(-1)
     const [isDragging, setIsDragging] = useState(false)
+    const [isFullscreen, setIsFullscreen] = useState(false)
 
     // Get existing mindmap from store
     const existingMindmap = getMindmapByNoteId(noteId)
@@ -463,7 +464,12 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const hasMindmap = nodes.length > 0
 
     return (
-        <div className="h-full flex flex-col">
+        <div className={cn(
+            "flex flex-col bg-background",
+            isFullscreen
+                ? "fixed inset-0 z-50 h-screen"
+                : "h-full"
+        )}>
             {/* Header with reduced padding */}
             <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b">
                 <div>
@@ -504,6 +510,19 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                             >
                                 <LayoutGrid className="h-3.5 w-3.5" />
                                 Reset Layout
+                            </Button>
+                            <Button
+                                onClick={() => setIsFullscreen(!isFullscreen)}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
+                            >
+                                {isFullscreen ? (
+                                    <Minimize2 className="h-3.5 w-3.5" />
+                                ) : (
+                                    <Maximize2 className="h-3.5 w-3.5" />
+                                )}
                             </Button>
                         </>
                     )}
