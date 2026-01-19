@@ -100,7 +100,7 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
                     "flex flex-col items-center justify-center text-center",
                     "max-w-[220px] wrap-break-word",
                     // Hover & Path Highlight
-                    data.isActivePath ? "scale-105 shadow-lg brightness-110" : "hover:scale-105 hover:-translate-y-1 hover:shadow-xl",
+                    data.isActivePath ? "scale-110 shadow-xl brightness-110" : "hover:scale-110 hover:-translate-y-2 hover:shadow-2xl",
                     data.isActivePath && level > 0 && "ring-2 ring-white/30",
                     "cursor-pointer",
                     // Root sizing override
