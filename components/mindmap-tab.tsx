@@ -286,6 +286,22 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const [historyIndex, setHistoryIndex] = useState(-1)
     const [isDragging, setIsDragging] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
+    const [isExitingFullscreen, setIsExitingFullscreen] = useState(false)
+
+    // Toggle fullscreen with exit animation (desktop only)
+    const toggleFullscreen = useCallback(() => {
+        if (isFullscreen) {
+            // Exiting fullscreen - trigger exit animation first
+            setIsExitingFullscreen(true)
+            // Wait for animation then actually exit
+            setTimeout(() => {
+                setIsFullscreen(false)
+                setIsExitingFullscreen(false)
+            }, 200) // Match animation duration
+        } else {
+            setIsFullscreen(true)
+        }
+    }, [isFullscreen])
 
     // Get existing mindmap from store
     const existingMindmap = getMindmapByNoteId(noteId)
@@ -466,9 +482,13 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     return (
         <div className={cn(
             "flex flex-col bg-background",
-            isFullscreen
-                ? "fixed inset-0 z-50 h-screen"
-                : "h-full"
+            // Animation only on desktop (md and above) to avoid mobile performance issues
+            "md:transition-all md:duration-200 md:ease-in-out",
+            isFullscreen && !isExitingFullscreen
+                ? "fixed inset-0 z-50 h-screen md:animate-in md:fade-in md:zoom-in-95"
+                : isExitingFullscreen
+                    ? "fixed inset-0 z-50 h-screen md:animate-out md:fade-out md:zoom-out-95"
+                    : "h-full"
         )}>
             {/* Header with reduced padding */}
             <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b">
@@ -501,7 +521,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                                     <Redo2 className="h-3.5 w-3.5" />
                                 </Button>
                                 <Button
-                                    onClick={() => setIsFullscreen(!isFullscreen)}
+                                    onClick={toggleFullscreen}
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-8 p-0"
