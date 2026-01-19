@@ -59,11 +59,17 @@ Kamu adalah asisten untuk membuat struktur mindmap dengan hubungan yang jelas.
 
 INSTRUKSI:
 1. Buat node utama (root) dengan judul catatan
-2. Identifikasi 3-6 konsep/topik utama sebagai cabang level 1
-3. Untuk setiap cabang, identifikasi 2-4 sub-konsep sebagai level 2
-4. Jika relevan, tambahkan detail penting sebagai level 3
+2. Identifikasi konsep/topik utama sebagai cabang level 1 (SESUAIKAN dengan kebutuhan materi - bisa sedikit atau banyak)
+3. Untuk setiap cabang, identifikasi sub-konsep sebagai level 2 (SESUAIKAN dengan kompleksitas topik)
+4. Jika relevan, tambahkan detail penting sebagai level 3 atau lebih dalam
 5. Setiap label node harus singkat (maksimal 5-7 kata)
 6. PENTING: Setiap node (kecuali root) HARUS memiliki "edgeLabel" - teks yang menjelaskan hubungan dengan parent-nya
+
+ATURAN JUMLAH NODE:
+- TIDAK ADA BATASAN TETAP untuk jumlah node atau sub-node
+- Untuk materi SINGKAT/SEDERHANA: cukup buat node yang diperlukan saja (bisa 5-10 node)
+- Untuk materi KOMPLEKS/DETAIL: boleh buat banyak node dan sub-node (bisa 20-40+ node)
+- PRINSIP: Sesuaikan struktur mindmap dengan KEBUTUHAN dan KOMPLEKSITAS materi
 
 CONTOH edgeLabel yang bisa digunakan:
 - "adalah" (untuk definisi)
@@ -92,7 +98,7 @@ FORMAT OUTPUT (JSON Valid):
 }
 
 PENTING:
-- Minimal 10 nodes, maksimal 25 nodes
+- Jumlah node FLEKSIBEL sesuai kebutuhan materi
 - Pastikan semua parentId valid (merujuk ke id yang ada)
 - Root node HARUS memiliki parentId: null dan edgeLabel: null
 - SETIAP node lain WAJIB memiliki edgeLabel yang sesuai konteks
