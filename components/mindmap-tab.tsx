@@ -27,8 +27,8 @@ interface MindmapTabProps {
     noteId: string
 }
 
-// Custom node component for mindmap with handles and relationship subtitle
-function MindmapNodeComponent({ data }: { data: { label: string; level: number; edgeLabel?: string } }) {
+// Custom node component for mindmap with handles on all sides for centered layout
+function MindmapNodeComponent({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center' } }) {
     const bgColors = [
         "bg-gradient-to-br from-primary to-primary/80", // Root
         "bg-gradient-to-br from-blue-500 to-blue-600", // Level 1
@@ -38,13 +38,16 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
     ]
 
     const level = Math.min(data.level, 4)
+    const side = data.side || 'right'
+    const isCenter = side === 'center'
 
     return (
         <div className="relative">
-            {/* Target handle (left side - hidden but functional) */}
+            {/* Left handle - source for center (root), source for left-side nodes, target for right-side nodes */}
             <Handle
-                type="target"
+                type={isCenter || side === 'left' ? 'source' : 'target'}
                 position={Position.Left}
+                id="left"
                 className="opacity-0! w-2! h-2!"
             />
 
@@ -66,10 +69,11 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
                 <div>{data.label}</div>
             </div>
 
-            {/* Source handle (right side - hidden but functional) */}
+            {/* Right handle - source for center (root), source for right-side nodes, target for left-side nodes */}
             <Handle
-                type="source"
+                type={isCenter || side === 'right' ? 'source' : 'target'}
                 position={Position.Right}
+                id="right"
                 className="opacity-0! w-2! h-2!"
             />
         </div>
@@ -80,7 +84,8 @@ const nodeTypes = {
     mindmapNode: MindmapNodeComponent,
 }
 
-// Convert MindmapNode[] to ReactFlow nodes and edges with tree-based layout
+// Convert MindmapNode[] to ReactFlow nodes and edges with CENTERED layout
+// Root in center, children split to left and right sides
 function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges: Edge[] } {
     const nodes: Node[] = []
     const edges: Edge[] = []
@@ -115,35 +120,53 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
 
     calculateLevel(root.id, 0)
 
-    // Layout constants - increased for better spacing
-    const ROOT_SPACING = 550        // Jarak khusus dari root ke level 1 (diperbesar)
-    const HORIZONTAL_SPACING = 350  // Jarak antar level lainnya (horizontal)
-    const VERTICAL_SPACING = 100    // Jarak antar sibling nodes (vertical)
+    // Layout constants for centered layout
+    const HORIZONTAL_SPACING = 350  // Jarak antar level
+    const VERTICAL_SPACING = 100    // Jarak antar sibling nodes
+
+    // Track which side each node is on
+    const nodeSideMap = new Map<string, 'left' | 'right' | 'center'>()
+
+    // Position nodes - centered layout
+    const nodePositions = new Map<string, { x: number; y: number }>()
+
+    // Get all level 1 children (direct children of root)
+    const rootChildren = childrenMap.get(root.id) || []
+
+    // Split children into left and right groups
+    const leftChildren: MindmapNode[] = []
+    const rightChildren: MindmapNode[] = []
+
+    rootChildren.forEach((child, index) => {
+        if (index % 2 === 0) {
+            rightChildren.push(child)
+        } else {
+            leftChildren.push(child)
+        }
+    })
 
     // Calculate subtree leaf count (for balanced spacing)
-    const subtreeLeafCount = new Map<string, number>()
-
     function calculateLeafCount(nodeId: string): number {
         const children = childrenMap.get(nodeId) || []
         if (children.length === 0) {
-            subtreeLeafCount.set(nodeId, 1)
             return 1
         }
         let totalLeaves = 0
         children.forEach((child) => {
             totalLeaves += calculateLeafCount(child.id)
         })
-        subtreeLeafCount.set(nodeId, totalLeaves)
         return totalLeaves
     }
 
-    calculateLeafCount(root.id)
-
-    // Position nodes - children first, then center parent among them
-    const nodePositions = new Map<string, { x: number; y: number }>()
-
-    function positionSubtree(nodeId: string, x: number, yStart: number, level: number): { endY: number; centerY: number } {
+    // Position a subtree on either left or right side
+    function positionSubtree(
+        nodeId: string,
+        x: number,
+        yStart: number,
+        side: 'left' | 'right'
+    ): { endY: number; centerY: number } {
         const children = childrenMap.get(nodeId) || []
+        nodeSideMap.set(nodeId, side)
 
         if (children.length === 0) {
             // Leaf node
@@ -151,15 +174,15 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
             return { endY: yStart + VERTICAL_SPACING, centerY: yStart }
         }
 
-        // Determine spacing based on level (root gets extra space)
-        const spacing = level === 0 ? ROOT_SPACING : HORIZONTAL_SPACING
+        // Determine X direction based on side
+        const xOffset = side === 'left' ? -HORIZONTAL_SPACING : HORIZONTAL_SPACING
 
         // Position all children and track their centers
         let currentY = yStart
         const childCenters: number[] = []
 
         children.forEach((child) => {
-            const result = positionSubtree(child.id, x + spacing, currentY, level + 1)
+            const result = positionSubtree(child.id, x + xOffset, currentY, side)
             childCenters.push(result.centerY)
             currentY = result.endY
         })
@@ -174,24 +197,44 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
         return { endY: currentY, centerY }
     }
 
-    // First pass: position everything starting from Y=0
-    // Start root at a negative X to shift the whole tree left and make room for children
-    positionSubtree(root.id, -100, 0, 0)
+    // Position root at center (0, 0)
+    nodePositions.set(root.id, { x: 0, y: 0 })
+    nodeSideMap.set(root.id, 'center')
 
-    // Second pass: shift everything so root is at Y=0
-    const rootPos = nodePositions.get(root.id)
-    if (rootPos && rootPos.y !== 0) {
-        const offset = rootPos.y
-        nodePositions.forEach((pos, nodeId) => {
-            nodePositions.set(nodeId, { x: pos.x, y: pos.y - offset })
-        })
-    }
+    // Position right side children
+    let rightYStart = 0
+    let rightTotalHeight = 0
+    rightChildren.forEach(child => {
+        rightTotalHeight += calculateLeafCount(child.id) * VERTICAL_SPACING
+    })
+    rightYStart = -rightTotalHeight / 2
+
+    let currentRightY = rightYStart
+    rightChildren.forEach((child) => {
+        const result = positionSubtree(child.id, HORIZONTAL_SPACING, currentRightY, 'right')
+        currentRightY = result.endY
+    })
+
+    // Position left side children
+    let leftYStart = 0
+    let leftTotalHeight = 0
+    leftChildren.forEach(child => {
+        leftTotalHeight += calculateLeafCount(child.id) * VERTICAL_SPACING
+    })
+    leftYStart = -leftTotalHeight / 2
+
+    let currentLeftY = leftYStart
+    leftChildren.forEach((child) => {
+        const result = positionSubtree(child.id, -HORIZONTAL_SPACING, currentLeftY, 'left')
+        currentLeftY = result.endY
+    })
 
     // Create ReactFlow nodes
     mindmapNodes.forEach((node) => {
         const position = nodePositions.get(node.id) || { x: 0, y: 0 }
         const level = levelMap.get(node.id) || 0
         const edgeLabel = edgeLabelMap.get(node.id)
+        const side = nodeSideMap.get(node.id) || 'right'
 
         nodes.push({
             id: node.id,
@@ -200,17 +243,23 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
             data: {
                 label: node.label,
                 level,
-                edgeLabel: edgeLabel || undefined // Pass edgeLabel to node for subtitle display
+                edgeLabel: edgeLabel || undefined,
+                side // Pass side info to node component
             },
         })
 
-        // Create clean bezier edge to parent
+        // Create edge to parent
         if (node.parentId) {
+            const parentSide = nodeSideMap.get(node.parentId) || 'center'
+            const nodeSide = nodeSideMap.get(node.id) || 'right'
+
             edges.push({
                 id: `e-${node.parentId}-${node.id}`,
                 source: node.parentId,
                 target: node.id,
-                type: "default", // Bezier curve for smoother lines
+                type: "default",
+                sourceHandle: nodeSide === 'left' ? 'left' : 'right',
+                targetHandle: nodeSide === 'left' ? 'right' : 'left',
                 style: {
                     stroke: '#64748b',
                     strokeWidth: 2,
