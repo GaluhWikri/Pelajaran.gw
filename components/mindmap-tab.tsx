@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo, useEffect } from "react"
+import { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import ReactFlow, {
     Node,
     Edge,
@@ -11,6 +11,8 @@ import ReactFlow, {
     BackgroundVariant,
     Handle,
     Position,
+    useReactFlow,
+    ReactFlowProvider,
 } from "reactflow"
 import "reactflow/dist/style.css"
 import { Button } from "@/components/ui/button"
@@ -287,6 +289,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const [isDragging, setIsDragging] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [isExitingFullscreen, setIsExitingFullscreen] = useState(false)
+    const reactFlowInstance = useRef<any>(null)
 
     // Toggle fullscreen with exit animation (desktop only)
     const toggleFullscreen = useCallback(() => {
@@ -300,6 +303,12 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
             }, 200) // Match animation duration
         } else {
             setIsFullscreen(true)
+            // FitView after entering fullscreen (wait for layout to update)
+            setTimeout(() => {
+                if (reactFlowInstance.current) {
+                    reactFlowInstance.current.fitView({ padding: 0.1, duration: 300 })
+                }
+            }, 100)
         }
     }, [isFullscreen])
 
@@ -592,6 +601,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                                 onNodesChange={handleNodesChange}
                                 onEdgesChange={onEdgesChange}
                                 nodeTypes={nodeTypes}
+                                onInit={(instance) => { reactFlowInstance.current = instance }}
                                 fitView
                                 fitViewOptions={{
                                     padding: 0.1,
