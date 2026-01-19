@@ -31,7 +31,7 @@ interface MindmapTabProps {
 
 // Custom node component for mindmap with modern, attractive design
 // Custom node component for mindmap with modern, attractive design
-function MindmapNodeComponent({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center' } }) {
+function MindmapNodeComponent({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center'; isActivePath?: boolean } }) {
     // "Dark Tech" style - Dark cards with vibrant colored borders/accents
     const nodeStyles = [
         // Root - Dark Tech Style (Matching Children)
@@ -98,9 +98,10 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
                     style.text,
                     // Layout
                     "flex flex-col items-center justify-center text-center",
-                    "max-w-[220px] break-words",
-                    // Hover effects
-                    "hover:scale-105 hover:-translate-y-1 hover:shadow-xl",
+                    "max-w-[220px] wrap-break-word",
+                    // Hover & Path Highlight
+                    data.isActivePath ? "scale-105 shadow-lg brightness-110" : "hover:scale-105 hover:-translate-y-1 hover:shadow-xl",
+                    data.isActivePath && level > 0 && "ring-2 ring-white/30",
                     "cursor-pointer",
                     // Root sizing override
                     level === 0 && "px-8 py-5 max-w-[300px] text-lg rounded-2xl",
@@ -470,12 +471,43 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
         onNodesChange(changes)
     }, [onNodesChange, isDragging, nodes, edges, saveToHistory])
 
-    // Animate edges on node hover
+    // Animate edges on node hover - traces path to root AND all descendants
     const onNodeMouseEnter = useCallback((_event: any, node: Node) => {
-        // Add animation and highlight to connected edges
-        setEdges((eds) =>
-            eds.map((edge) => {
-                if (edge.source === node.id || edge.target === node.id) {
+        setEdges((eds) => {
+            const pathNodeIds = new Set<string>([node.id])
+            const pathEdgeIds = new Set<string>()
+
+            // 1. Recursive helper to find Path to Root (Ancestors)
+            const findPathToRoot = (targetId: string) => {
+                const incomingEdge = eds.find(e => e.target === targetId)
+                if (incomingEdge) {
+                    pathEdgeIds.add(incomingEdge.id)
+                    pathNodeIds.add(incomingEdge.source)
+                    findPathToRoot(incomingEdge.source)
+                }
+            }
+
+            // 2. Recursive helper to find Subtree (Descendants)
+            const findDescendants = (sourceId: string) => {
+                const outgoingEdges = eds.filter(e => e.source === sourceId)
+                outgoingEdges.forEach(edge => {
+                    pathEdgeIds.add(edge.id)
+                    pathNodeIds.add(edge.target)
+                    findDescendants(edge.target)
+                })
+            }
+
+            findPathToRoot(node.id)
+            findDescendants(node.id)
+
+            // Highlight nodes in the path
+            setNodes((nds) => nds.map(n => ({
+                ...n,
+                data: { ...n.data, isActivePath: pathNodeIds.has(n.id) }
+            })))
+
+            return eds.map((edge) => {
+                if (pathEdgeIds.has(edge.id)) {
                     return {
                         ...edge,
                         animated: true,
@@ -484,24 +516,25 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                 }
                 return edge
             })
-        )
-    }, [setEdges])
+        })
+    }, [setEdges, setNodes])
 
-    const onNodeMouseLeave = useCallback((_event: any, node: Node) => {
-        // Reset edges animation and style
+    const onNodeMouseLeave = useCallback((_event: any, _node: Node) => {
+        // Reset nodes highlighting
+        setNodes((nds) => nds.map(n => ({
+            ...n,
+            data: { ...n.data, isActivePath: false }
+        })))
+
+        // Reset ALL edges animation and style
         setEdges((eds) =>
-            eds.map((edge) => {
-                if (edge.source === node.id || edge.target === node.id) {
-                    return {
-                        ...edge,
-                        animated: false,
-                        style: { ...edge.style, stroke: '#64748b', strokeWidth: 2 }, // Reset to original style (slate-500)
-                    }
-                }
-                return edge
-            })
+            eds.map((edge) => ({
+                ...edge,
+                animated: false,
+                style: { ...edge.style, stroke: '#64748b', strokeWidth: 2 }, // Reset to original style (slate-500)
+            }))
         )
-    }, [setEdges])
+    }, [setEdges, setNodes])
 
     // Undo function
     const handleUndo = useCallback(() => {
