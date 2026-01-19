@@ -97,6 +97,7 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     summary: string
     quiz: Omit<Quiz, "id" | "createdAt">
     flashcards: Omit<Flashcard, "id" | "createdAt">[]
+    detectedSubject?: string
 }> {
     if (!apiKey) {
         console.warn("Gemini API Key is missing. Returning mock data.")
@@ -162,6 +163,7 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
       "title": "Judul Materi (Max 5-7 kata)",
+      "detectedSubject": "Mata Pelajaran/Kuliah yang TERDETEKSI dari ISI KONTEN (contoh: Matematika, Biologi, Sejarah, Pemrograman, dll)",
       "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
@@ -193,6 +195,7 @@ export async function generateLearningContentFromText(text: string, options?: Ge
     summary: string
     quiz: Omit<Quiz, "id" | "createdAt">
     flashcards: Omit<Flashcard, "id" | "createdAt">[]
+    detectedSubject?: string
 }> {
     if (!apiKey) {
         console.warn("Gemini API Key is missing. Returning mock data.")
@@ -233,6 +236,7 @@ export async function generateLearningContentFromText(text: string, options?: Ge
     FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
       "title": "Judul Materi (Max 5-7 kata)",
+      "detectedSubject": "Mata Pelajaran/Kuliah yang TERDETEKSI dari ISI KONTEN (contoh: Matematika, Biologi, Sejarah, Pemrograman, dll)",
       "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
@@ -267,6 +271,7 @@ export async function generateLearningContentFromYouTube(youtubeUrl: string, opt
     summary: string
     quiz: Omit<Quiz, "id" | "createdAt">
     flashcards: Omit<Flashcard, "id" | "createdAt">[]
+    detectedSubject?: string
 }> {
     if (!apiKey) {
         console.warn("Gemini API Key is missing. Returning mock data.")
@@ -307,6 +312,7 @@ export async function generateLearningContentFromYouTube(youtubeUrl: string, opt
     FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
       "title": "Judul berdasarkan isi video (Max 5-7 kata)",
+      "detectedSubject": "Mata Pelajaran/Kuliah yang TERDETEKSI dari ISI VIDEO (contoh: Matematika, Biologi, Sejarah, Pemrograman, dll)",
       "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
@@ -477,9 +483,13 @@ function parseGeminiResponse(responseText: string) {
             console.log("Failed to extract flashcards");
         }
 
+        // Extract detectedSubject (Fallback support)
+        const detectedSubjectMatch = responseText.match(/"detectedSubject":\s*"([^"]+)"/);
+
         // Construct fallback object
         data = {
             title: titleMatch ? titleMatch[1] : "Generated Content (Partial)",
+            detectedSubject: detectedSubjectMatch ? detectedSubjectMatch[1] : undefined,
             summary: summaryText,
             quiz: quizData,
             flashcards: flashcardsData
@@ -503,6 +513,7 @@ function parseGeminiResponse(responseText: string) {
                 reviewCount: 0,
             }))
             : [],
+        detectedSubject: data.detectedSubject || undefined,
     }
 }
 

@@ -227,11 +227,14 @@ export default function UploadPage() {
             updateActiveUpload(ytId, { status: "processing", progress: 20, fileName: "Mengirim ke AI..." })
 
             // Send YouTube URL directly to Gemini AI (no transcript extraction needed)
-            const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContentFromYouTube(url, {
+            const { title: generatedTitle, summary, quiz, flashcards, detectedSubject } = await generateLearningContentFromYouTube(url, {
                 subject: defaultConfig.subject,
                 understandingLevel: defaultConfig.understandingLevel,
                 writingStyle: defaultConfig.writingStyle
             })
+
+            // Use AI-detected subject if available, otherwise fall back to default
+            const finalSubject = detectedSubject || defaultConfig.subject
 
             updateActiveUpload(ytId, { progress: 80, fileName: generatedTitle || "YouTube Video" })
 
@@ -246,7 +249,7 @@ export default function UploadPage() {
                     userId: user.id,
                     title: generatedTitle || "YouTube Summary",
                     content: htmlContent as string,
-                    tags: [defaultConfig.subject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
+                    tags: [finalSubject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
                     isFavorite: false,
                 })
 
@@ -261,7 +264,7 @@ export default function UploadPage() {
                 userId: user?.id || "demo-user",
                 title: generatedTitle || "YouTube Summary",
                 content: htmlContent as string,
-                tags: [defaultConfig.subject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
+                tags: [finalSubject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
                 isFavorite: false,
             })
 
@@ -387,11 +390,14 @@ export default function UploadPage() {
                 updateActiveUpload(ytId, { status: "processing", progress: 20, fileName: "Mengirim ke AI..." })
 
                 // Send YouTube URL directly to Gemini AI (no transcript extraction needed)
-                const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContentFromYouTube(youtubeTask.url, {
+                const { title: generatedTitle, summary, quiz, flashcards, detectedSubject } = await generateLearningContentFromYouTube(youtubeTask.url, {
                     subject: config.subject,
                     understandingLevel: getUnderstandingLabel(config.understandingLevel),
                     writingStyle: config.writingStyle
                 })
+
+                // Use AI-detected subject if available, otherwise fall back to config
+                const finalSubject = detectedSubject || config.subject
 
                 updateActiveUpload(ytId, { progress: 80, fileName: generatedTitle || "YouTube Video" })
 
@@ -406,7 +412,7 @@ export default function UploadPage() {
                         userId: user.id,
                         title: generatedTitle || "YouTube Summary",
                         content: htmlContent as string,
-                        tags: [config.subject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
+                        tags: [finalSubject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
                         isFavorite: false,
                     })
 
@@ -422,7 +428,7 @@ export default function UploadPage() {
                     userId: user?.id || "demo-user",
                     title: generatedTitle || "YouTube Summary",
                     content: htmlContent as string,
-                    tags: [config.subject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
+                    tags: [finalSubject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
                     isFavorite: false,
                 })
 
@@ -504,11 +510,14 @@ export default function UploadPage() {
                 fileSize: file.size,
             })
 
-            const { title: generatedTitle, summary, quiz, flashcards } = await generateLearningContent(file, {
+            const { title: generatedTitle, summary, quiz, flashcards, detectedSubject } = await generateLearningContent(file, {
                 subject: config.subject,
                 understandingLevel: getUnderstandingLabel(config.understandingLevel),
                 writingStyle: config.writingStyle
             })
+
+            // Use AI-detected subject if available, otherwise fall back to config
+            const finalSubject = detectedSubject || config.subject
 
             // Generate proper UUID for note ID
             const noteId = crypto.randomUUID()
@@ -521,7 +530,7 @@ export default function UploadPage() {
                     userId: user.id,
                     title: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
                     content: htmlContent as string,
-                    tags: [config.subject, fileType, "AI Generated"].filter((t) => t && t.trim() !== ""),
+                    tags: [finalSubject, fileType, "AI Generated"].filter((t) => t && t.trim() !== ""),
                     isFavorite: false,
                 })
 
@@ -537,7 +546,7 @@ export default function UploadPage() {
                 userId: user?.id || "demo-user",
                 title: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
                 content: htmlContent as string,
-                tags: [config.subject, fileType, "AI Generated"].filter((t) => t && t.trim() !== ""),
+                tags: [finalSubject, fileType, "AI Generated"].filter((t) => t && t.trim() !== ""),
                 isFavorite: false,
             })
 
