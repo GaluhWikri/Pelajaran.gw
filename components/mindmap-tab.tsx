@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import ReactFlow, {
     Node,
     Edge,
@@ -251,11 +251,15 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
-    // Save current state to history
+    // Save current state to history - use functional update to avoid stale closure
     const saveToHistory = useCallback((currentNodes: Node[], currentEdges: Edge[]) => {
         setHistory(prev => {
-            // Remove any redo states after current index
-            const newHistory = prev.slice(0, historyIndex + 1)
+            // Get the actual current index from previous state
+            const currentIndex = prev.length - 1
+            // Remove any redo states after current position (if we're not at the end)
+            const newHistory = historyIndex >= 0 && historyIndex < prev.length - 1
+                ? prev.slice(0, historyIndex + 1)
+                : [...prev]
             // Add new state
             newHistory.push({
                 nodes: currentNodes.map(n => ({ ...n, position: { ...n.position } })),
@@ -264,11 +268,11 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
             // Limit history to 50 states
             if (newHistory.length > 50) {
                 newHistory.shift()
-                return newHistory
             }
+            // Update historyIndex to point to the new state
+            setHistoryIndex(newHistory.length - 1)
             return newHistory
         })
-        setHistoryIndex(prev => Math.min(prev + 1, 49))
     }, [historyIndex])
 
     // Handle node changes with history tracking
@@ -293,26 +297,49 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
 
     // Undo function
     const handleUndo = useCallback(() => {
-        if (historyIndex > 0) {
+        if (historyIndex > 0 && history[historyIndex - 1]) {
             const prevState = history[historyIndex - 1]
-            setNodes(prevState.nodes)
-            setEdges(prevState.edges)
-            setHistoryIndex(prev => prev - 1)
+            if (prevState && prevState.nodes && prevState.edges) {
+                setNodes(prevState.nodes)
+                setEdges(prevState.edges)
+                setHistoryIndex(prev => prev - 1)
+            }
         }
     }, [history, historyIndex, setNodes, setEdges])
 
     // Redo function
     const handleRedo = useCallback(() => {
-        if (historyIndex < history.length - 1) {
+        if (historyIndex < history.length - 1 && history[historyIndex + 1]) {
             const nextState = history[historyIndex + 1]
-            setNodes(nextState.nodes)
-            setEdges(nextState.edges)
-            setHistoryIndex(prev => prev + 1)
+            if (nextState && nextState.nodes && nextState.edges) {
+                setNodes(nextState.nodes)
+                setEdges(nextState.edges)
+                setHistoryIndex(prev => prev + 1)
+            }
         }
     }, [history, historyIndex, setNodes, setEdges])
 
+    // Keyboard shortcuts for undo/redo
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ctrl+Z for undo (or Cmd+Z on Mac)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault()
+                handleUndo()
+            }
+            // Ctrl+Y for redo (or Ctrl+Shift+Z / Cmd+Shift+Z)
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault()
+                handleRedo()
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [handleUndo, handleRedo])
+
     // Check if undo/redo is available
-    const canUndo = historyIndex > 0
+    const canUndo = historyIndex > 0 && history.length > 0
     const canRedo = historyIndex < history.length - 1
 
     const handleGenerateMindmap = async () => {
