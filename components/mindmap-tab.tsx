@@ -478,7 +478,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                 <div className="flex gap-2">
                     {hasMindmap && (
                         <>
-                            {/* Undo/Redo Buttons */}
+                            {/* Undo/Redo/Fullscreen Buttons */}
                             <div className="flex gap-1">
                                 <Button
                                     onClick={handleUndo}
@@ -500,6 +500,19 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                                 >
                                     <Redo2 className="h-3.5 w-3.5" />
                                 </Button>
+                                <Button
+                                    onClick={() => setIsFullscreen(!isFullscreen)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
+                                >
+                                    {isFullscreen ? (
+                                        <Minimize2 className="h-3.5 w-3.5" />
+                                    ) : (
+                                        <Maximize2 className="h-3.5 w-3.5" />
+                                    )}
+                                </Button>
                             </div>
                             <Button
                                 onClick={handleResetLayout}
@@ -510,19 +523,6 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                             >
                                 <LayoutGrid className="h-3.5 w-3.5" />
                                 Reset Layout
-                            </Button>
-                            <Button
-                                onClick={() => setIsFullscreen(!isFullscreen)}
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
-                            >
-                                {isFullscreen ? (
-                                    <Minimize2 className="h-3.5 w-3.5" />
-                                ) : (
-                                    <Maximize2 className="h-3.5 w-3.5" />
-                                )}
                             </Button>
                         </>
                     )}
@@ -553,11 +553,13 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                 </div>
             </div>
 
-            {error && (
-                <div className="mx-4 md:mx-6 mt-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
-                    {error}
-                </div>
-            )}
+            {
+                error && (
+                    <div className="mx-4 md:mx-6 mt-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
+                        {error}
+                    </div>
+                )
+            }
 
             {/* Mindmap Canvas - Truly Full bleed */}
             <div className="flex-1 flex flex-col min-h-[500px]">
@@ -614,6 +616,6 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     )
 }
