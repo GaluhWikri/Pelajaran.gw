@@ -204,33 +204,74 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
     nodePositions.set(root.id, { x: 0, y: 0 })
     nodeSideMap.set(root.id, 'center')
 
-    // Position right side children
-    let rightYStart = 0
+    // Calculate total heights for both sides
     let rightTotalHeight = 0
     rightChildren.forEach(child => {
         rightTotalHeight += calculateLeafCount(child.id) * VERTICAL_SPACING
     })
-    rightYStart = -rightTotalHeight / 2
 
-    let currentRightY = rightYStart
-    rightChildren.forEach((child) => {
-        const result = positionSubtree(child.id, HORIZONTAL_SPACING, currentRightY, 'right')
-        currentRightY = result.endY
-    })
-
-    // Position left side children
-    let leftYStart = 0
     let leftTotalHeight = 0
     leftChildren.forEach(child => {
         leftTotalHeight += calculateLeafCount(child.id) * VERTICAL_SPACING
     })
-    leftYStart = -leftTotalHeight / 2
 
-    let currentLeftY = leftYStart
+    // Use the MAXIMUM height so both sides are balanced around root
+    const maxTotalHeight = Math.max(rightTotalHeight, leftTotalHeight)
+    const startY = -maxTotalHeight / 2
+
+    // Position right side children - start from root's position (0), children will be at HORIZONTAL_SPACING
+    let currentRightY = startY + (maxTotalHeight - rightTotalHeight) / 2
+    rightChildren.forEach((child) => {
+        // Level 1 nodes will be positioned at x=0, then offset by positionSubtree
+        // But we need them at HORIZONTAL_SPACING directly
+        nodeSideMap.set(child.id, 'right')
+        const result = positionSubtreeFromRoot(child.id, HORIZONTAL_SPACING, currentRightY, 'right')
+        currentRightY = result.endY
+    })
+
+    // Position left side children - mirror of right side
+    let currentLeftY = startY + (maxTotalHeight - leftTotalHeight) / 2
     leftChildren.forEach((child) => {
-        const result = positionSubtree(child.id, -HORIZONTAL_SPACING, currentLeftY, 'left')
+        nodeSideMap.set(child.id, 'left')
+        const result = positionSubtreeFromRoot(child.id, -HORIZONTAL_SPACING, currentLeftY, 'left')
         currentLeftY = result.endY
     })
+
+    // Helper to position subtree starting from a specific position (for level 1 nodes)
+    function positionSubtreeFromRoot(
+        nodeId: string,
+        x: number,
+        yStart: number,
+        side: 'left' | 'right'
+    ): { endY: number; centerY: number } {
+        const children = childrenMap.get(nodeId) || []
+        nodeSideMap.set(nodeId, side)
+
+        if (children.length === 0) {
+            nodePositions.set(nodeId, { x, y: yStart })
+            return { endY: yStart + VERTICAL_SPACING, centerY: yStart }
+        }
+
+        // X offset direction based on side
+        const xOffset = side === 'left' ? -HORIZONTAL_SPACING : HORIZONTAL_SPACING
+
+        let currentY = yStart
+        const childCenters: number[] = []
+
+        children.forEach((child) => {
+            const result = positionSubtreeFromRoot(child.id, x + xOffset, currentY, side)
+            childCenters.push(result.centerY)
+            currentY = result.endY
+        })
+
+        const firstChildCenter = childCenters[0]
+        const lastChildCenter = childCenters[childCenters.length - 1]
+        const centerY = (firstChildCenter + lastChildCenter) / 2
+
+        nodePositions.set(nodeId, { x, y: centerY })
+
+        return { endY: currentY, centerY }
+    }
 
     // Create ReactFlow nodes
     mindmapNodes.forEach((node) => {
