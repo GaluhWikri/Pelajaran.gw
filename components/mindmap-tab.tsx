@@ -30,38 +30,44 @@ interface MindmapTabProps {
 }
 
 // Custom node component for mindmap with modern, attractive design
+// Custom node component for mindmap with modern, attractive design
 function MindmapNodeComponent({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center' } }) {
-    // Modern color schemes with gradients and glow effects
+    // "Dark Tech" style - Dark cards with vibrant colored borders/accents
     const nodeStyles = [
-        // Root - Premium orange/amber with glow
+        // Root - Dark Tech Style (Matching Children)
         {
-            bg: "bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500",
-            shadow: "shadow-[0_0_30px_rgba(251,146,60,0.4)]",
-            border: "ring-2 ring-orange-300/50",
+            wrapper: "bg-slate-950/90 border-2 border-orange-500 shadow-md",
+            text: "text-orange-100 font-bold",
+            glow: "", // No glow
+            badge: "bg-orange-500/20 text-orange-200",
         },
-        // Level 1 - Vibrant blue
+        // Level 1 - Blue Border
         {
-            bg: "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500",
-            shadow: "shadow-[0_0_20px_rgba(99,102,241,0.3)]",
-            border: "ring-1 ring-blue-300/30",
+            wrapper: "bg-slate-950/90 border-2 border-blue-500 shadow-sm",
+            text: "text-blue-100 font-semibold",
+            glow: "", // No glow
+            badge: "bg-blue-500/20 text-blue-200",
         },
-        // Level 2 - Fresh green/teal
+        // Level 2 - Emerald Border
         {
-            bg: "bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500",
-            shadow: "shadow-[0_0_15px_rgba(20,184,166,0.3)]",
-            border: "ring-1 ring-emerald-300/30",
+            wrapper: "bg-slate-950/90 border-2 border-emerald-500 shadow-sm",
+            text: "text-emerald-100 font-medium",
+            glow: "", // No glow
+            badge: "bg-emerald-500/20 text-emerald-200",
         },
-        // Level 3 - Warm rose/pink
+        // Level 3 - Pink Border
         {
-            bg: "bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-500",
-            shadow: "shadow-[0_0_15px_rgba(236,72,153,0.3)]",
-            border: "ring-1 ring-rose-300/30",
+            wrapper: "bg-slate-950/90 border-2 border-pink-500 shadow-sm",
+            text: "text-pink-100",
+            glow: "", // No glow
+            badge: "bg-pink-500/20 text-pink-200",
         },
-        // Level 4+ - Rich purple/violet
+        // Level 4+ - Violet Border
         {
-            bg: "bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500",
-            shadow: "shadow-[0_0_15px_rgba(139,92,246,0.3)]",
-            border: "ring-1 ring-violet-300/30",
+            wrapper: "bg-slate-950/90 border-2 border-violet-500 shadow-sm",
+            text: "text-violet-100",
+            glow: "", // No glow
+            badge: "bg-violet-500/20 text-violet-200",
         },
     ]
 
@@ -80,41 +86,40 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
                 className="opacity-0! w-2! h-2!"
             />
 
-            {/* Node content with glassmorphism effect */}
+            {/* Node Content */}
             <div
                 className={cn(
-                    // Base styles
-                    "relative px-5 py-3 rounded-2xl text-white font-semibold text-center",
-                    // Modern effects
-                    "backdrop-blur-sm",
-                    style.bg,
-                    style.shadow,
-                    style.border,
-                    // Text wrapping
+                    // Shape & Base
+                    "relative px-5 py-3 rounded-xl transition-all duration-300",
+                    "backdrop-blur-md",
+                    // Style specific classes
+                    style.wrapper,
+                    style.glow,
+                    style.text,
+                    // Layout
+                    "flex flex-col items-center justify-center text-center",
                     "max-w-[220px] break-words",
-                    // Smooth animations
-                    "transition-all duration-300 ease-out",
-                    "hover:scale-105 hover:shadow-xl",
+                    // Hover effects
+                    "hover:scale-105 hover:-translate-y-1 hover:shadow-xl",
                     "cursor-pointer",
-                    // Root specific
-                    level === 0 && "text-lg px-8 py-4 max-w-[280px] rounded-3xl font-bold",
-                    // Child nodes
+                    // Root sizing override
+                    level === 0 && "px-8 py-5 max-w-[300px] text-lg rounded-2xl",
+                    // Child text size
                     level > 0 && "text-sm"
                 )}
             >
-                {/* Subtle inner glow overlay */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-white/5 to-white/20 pointer-events-none"
-                    style={{ borderRadius: level === 0 ? '1.5rem' : '1rem' }} />
-
-                {/* Relationship subtitle badge */}
+                {/* Relationship Badge (Pill) */}
                 {data.edgeLabel && (
-                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded-full text-[9px] text-white/80 font-normal whitespace-nowrap">
+                    <div className={cn(
+                        "absolute -top-3 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider backdrop-blur-sm shadow-sm border border-white/10",
+                        style.badge
+                    )}>
                         {data.edgeLabel}
                     </div>
                 )}
 
-                {/* Main label */}
-                <div className="relative z-10 whitespace-pre-wrap leading-snug">
+                {/* Main Label */}
+                <div className="relative z-10 whitespace-pre-wrap leading-tight">
                     {data.label}
                 </div>
             </div>
