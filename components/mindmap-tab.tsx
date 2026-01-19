@@ -470,6 +470,39 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
         onNodesChange(changes)
     }, [onNodesChange, isDragging, nodes, edges, saveToHistory])
 
+    // Animate edges on node hover
+    const onNodeMouseEnter = useCallback((_event: any, node: Node) => {
+        // Add animation and highlight to connected edges
+        setEdges((eds) =>
+            eds.map((edge) => {
+                if (edge.source === node.id || edge.target === node.id) {
+                    return {
+                        ...edge,
+                        animated: true,
+                        style: { ...edge.style, stroke: '#6366f1', strokeWidth: 3 }, // Highlight color (indigo-500)
+                    }
+                }
+                return edge
+            })
+        )
+    }, [setEdges])
+
+    const onNodeMouseLeave = useCallback((_event: any, node: Node) => {
+        // Reset edges animation and style
+        setEdges((eds) =>
+            eds.map((edge) => {
+                if (edge.source === node.id || edge.target === node.id) {
+                    return {
+                        ...edge,
+                        animated: false,
+                        style: { ...edge.style, stroke: '#64748b', strokeWidth: 2 }, // Reset to original style (slate-500)
+                    }
+                }
+                return edge
+            })
+        )
+    }, [setEdges])
+
     // Undo function
     const handleUndo = useCallback(() => {
         if (historyIndex > 0 && history[historyIndex - 1]) {
@@ -699,6 +732,8 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                                 edges={edges}
                                 onNodesChange={handleNodesChange}
                                 onEdgesChange={onEdgesChange}
+                                onNodeMouseEnter={onNodeMouseEnter}
+                                onNodeMouseLeave={onNodeMouseLeave}
                                 nodeTypes={nodeTypes}
                                 onInit={(instance) => { reactFlowInstance.current = instance }}
                                 fitView
