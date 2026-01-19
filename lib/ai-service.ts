@@ -160,10 +160,17 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     2. KUIS (Quiz): Wajib buat 10 soal pilihan ganda yang relevan.
     3. FLASHCARDS: Wajib buat minimal 5 flashcards.
 
+    ATURAN DETEKSI MATA PELAJARAN (SANGAT PENTING - WAJIB DIIKUTI):
+    - Field "detectedSubject" WAJIB diisi berdasarkan ISI AKTUAL FILE, BUKAN dari preferensi user
+    - Jika file tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
+    - Jika file tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
+    - ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
+    - detectedSubject HARUS mencerminkan topik SEBENARNYA dari file
+
     FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
       "title": "Judul Materi (Max 5-7 kata)",
-      "detectedSubject": "Mata Pelajaran/Kuliah yang TERDETEKSI dari ISI KONTEN (contoh: Matematika, Biologi, Sejarah, Pemrograman, dll)",
+      "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI FILE (contoh: Matematika, Biologi, Sejarah, Pemrograman, Fisika, Kimia, dll) - ABAIKAN pilihan user!",
       "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
@@ -233,10 +240,17 @@ export async function generateLearningContentFromText(text: string, options?: Ge
     - Kuis dan Flashcards TIDAK BOLEH KOSONG.
     - Jika materi sangat singkat, fokus buat pertanyaan dari informasi kunci yang tersedua.
 
+    ATURAN DETEKSI MATA PELAJARAN (SANGAT PENTING - WAJIB DIIKUTI):
+    - Field "detectedSubject" WAJIB diisi berdasarkan ISI AKTUAL MATERI, BUKAN dari preferensi user
+    - Jika materi tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
+    - Jika materi tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
+    - ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
+    - detectedSubject HARUS mencerminkan topik SEBENARNYA dari materi
+
     FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
       "title": "Judul Materi (Max 5-7 kata)",
-      "detectedSubject": "Mata Pelajaran/Kuliah yang TERDETEKSI dari ISI KONTEN (contoh: Matematika, Biologi, Sejarah, Pemrograman, dll)",
+      "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI MATERI (contoh: Matematika, Biologi, Sejarah, Pemrograman, Fisika, Kimia, dll) - ABAIKAN pilihan user!",
       "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
@@ -284,9 +298,9 @@ export async function generateLearningContentFromYouTube(youtubeUrl: string, opt
         const prompt = `
     ${AI_SYSTEM_PROMPT}
 
-    Tugas: Analisis VIDEO YOUTUBE berikut dan buat output JSON berisi ringkasan, kuis, dan flashcards.
-
-    URL Video: ${youtubeUrl}
+    Tugas: Analisis VIDEO YOUTUBE yang diberikan dan buat output JSON berisi ringkasan, kuis, dan flashcards.
+    
+    PENTING: Analisis ISI AKTUAL dari video (audio, visual, narasi) yang diberikan di atas, BUKAN dari informasi lain.
 
     ${promptContext}
 
@@ -309,10 +323,18 @@ export async function generateLearningContentFromYouTube(youtubeUrl: string, opt
     - Kuis dan Flashcards TIDAK BOLEH KOSONG.
     - Fokus pada poin-poin pembelajaran utama dari video.
 
+    ATURAN DETEKSI MATA PELAJARAN (SANGAT PENTING - WAJIB DIIKUTI):
+    - Field "detectedSubject" WAJIB diisi berdasarkan ISI AKTUAL VIDEO, BUKAN dari preferensi user
+    - Jika video tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
+    - Jika video tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
+    - Jika video tentang Musik, isi "Musik" meskipun user pilih apapun
+    - ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
+    - detectedSubject HARUS mencerminkan topik SEBENARNYA dari video
+
     FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
     {
       "title": "Judul berdasarkan isi video (Max 5-7 kata)",
-      "detectedSubject": "Mata Pelajaran/Kuliah yang TERDETEKSI dari ISI VIDEO (contoh: Matematika, Biologi, Sejarah, Pemrograman, dll)",
+      "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI VIDEO (contoh: Matematika, Biologi, Sejarah, Pemrograman, Musik, Fisika, Kimia, Ekonomi, dll) - ABAIKAN pilihan user!",
       "summary": "String markdown ringkasan...",
       "quiz": {
         "title": "Judul Kuis",
@@ -326,8 +348,16 @@ export async function generateLearningContentFromYouTube(youtubeUrl: string, opt
     }
     `
 
-        // Send prompt with YouTube URL directly to Gemini
-        const result = await retryGenAI(() => model.generateContent(prompt))
+        // Create video part with fileUri to let Gemini access and analyze the YouTube video
+        const videoPart = {
+            fileData: {
+                fileUri: youtubeUrl,
+                mimeType: "video/*"
+            }
+        }
+
+        // Send prompt with YouTube video as fileData so Gemini can actually analyze the video content
+        const result = await retryGenAI(() => model.generateContent([prompt, videoPart]))
         const responseText = result.response.text()
 
         return parseGeminiResponse(responseText)
