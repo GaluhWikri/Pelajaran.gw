@@ -29,23 +29,50 @@ interface MindmapTabProps {
     noteId: string
 }
 
-// Custom node component for mindmap with handles on all sides for centered layout
+// Custom node component for mindmap with modern, attractive design
 function MindmapNodeComponent({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center' } }) {
-    const bgColors = [
-        "bg-gradient-to-br from-primary to-primary/80", // Root
-        "bg-gradient-to-br from-blue-500 to-blue-600", // Level 1
-        "bg-gradient-to-br from-emerald-500 to-emerald-600", // Level 2
-        "bg-gradient-to-br from-amber-500 to-amber-600", // Level 3
-        "bg-gradient-to-br from-purple-500 to-purple-600", // Level 4+
+    // Modern color schemes with gradients and glow effects
+    const nodeStyles = [
+        // Root - Premium orange/amber with glow
+        {
+            bg: "bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500",
+            shadow: "shadow-[0_0_30px_rgba(251,146,60,0.4)]",
+            border: "ring-2 ring-orange-300/50",
+        },
+        // Level 1 - Vibrant blue
+        {
+            bg: "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500",
+            shadow: "shadow-[0_0_20px_rgba(99,102,241,0.3)]",
+            border: "ring-1 ring-blue-300/30",
+        },
+        // Level 2 - Fresh green/teal
+        {
+            bg: "bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500",
+            shadow: "shadow-[0_0_15px_rgba(20,184,166,0.3)]",
+            border: "ring-1 ring-emerald-300/30",
+        },
+        // Level 3 - Warm rose/pink
+        {
+            bg: "bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-500",
+            shadow: "shadow-[0_0_15px_rgba(236,72,153,0.3)]",
+            border: "ring-1 ring-rose-300/30",
+        },
+        // Level 4+ - Rich purple/violet
+        {
+            bg: "bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500",
+            shadow: "shadow-[0_0_15px_rgba(139,92,246,0.3)]",
+            border: "ring-1 ring-violet-300/30",
+        },
     ]
 
     const level = Math.min(data.level, 4)
     const side = data.side || 'right'
     const isCenter = side === 'center'
+    const style = nodeStyles[level]
 
     return (
-        <div className="relative">
-            {/* Left handle - source for center (root), source for left-side nodes, target for right-side nodes */}
+        <div className="relative group">
+            {/* Left handle */}
             <Handle
                 type={isCenter || side === 'left' ? 'source' : 'target'}
                 position={Position.Left}
@@ -53,26 +80,46 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
                 className="opacity-0! w-2! h-2!"
             />
 
-            {/* Node content with optional relationship subtitle */}
+            {/* Node content with glassmorphism effect */}
             <div
                 className={cn(
-                    "px-4 py-2 rounded-lg shadow-lg text-white font-medium text-center transition-transform hover:scale-105",
-                    "max-w-[200px] break-words", // Limit width and wrap long text
-                    bgColors[level],
-                    level === 0 ? "text-lg px-6 py-3 max-w-[250px]" : "text-sm"
+                    // Base styles
+                    "relative px-5 py-3 rounded-2xl text-white font-semibold text-center",
+                    // Modern effects
+                    "backdrop-blur-sm",
+                    style.bg,
+                    style.shadow,
+                    style.border,
+                    // Text wrapping
+                    "max-w-[220px] break-words",
+                    // Smooth animations
+                    "transition-all duration-300 ease-out",
+                    "hover:scale-105 hover:shadow-xl",
+                    "cursor-pointer",
+                    // Root specific
+                    level === 0 && "text-lg px-8 py-4 max-w-[280px] rounded-3xl font-bold",
+                    // Child nodes
+                    level > 0 && "text-sm"
                 )}
             >
-                {/* Relationship subtitle - shows how this node relates to parent */}
+                {/* Subtle inner glow overlay */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-white/5 to-white/20 pointer-events-none"
+                    style={{ borderRadius: level === 0 ? '1.5rem' : '1rem' }} />
+
+                {/* Relationship subtitle badge */}
                 {data.edgeLabel && (
-                    <div className="text-[10px] opacity-70 mb-0.5 font-normal italic">
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded-full text-[9px] text-white/80 font-normal whitespace-nowrap">
                         {data.edgeLabel}
                     </div>
                 )}
+
                 {/* Main label */}
-                <div className="whitespace-pre-wrap">{data.label}</div>
+                <div className="relative z-10 whitespace-pre-wrap leading-snug">
+                    {data.label}
+                </div>
             </div>
 
-            {/* Right handle - source for center (root), source for right-side nodes, target for left-side nodes */}
+            {/* Right handle */}
             <Handle
                 type={isCenter || side === 'right' ? 'source' : 'target'}
                 position={Position.Right}
