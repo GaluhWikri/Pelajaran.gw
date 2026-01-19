@@ -16,7 +16,7 @@ const model = genAI.getGenerativeModel({
         temperature: 0.7,
         topP: 0.95,
         topK: 40,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 16384,
     },
 })
 
@@ -27,7 +27,7 @@ const mindmapModel = genAI.getGenerativeModel({
         temperature: 0.5, // Lower for more consistent JSON structure
         topP: 0.9,
         topK: 40,
-        maxOutputTokens: 8192, // Increased to accommodate detailed prompt output
+        maxOutputTokens: 16384, // Increased to prevent truncation
     },
 })
 
@@ -37,7 +37,7 @@ const chatModel = genAI.getGenerativeModel({
         temperature: 0.7,
         topP: 0.95,
         topK: 40,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 16384,
     },
 })
 
@@ -824,7 +824,56 @@ Buat mindmap JSON untuk konten di atas. Output HANYA JSON valid.`
                 .replace(/\t/g, ' ')      // Replace tabs with spaces
                 .replace(/"\s+"/g, '" "') // Fix spacing between strings
 
-            data = JSON.parse(jsonStr)
+            // Try parsing
+            try {
+                data = JSON.parse(jsonStr)
+            } catch (parseError) {
+                console.warn("Initial parse failed, attempting deeper recovery...")
+
+                // Strategy 1: Find the last complete object in nodes array
+                const nodesStart = jsonStr.indexOf('"nodes"')
+                if (nodesStart !== -1) {
+                    const arrayStart = jsonStr.indexOf('[', nodesStart)
+                    if (arrayStart !== -1) {
+                        // Find last complete node object (ends with })
+                        let lastValidPos = arrayStart
+                        let braceCount = 0
+                        let inString = false
+
+                        for (let i = arrayStart; i < jsonStr.length; i++) {
+                            const char = jsonStr[i]
+                            const prevChar = i > 0 ? jsonStr[i - 1] : ''
+
+                            if (char === '"' && prevChar !== '\\') {
+                                inString = !inString
+                            }
+
+                            if (!inString) {
+                                if (char === '{') braceCount++
+                                if (char === '}') {
+                                    braceCount--
+                                    if (braceCount === 0) {
+                                        lastValidPos = i + 1
+                                    }
+                                }
+                            }
+                        }
+
+                        // Reconstruct valid JSON
+                        const validContent = jsonStr.substring(0, lastValidPos)
+                        const reconstructed = validContent.replace(/,\s*$/, '') + ']}'
+
+                        try {
+                            data = JSON.parse(reconstructed)
+                            console.log("Successfully recovered truncated JSON")
+                        } catch (e2) {
+                            throw parseError // Use original error
+                        }
+                    }
+                }
+
+                if (!data) throw parseError
+            }
         } catch (e) {
             console.error("Failed to parse mindmap JSON:", e)
             console.error("Raw response:", responseText.substring(0, 500))
