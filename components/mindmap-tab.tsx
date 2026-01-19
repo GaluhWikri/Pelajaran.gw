@@ -55,8 +55,9 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
             <div
                 className={cn(
                     "px-4 py-2 rounded-lg shadow-lg text-white font-medium text-center transition-transform hover:scale-105",
+                    "max-w-[200px] break-words", // Limit width and wrap long text
                     bgColors[level],
-                    level === 0 ? "text-lg px-6 py-3" : "text-sm"
+                    level === 0 ? "text-lg px-6 py-3 max-w-[250px]" : "text-sm"
                 )}
             >
                 {/* Relationship subtitle - shows how this node relates to parent */}
@@ -66,7 +67,7 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
                     </div>
                 )}
                 {/* Main label */}
-                <div>{data.label}</div>
+                <div className="whitespace-pre-wrap">{data.label}</div>
             </div>
 
             {/* Right handle - source for center (root), source for right-side nodes, target for left-side nodes */}
