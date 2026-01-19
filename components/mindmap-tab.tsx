@@ -300,6 +300,12 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
             setTimeout(() => {
                 setIsFullscreen(false)
                 setIsExitingFullscreen(false)
+                // FitView after exiting fullscreen (wait for layout to update)
+                setTimeout(() => {
+                    if (reactFlowInstance.current) {
+                        reactFlowInstance.current.fitView({ padding: 0.1, duration: 300 })
+                    }
+                }, 100)
             }, 200) // Match animation duration
         } else {
             setIsFullscreen(true)
