@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react"
+import { useState, useCallback, useMemo, useEffect, useRef, memo } from "react"
 import ReactFlow, {
     Node,
     Edge,
@@ -8,6 +8,8 @@ import ReactFlow, {
     Background,
     useNodesState,
     useEdgesState,
+    addEdge,
+    MarkerType,
     BackgroundVariant,
     Handle,
     Position,
@@ -29,51 +31,42 @@ interface MindmapTabProps {
     noteId: string
 }
 
-// Custom node component for mindmap with modern, attractive design
-// Custom node component for mindmap with modern, attractive design
-function MindmapNodeComponent({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center'; isActivePath?: boolean } }) {
-    // "Dark Tech" style - Dark cards with vibrant colored borders/accents
+// Memoize the node component to prevent unnecessary re-renders in large maps
+const MindmapNodeComponent = memo(({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center'; isActivePath?: boolean } }) => {
+    // Determining styling level
+    const level = Math.min(data.level, 4)
+    const side = data.side || 'right'
+    const isCenter = side === 'center'
+
+    // Configurable styles for different levels
     const nodeStyles = [
-        // Root - Dark Tech Style (Matching Children)
         {
-            wrapper: "bg-slate-950/90 border-2 border-orange-500 shadow-md",
+            wrapper: "bg-slate-900 border-2 border-orange-500 shadow-md",
             text: "text-orange-100 font-bold",
-            glow: "", // No glow
             badge: "bg-orange-500/20 text-orange-200",
         },
-        // Level 1 - Blue Border
         {
-            wrapper: "bg-slate-950/90 border-2 border-blue-500 shadow-sm",
+            wrapper: "bg-slate-900 border-2 border-blue-500 shadow-sm",
             text: "text-blue-100 font-semibold",
-            glow: "", // No glow
             badge: "bg-blue-500/20 text-blue-200",
         },
-        // Level 2 - Emerald Border
         {
-            wrapper: "bg-slate-950/90 border-2 border-emerald-500 shadow-sm",
+            wrapper: "bg-slate-900 border-2 border-emerald-500 shadow-sm",
             text: "text-emerald-100 font-medium",
-            glow: "", // No glow
             badge: "bg-emerald-500/20 text-emerald-200",
         },
-        // Level 3 - Pink Border
         {
-            wrapper: "bg-slate-950/90 border-2 border-pink-500 shadow-sm",
+            wrapper: "bg-slate-900 border-2 border-pink-500 shadow-sm",
             text: "text-pink-100",
-            glow: "", // No glow
             badge: "bg-pink-500/20 text-pink-200",
         },
-        // Level 4+ - Violet Border
         {
-            wrapper: "bg-slate-950/90 border-2 border-violet-500 shadow-sm",
+            wrapper: "bg-slate-900 border-2 border-violet-500 shadow-sm",
             text: "text-violet-100",
-            glow: "", // No glow
             badge: "bg-violet-500/20 text-violet-200",
         },
     ]
 
-    const level = Math.min(data.level, 4)
-    const side = data.side || 'right'
-    const isCenter = side === 'center'
     const style = nodeStyles[level]
 
     return (
@@ -90,29 +83,23 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
             <div
                 className={cn(
                     // Shape & Base
-                    "relative px-5 py-3 rounded-xl transition-all duration-300",
-                    "backdrop-blur-md",
-                    // Style specific classes
+                    "relative px-5 py-4 rounded-xl",
                     style.wrapper,
-                    style.glow,
                     style.text,
-                    // Layout
+                    // Layout & Stability - Exclusive sizing to prevent conflicts
                     "flex flex-col items-center justify-center text-center",
-                    "max-w-[220px] wrap-break-word",
-                    // Hover & Path Highlight
-                    data.isActivePath ? "scale-110 shadow-xl brightness-110" : "hover:scale-110 hover:-translate-y-2 hover:shadow-2xl",
-                    data.isActivePath && level > 0 && "ring-2 ring-white/30",
+                    level === 0 ? "w-[280px] min-h-[90px] text-lg rounded-2xl" : "w-[220px] min-h-[70px] text-sm",
+                    "break-words overflow-visible",
+                    // Performance Optimization - Stable 2D Transform
+                    "will-change-transform transition-transform duration-200 ease-out",
+                    data.isActivePath ? "scale-105 shadow-xl brightness-110 ring-2 ring-white/40" : "hover:scale-105 hover:-translate-y-2 hover:shadow-2xl",
                     "cursor-pointer",
-                    // Root sizing override
-                    level === 0 && "px-8 py-5 max-w-[300px] text-lg rounded-2xl",
-                    // Child text size
-                    level > 0 && "text-sm"
                 )}
             >
-                {/* Relationship Badge (Pill) */}
+                {/* Relationship Badge (Pill) - Removed backdrop-blur for SVG stability */}
                 {data.edgeLabel && (
                     <div className={cn(
-                        "absolute -top-3 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider backdrop-blur-sm shadow-sm border border-white/10",
+                        "absolute -top-2 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider shadow-sm border border-white/10",
                         style.badge
                     )}>
                         {data.edgeLabel}
@@ -134,7 +121,8 @@ function MindmapNodeComponent({ data }: { data: { label: string; level: number; 
             />
         </div>
     )
-}
+})
+MindmapNodeComponent.displayName = "MindmapNodeComponent"
 
 const nodeTypes = {
     mindmapNode: MindmapNodeComponent,
@@ -201,6 +189,37 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
         }
     })
 
+    // Recursive helper to position subtrees
+    function positionNode(
+        nodeId: string,
+        x: number,
+        yStart: number,
+        side: 'left' | 'right'
+    ): { endY: number; centerY: number } {
+        const children = childrenMap.get(nodeId) || []
+        nodeSideMap.set(nodeId, side)
+
+        if (children.length === 0) {
+            nodePositions.set(nodeId, { x, y: yStart })
+            return { endY: yStart + VERTICAL_SPACING, centerY: yStart }
+        }
+
+        const xOffset = side === 'left' ? -HORIZONTAL_SPACING : HORIZONTAL_SPACING
+        let currentY = yStart
+        const childCenters: number[] = []
+
+        children.forEach((child) => {
+            const result = positionNode(child.id, x + xOffset, currentY, side)
+            childCenters.push(result.centerY)
+            currentY = result.endY
+        })
+
+        const centerY = (childCenters[0] + childCenters[childCenters.length - 1]) / 2
+        nodePositions.set(nodeId, { x, y: centerY })
+
+        return { endY: currentY, centerY }
+    }
+
     // Calculate subtree leaf count (for balanced spacing)
     function calculateLeafCount(nodeId: string): number {
         const children = childrenMap.get(nodeId) || []
@@ -214,121 +233,37 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
         return totalLeaves
     }
 
-    // Position a subtree on either left or right side
-    function positionSubtree(
-        nodeId: string,
-        x: number,
-        yStart: number,
-        side: 'left' | 'right'
-    ): { endY: number; centerY: number } {
-        const children = childrenMap.get(nodeId) || []
-        nodeSideMap.set(nodeId, side)
-
-        if (children.length === 0) {
-            // Leaf node
-            nodePositions.set(nodeId, { x, y: yStart })
-            return { endY: yStart + VERTICAL_SPACING, centerY: yStart }
-        }
-
-        // Determine X direction based on side
-        const xOffset = side === 'left' ? -HORIZONTAL_SPACING : HORIZONTAL_SPACING
-
-        // Position all children and track their centers
-        let currentY = yStart
-        const childCenters: number[] = []
-
-        children.forEach((child) => {
-            const result = positionSubtree(child.id, x + xOffset, currentY, side)
-            childCenters.push(result.centerY)
-            currentY = result.endY
-        })
-
-        // Position this node at the center of its children's centers
-        const firstChildCenter = childCenters[0]
-        const lastChildCenter = childCenters[childCenters.length - 1]
-        const centerY = (firstChildCenter + lastChildCenter) / 2
-
-        nodePositions.set(nodeId, { x, y: centerY })
-
-        return { endY: currentY, centerY }
-    }
-
     // Position root at center (0, 0)
     nodePositions.set(root.id, { x: 0, y: 0 })
     nodeSideMap.set(root.id, 'center')
 
-    // Calculate total heights for both sides
-    let rightTotalHeight = 0
-    rightChildren.forEach(child => {
-        rightTotalHeight += calculateLeafCount(child.id) * VERTICAL_SPACING
-    })
+    // Calculate start Y to balance both sides around root's Y=0
+    const calculateSideHeight = (sideChildren: MindmapNode[]) =>
+        sideChildren.reduce((acc, child) => acc + calculateLeafCount(child.id), 0) * VERTICAL_SPACING
 
-    let leftTotalHeight = 0
-    leftChildren.forEach(child => {
-        leftTotalHeight += calculateLeafCount(child.id) * VERTICAL_SPACING
-    })
+    const rightHeight = calculateSideHeight(rightChildren)
+    const leftHeight = calculateSideHeight(leftChildren)
+    const maxH = Math.max(rightHeight, leftHeight)
+    const startY = -maxH / 2
 
-    // Use the MAXIMUM height so both sides are balanced around root
-    const maxTotalHeight = Math.max(rightTotalHeight, leftTotalHeight)
-    const startY = -maxTotalHeight / 2
-
-    // Position right side children - start from root's position (0), children will be at HORIZONTAL_SPACING
-    let currentRightY = startY + (maxTotalHeight - rightTotalHeight) / 2
+    // Position sides
+    let currentRightY = startY + (maxH - rightHeight) / 2
     rightChildren.forEach((child) => {
-        // Level 1 nodes will be positioned at x=0, then offset by positionSubtree
-        // But we need them at HORIZONTAL_SPACING directly
-        nodeSideMap.set(child.id, 'right')
-        const result = positionSubtreeFromRoot(child.id, HORIZONTAL_SPACING, currentRightY, 'right')
+        const result = positionNode(child.id, HORIZONTAL_SPACING, currentRightY, 'right')
         currentRightY = result.endY
     })
 
-    // Position left side children - mirror of right side
-    let currentLeftY = startY + (maxTotalHeight - leftTotalHeight) / 2
+    let currentLeftY = startY + (maxH - leftHeight) / 2
     leftChildren.forEach((child) => {
-        nodeSideMap.set(child.id, 'left')
-        const result = positionSubtreeFromRoot(child.id, -HORIZONTAL_SPACING, currentLeftY, 'left')
+        const result = positionNode(child.id, -HORIZONTAL_SPACING, currentLeftY, 'left')
         currentLeftY = result.endY
     })
 
-    // Helper to position subtree starting from a specific position (for level 1 nodes)
-    function positionSubtreeFromRoot(
-        nodeId: string,
-        x: number,
-        yStart: number,
-        side: 'left' | 'right'
-    ): { endY: number; centerY: number } {
-        const children = childrenMap.get(nodeId) || []
-        nodeSideMap.set(nodeId, side)
-
-        if (children.length === 0) {
-            nodePositions.set(nodeId, { x, y: yStart })
-            return { endY: yStart + VERTICAL_SPACING, centerY: yStart }
-        }
-
-        // X offset direction based on side
-        const xOffset = side === 'left' ? -HORIZONTAL_SPACING : HORIZONTAL_SPACING
-
-        let currentY = yStart
-        const childCenters: number[] = []
-
-        children.forEach((child) => {
-            const result = positionSubtreeFromRoot(child.id, x + xOffset, currentY, side)
-            childCenters.push(result.centerY)
-            currentY = result.endY
-        })
-
-        const firstChildCenter = childCenters[0]
-        const lastChildCenter = childCenters[childCenters.length - 1]
-        const centerY = (firstChildCenter + lastChildCenter) / 2
-
-        nodePositions.set(nodeId, { x, y: centerY })
-
-        return { endY: currentY, centerY }
-    }
-
-    // Create ReactFlow nodes
+    // Create ReactFlow nodes & edges with safety check for orphans
     mindmapNodes.forEach((node) => {
-        const position = nodePositions.get(node.id) || { x: 0, y: 0 }
+        if (!nodePositions.has(node.id)) return // Skip orphans to prevent stray lines at (0,0)
+
+        const position = nodePositions.get(node.id)!
         const level = levelMap.get(node.id) || 0
         const edgeLabel = edgeLabelMap.get(node.id)
         const side = nodeSideMap.get(node.id) || 'right'
@@ -337,30 +272,18 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
             id: node.id,
             type: "mindmapNode",
             position,
-            data: {
-                label: node.label,
-                level,
-                edgeLabel: edgeLabel || undefined,
-                side // Pass side info to node component
-            },
+            data: { label: node.label, level, edgeLabel: edgeLabel || undefined, side },
         })
 
-        // Create edge to parent
-        if (node.parentId) {
-            const parentSide = nodeSideMap.get(node.parentId) || 'center'
-            const nodeSide = nodeSideMap.get(node.id) || 'right'
-
+        if (node.parentId && nodePositions.has(node.parentId)) {
             edges.push({
                 id: `e-${node.parentId}-${node.id}`,
                 source: node.parentId,
                 target: node.id,
-                type: "default",
-                sourceHandle: nodeSide === 'left' ? 'left' : 'right',
-                targetHandle: nodeSide === 'left' ? 'right' : 'left',
-                style: {
-                    stroke: '#64748b',
-                    strokeWidth: 2,
-                },
+                type: "default", // Reverted to curved edges as requested
+                sourceHandle: side === 'left' ? 'left' : 'right',
+                targetHandle: side === 'left' ? 'right' : 'left',
+                style: { stroke: '#64748b', strokeWidth: 2 },
                 animated: false,
             })
         }
@@ -369,7 +292,7 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
     return { nodes, edges }
 }
 
-export function MindmapTab({ noteId }: MindmapTabProps) {
+const MindmapContent = ({ noteId }: MindmapTabProps) => {
     const { notes, getMindmapByNoteId, addMindmap, updateMindmap, addXP } = useStore()
     const { user } = useAuth()
     const note = notes.find((n) => n.id === noteId)
@@ -383,7 +306,8 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
     const [isDragging, setIsDragging] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [isExitingFullscreen, setIsExitingFullscreen] = useState(false)
-    const reactFlowInstance = useRef<any>(null)
+    const hoveredNodeId = useRef<string | null>(null) // Hover Guard Ref
+    const { fitView, getEdges } = useReactFlow()
 
     // Toggle fullscreen with exit animation (desktop only)
     const toggleFullscreen = useCallback(() => {
@@ -396,21 +320,25 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                 setIsExitingFullscreen(false)
                 // FitView after exiting fullscreen (wait for layout to update)
                 setTimeout(() => {
-                    if (reactFlowInstance.current) {
-                        reactFlowInstance.current.fitView({ padding: 0.1, duration: 300 })
-                    }
-                }, 100)
+                    fitView({
+                        padding: 0.3,
+                        duration: 500,
+                        includeHiddenNodes: true
+                    })
+                }, 300)
             }, 200) // Match animation duration
         } else {
             setIsFullscreen(true)
-            // FitView after entering fullscreen (wait for layout to update)
+            // Wait longer for fullscreen transition to finish before calculating map bounds
             setTimeout(() => {
-                if (reactFlowInstance.current) {
-                    reactFlowInstance.current.fitView({ padding: 0.1, duration: 300 })
-                }
-            }, 100)
+                fitView({
+                    padding: 0.3,
+                    duration: 500,
+                    includeHiddenNodes: true
+                })
+            }, 500) // Longer delay to ensure container is fully expanded
         }
-    }, [isFullscreen])
+    }, [isFullscreen, fitView])
 
     // Get existing mindmap from store
     const existingMindmap = getMindmapByNoteId(noteId)
@@ -426,6 +354,24 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+
+    // Sync ReactFlow state when a mindmap is loaded or regenerated
+    const nodesJson = JSON.stringify(existingMindmap?.nodes)
+    useEffect(() => {
+        if (existingMindmap?.nodes && existingMindmap.nodes.length > 0) {
+            const { nodes: newNodes, edges: newEdges } = convertToReactFlow(existingMindmap.nodes)
+            setNodes(newNodes)
+            setEdges(newEdges)
+            // Reset history when a fresh mindmap is loaded from store
+            setHistory([{ nodes: newNodes, edges: newEdges }])
+            setHistoryIndex(0)
+
+            // Auto-fit view when mindmap changes
+            setTimeout(() => {
+                fitView({ padding: 0.3, duration: 400, includeHiddenNodes: true })
+            }, 100)
+        }
+    }, [noteId, nodesJson, setNodes, setEdges, fitView]) // Re-run when switching notes OR when mindmap content changes
 
     // Save current state to history - use functional update to avoid stale closure
     const saveToHistory = useCallback((currentNodes: Node[], currentEdges: Edge[]) => {
@@ -473,67 +419,85 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
 
     // Animate edges on node hover - traces path to root AND all descendants
     const onNodeMouseEnter = useCallback((_event: any, node: Node) => {
-        setEdges((eds) => {
-            const pathNodeIds = new Set<string>([node.id])
-            const pathEdgeIds = new Set<string>()
+        if (hoveredNodeId.current === node.id) return
+        hoveredNodeId.current = node.id
 
-            // 1. Recursive helper to find Path to Root (Ancestors)
-            const findPathToRoot = (targetId: string) => {
-                const incomingEdge = eds.find(e => e.target === targetId)
-                if (incomingEdge) {
-                    pathEdgeIds.add(incomingEdge.id)
-                    pathNodeIds.add(incomingEdge.source)
-                    findPathToRoot(incomingEdge.source)
-                }
+        const currentEdges = getEdges()
+        const pathNodeIds = new Set<string>([node.id])
+        const pathEdgeIds = new Set<string>()
+
+        // 1. Recursive Helpers using current state from getEdges()
+        const findPathToRoot = (targetId: string) => {
+            const incomingEdge = currentEdges.find(e => e.target === targetId)
+            if (incomingEdge) {
+                pathEdgeIds.add(incomingEdge.id)
+                pathNodeIds.add(incomingEdge.source)
+                findPathToRoot(incomingEdge.source)
             }
+        }
 
-            // 2. Recursive helper to find Subtree (Descendants)
-            const findDescendants = (sourceId: string) => {
-                const outgoingEdges = eds.filter(e => e.source === sourceId)
-                outgoingEdges.forEach(edge => {
-                    pathEdgeIds.add(edge.id)
-                    pathNodeIds.add(edge.target)
-                    findDescendants(edge.target)
-                })
-            }
-
-            findPathToRoot(node.id)
-            findDescendants(node.id)
-
-            // Highlight nodes in the path
-            setNodes((nds) => nds.map(n => ({
-                ...n,
-                data: { ...n.data, isActivePath: pathNodeIds.has(n.id) }
-            })))
-
-            return eds.map((edge) => {
-                if (pathEdgeIds.has(edge.id)) {
-                    return {
-                        ...edge,
-                        animated: true,
-                        style: { ...edge.style, stroke: '#6366f1', strokeWidth: 3 }, // Highlight color (indigo-500)
-                    }
-                }
-                return edge
+        const findDescendants = (sourceId: string) => {
+            const outgoingEdges = currentEdges.filter(e => e.source === sourceId)
+            outgoingEdges.forEach(edge => {
+                pathEdgeIds.add(edge.id)
+                pathNodeIds.add(edge.target)
+                findDescendants(edge.target)
             })
+        }
+
+        findPathToRoot(node.id)
+        findDescendants(node.id)
+
+        // 2. Optimized State Updates with zIndex boosting
+        setNodes((nds) => nds.map(n => {
+            const shouldBeActive = pathNodeIds.has(n.id)
+            if (n.data.isActivePath === shouldBeActive) return n
+            return {
+                ...n,
+                zIndex: shouldBeActive ? 1000 : 0, // Boost active path to front
+                data: { ...n.data, isActivePath: shouldBeActive }
+            }
+        }))
+
+        setEdges((eds) => eds.map((edge) => {
+            const isPathEdge = pathEdgeIds.has(edge.id)
+            if (edge.animated === isPathEdge) return edge
+
+            return {
+                ...edge,
+                animated: isPathEdge,
+                style: {
+                    ...edge.style,
+                    stroke: isPathEdge ? '#6366f1' : '#64748b',
+                    strokeWidth: isPathEdge ? 3 : 2
+                },
+            }
+        }))
+    }, [getEdges, setEdges, setNodes])
+
+    const onNodeMouseLeave = useCallback((_event: any, node: Node) => {
+        // ONLY reset if we are truly leaving the current hovered node
+        // and not just moving to a child or parent node
+        if (hoveredNodeId.current !== node.id) return
+        hoveredNodeId.current = null
+
+        setNodes((nds) => {
+            if (!nds.some(n => n.data.isActivePath)) return nds
+            return nds.map(n => ({
+                ...n,
+                zIndex: 0,
+                data: { ...n.data, isActivePath: false }
+            }))
         })
-    }, [setEdges, setNodes])
 
-    const onNodeMouseLeave = useCallback((_event: any, _node: Node) => {
-        // Reset nodes highlighting
-        setNodes((nds) => nds.map(n => ({
-            ...n,
-            data: { ...n.data, isActivePath: false }
-        })))
-
-        // Reset ALL edges animation and style
-        setEdges((eds) =>
-            eds.map((edge) => ({
+        setEdges((eds) => {
+            if (!eds.some(e => e.animated)) return eds
+            return eds.map((edge) => ({
                 ...edge,
                 animated: false,
-                style: { ...edge.style, stroke: '#64748b', strokeWidth: 2 }, // Reset to original style (slate-500)
+                style: { ...edge.style, stroke: '#64748b', strokeWidth: 2 },
             }))
-        )
+        })
     }, [setEdges, setNodes])
 
     // Undo function
@@ -655,13 +619,11 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
 
     return (
         <div className={cn(
-            "flex flex-col bg-background",
-            // Animation only on desktop (md and above) to avoid mobile performance issues
-            "md:transition-all md:duration-200 md:ease-in-out",
+            "flex flex-col bg-background transition-all duration-300 ease-in-out",
             isFullscreen && !isExitingFullscreen
-                ? "fixed inset-0 z-50 h-screen md:animate-in md:fade-in md:zoom-in-95"
+                ? "fixed inset-0 z-50 h-screen animate-in fade-in"
                 : isExitingFullscreen
-                    ? "fixed inset-0 z-50 h-screen md:animate-out md:fade-out md:zoom-out-95"
+                    ? "fixed inset-0 z-50 h-screen animate-out fade-out"
                     : "h-full"
         )}>
             {/* Header with reduced padding */}
@@ -768,7 +730,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                                 onNodeMouseEnter={onNodeMouseEnter}
                                 onNodeMouseLeave={onNodeMouseLeave}
                                 nodeTypes={nodeTypes}
-                                onInit={(instance) => { reactFlowInstance.current = instance }}
+                                nodeOrigin={[0.5, 0.5]}
                                 fitView
                                 fitViewOptions={{
                                     padding: 0.1,
@@ -776,6 +738,7 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                                 }}
                                 minZoom={0.05}
                                 maxZoom={1.5}
+                                onlyRenderVisibleElements={false} // Prevent elements disappearing on zoom
                                 className="bg-background"
                             >
                                 <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
@@ -814,5 +777,13 @@ export function MindmapTab({ noteId }: MindmapTabProps) {
                 </Card>
             </div>
         </div >
+    )
+}
+
+export function MindmapTab(props: MindmapTabProps) {
+    return (
+        <ReactFlowProvider>
+            <MindmapContent {...props} />
+        </ReactFlowProvider>
     )
 }
