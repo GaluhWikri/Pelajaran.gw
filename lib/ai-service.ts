@@ -357,12 +357,35 @@ function buildPromptContext(options?: GenerationOptions): string {
     }
     const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
 
+    // Smart subject context - AI will check relevance
+    const subjectContext = options.subject
+        ? `Mata Pelajaran/Kuliah yang dipilih user: "${options.subject}"`
+        : ""
+
     return `
-    KONTEKS PENGGUNA (Gunakan informasi ini untuk menyesuaikan Ringkasan, Kuis, dan Flashcard):
-    - Mata Pelajaran/Topik: ${options.subject || "Umum"}
-    - Tingkat Pemahaman: ${level}
+    PREFERENSI PENGGUNA:
+    ${subjectContext}
+    - Tingkat Pemahaman Target: ${level}
     - Kompleksitas Penjelasan: ${styleGuide}
     - Gaya Penulisan & Tone: ${toneInstruction}
+    
+    ATURAN CERDAS MATA PELAJARAN (WAJIB DIIKUTI):
+    Langkah 1: Analisis ISI KONTEN dari file/link/materi yang diberikan terlebih dahulu.
+    Langkah 2: Bandingkan dengan "Mata Pelajaran/Kuliah yang dipilih user" di atas.
+    Langkah 3: Tentukan apakah RELEVAN atau TIDAK:
+    
+    ✅ JIKA RELEVAN (konten sesuai dengan mata pelajaran):
+       - Gunakan mata pelajaran untuk MEMPERKAYA konteks dan terminologi
+       - Contoh: Video Kalkulus + Form "Matematika" → Gunakan istilah matematika yang tepat
+       - Contoh: Materi Sel + Form "Biologi" → Gunakan konteks biologi yang akurat
+    
+    ❌ JIKA TIDAK RELEVAN (konten berbeda dari mata pelajaran):
+       - ABAIKAN mata pelajaran yang dipilih user
+       - FOKUS 100% pada ISI KONTEN AKTUAL dari file/link
+       - Contoh: Video Sejarah PDII + Form "Matematika" → Buat konten tentang Sejarah, BUKAN Matematika
+       - Contoh: File tentang Pemrograman + Form "Bahasa Inggris" → Buat konten Pemrograman
+    
+    PRIORITAS: Konten file/link SELALU lebih penting daripada pilihan mata pelajaran user.
     `
 }
 
