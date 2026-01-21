@@ -49,6 +49,7 @@ interface AppState {
   setUser: (user: AppState['user']) => void
   addXP: (amount: number) => void
   checkDailyLogin: (userId: string) => void
+  checkStreakMilestone: () => void // Check and award 7-day streak bonus if applicable
 
   // Actions - Processing
   addActiveUpload: (upload: AppState['activeUploads'][0]) => void
@@ -193,13 +194,7 @@ export const useStore = create<AppState>()(
           // Daily Login Reward - Only gives XP, NOT streak increment
           get().addXP(10)
 
-          // 7-day Weekly Bonus based on ACTIVITY streak (not login streak)
-          // Only award if we haven't awarded for this streak milestone before
-          const previousStreak = state.user.streak || 0
-          if (activityStreak > 0 && activityStreak % 7 === 0 && activityStreak > previousStreak) {
-            console.log('[Store] 7-Day Activity Streak Bonus! Streak:', activityStreak)
-            get().addXP(100)
-          }
+          // Note: 7-day streak bonus is now checked via checkStreakMilestone() when activities occur
 
           set(s => ({
             user: s.user ? { ...s.user, lastLoginDate: todayStr, streak: activityStreak } : null,
@@ -269,6 +264,44 @@ export const useStore = create<AppState>()(
       }),
 
 
+      // Helper: Check and award 7-day streak bonus after activity
+      checkStreakMilestone: () => {
+        const state = get()
+        if (!state.user || state.user.id === 'demo-user') return
+
+        const newStats = get().getActivityStats()
+        const newStreak = newStats.streak
+        const previousStreak = state.user.streak || 0
+
+        // Only check if streak increased
+        if (newStreak > previousStreak) {
+          console.log('[Store] Streak increased:', previousStreak, '->', newStreak)
+
+          // Check if we crossed a 7-day milestone
+          // Award bonus if the new streak passes a multiple of 7 that previous hadn't reached
+          const previousMilestone = Math.floor(previousStreak / 7)
+          const newMilestone = Math.floor(newStreak / 7)
+
+          if (newMilestone > previousMilestone) {
+            const bonusAmount = (newMilestone - previousMilestone) * 100
+            console.log('[Store] 7-Day Streak Milestone! Awarding bonus:', bonusAmount, 'XP')
+            get().addXP(bonusAmount)
+          }
+
+          // Update streak in local state and sync to DB
+          set(s => ({
+            user: s.user ? { ...s.user, streak: newStreak } : null
+          }))
+
+          supabase.from('profiles').update({
+            streak: newStreak,
+            updated_at: new Date().toISOString()
+          }).eq('id', state.user.id).then(({ error }) => {
+            if (error) console.error("Failed to sync streak milestone:", error)
+          })
+        }
+      },
+
       // Notes actions
       setNotes: (notes) => set({ notes }),
       addNote: (note) => {
@@ -284,6 +317,8 @@ export const useStore = create<AppState>()(
             } as Note,
           ],
         }))
+        // Check if this activity caused a streak milestone
+        setTimeout(() => get().checkStreakMilestone(), 100)
       },
 
       updateNote: (id, updates) =>
@@ -395,6 +430,11 @@ export const useStore = create<AppState>()(
         set((state) => ({
           quizzes: state.quizzes.map((quiz) => (quiz.id === id ? { ...quiz, ...updates } : quiz)),
         }))
+
+        // Check streak milestone if quiz was just completed
+        if (updates.completedAt) {
+          setTimeout(() => get().checkStreakMilestone(), 100)
+        }
       },
 
       deleteQuiz: (id) =>
@@ -483,6 +523,8 @@ export const useStore = create<AppState>()(
             ],
           }))
         }
+        // Check streak milestone after mindmap activity
+        setTimeout(() => get().checkStreakMilestone(), 100)
       },
 
       updateMindmap: (id, updates) =>

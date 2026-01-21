@@ -223,19 +223,12 @@ export default function DashboardPage() {
           }
 
           // CHECK: Streak Sync
-          // If the calculated activity streak differs from DB, or we just want to ensure it's up to date
+          // If the calculated activity streak differs from DB, update it
           if (calculatedStreak !== profileData.streak) {
             console.log('[Dashboard] Activity Streak updated:', calculatedStreak)
             updatesToSync.streak = calculatedStreak
             hasUpdates = true
-
-            // Optional: 7-Day Streak Bonus Check
-            // Only award if it's a NEW milestone reached today
-            if (calculatedStreak > 0 && calculatedStreak % 7 === 0 && calculatedStreak > (profileData.streak || 0)) {
-              currentXP += 100
-              updatesToSync.current_xp = currentXP
-              console.log('[Dashboard] 7-Day Streak Bonus Attempted')
-            }
+            // Note: 7-day streak bonus is handled by checkStreakMilestone() in store when activities occur
           }
 
           // Calculate Level Up (based on potentially new XP)
