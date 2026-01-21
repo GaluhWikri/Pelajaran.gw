@@ -183,79 +183,60 @@ export const useStore = create<AppState>()(
         const todayStr = now.toLocaleDateString('en-CA') // YYYY-MM-DD
         const lastLoginStr = state.user.lastLoginDate || ""
 
-        // Calculate Yesterday
-        const yesterday = new Date(now)
-        yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStr = yesterday.toLocaleDateString('en-CA')
-
-        let newStreak = state.user.streak || 0
-
-        // MIGRATION / RECOVERY: If persistent streak is 0, check if we have a calculated activity streak
-        if (newStreak === 0) {
-          const calculatedStats = get().getActivityStats()
-          if (calculatedStats.streak > 0) {
-            console.log('[Store] Recovering streak from activity history:', calculatedStats.streak)
-            newStreak = calculatedStats.streak
-          }
-        }
+        // Get streak from actual activity (NOT from login)
+        const calculatedStats = get().getActivityStats()
+        const activityStreak = calculatedStats.streak
 
         if (lastLoginStr !== todayStr) {
-          console.log('[Store] New daily login detected! Updating DB...')
+          console.log('[Store] New daily login detected! Awarding XP only (streak is activity-based).')
 
-          // Logic Streak
-          if (lastLoginStr === yesterdayStr) {
-            newStreak += 1
-            console.log('[Store] Consecutive login! Streak incremented to:', newStreak)
-          } else {
-            // Only reset if it wasn't a brand new 0-streak or empty
-            // If lastLoginStr is empty (first ever), streak becomes 1.
-            // If lastLoginStr is old (broken), streak becomes 1.
-            if (newStreak === 0 && lastLoginStr === "") {
-              newStreak = 1
-            } else {
-              console.log('[Store] Streak broken (Last login: ' + lastLoginStr + '). Reset to 1.')
-              newStreak = 1
-            }
-          }
+          // Daily Login Reward - Only gives XP, NOT streak increment
+          get().addXP(10)
 
-          get().addXP(10) // Daily Login Reward
-
-          // Cek 7-day Weekly Bonus
-          if (newStreak > 0 && newStreak % 7 === 0) {
+          // 7-day Weekly Bonus based on ACTIVITY streak (not login streak)
+          // Only award if we haven't awarded for this streak milestone before
+          const previousStreak = state.user.streak || 0
+          if (activityStreak > 0 && activityStreak % 7 === 0 && activityStreak > previousStreak) {
+            console.log('[Store] 7-Day Activity Streak Bonus! Streak:', activityStreak)
             get().addXP(100)
           }
 
           set(s => ({
-            user: s.user ? { ...s.user, lastLoginDate: todayStr, streak: newStreak } : null,
+            user: s.user ? { ...s.user, lastLoginDate: todayStr, streak: activityStreak } : null,
             showDailyLoginEffect: true
           }))
 
-          // SYNC DATE & STREAK TO SUPABASE
+          // SYNC DATE & ACTIVITY STREAK TO SUPABASE
           if (userId && userId !== 'demo-user') {
             supabase.from('profiles').update({
               last_login_date: todayStr,
-              streak: newStreak,
+              streak: activityStreak,
               updated_at: new Date().toISOString()
             }).eq('id', userId).then(({ error }) => {
               if (error) {
                 console.error("Failed to sync Login/Streak to DB:", error)
               } else {
-                console.log("Successfully synced Login/Streak to DB:", newStreak)
+                console.log("Successfully synced Login Date to DB. Activity Streak:", activityStreak)
               }
             })
           }
 
         } else {
-          console.log('[Store] Already logged in today. Current Streak:', newStreak)
+          console.log('[Store] Already logged in today. Activity Streak:', activityStreak)
 
-          // Ensure DB is consistent even if already logged in locally
-          if (userId && userId !== 'demo-user') {
+          // Sync activity streak to DB for consistency
+          if (userId && userId !== 'demo-user' && activityStreak !== state.user.streak) {
             supabase.from('profiles').update({
-              streak: newStreak,
+              streak: activityStreak,
               updated_at: new Date().toISOString()
             }).eq('id', userId).then(({ error }) => {
-              if (error) console.error("Failed to sync Streak consistency:", error)
+              if (error) console.error("Failed to sync Activity Streak:", error)
             })
+
+            // Update local state with activity streak
+            set(s => ({
+              user: s.user ? { ...s.user, streak: activityStreak } : null
+            }))
           }
         }
       },
