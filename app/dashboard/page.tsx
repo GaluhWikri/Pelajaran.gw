@@ -523,11 +523,11 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-4">
-            <div className="lg:col-span-3">
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-4">
+            <div className="lg:col-span-3 order-1">
               <ActivityChart />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 order-2">
               <RecentActivity />
             </div>
           </div>

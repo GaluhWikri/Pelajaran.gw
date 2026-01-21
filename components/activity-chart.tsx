@@ -160,9 +160,9 @@ export function ActivityChart() {
   }[timeRange]
 
   return (
-    <Card className="col-span-1 h-full flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-base">Aktivitas Harian ({rangeLabel})</CardTitle>
+    <Card className="w-full h-full flex flex-col">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+        <CardTitle className="text-sm sm:text-base">Aktivitas Harian ({rangeLabel})</CardTitle>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-[130px] h-8 text-xs">
             <SelectValue placeholder="Pilih Periode" />
@@ -174,8 +174,8 @@ export function ActivityChart() {
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="flex-1 min-h-[350px] pb-4 pl-2">
-        <div className="h-full w-full">
+      <CardContent className="pb-4 pl-2">
+        <div className="h-[250px] sm:h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
               <XAxis

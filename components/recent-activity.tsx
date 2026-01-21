@@ -41,7 +41,7 @@ export function RecentActivity() {
   ]
 
   const sortedActivities = allActivities.sort((a, b) => b.time.getTime() - a.time.getTime())
-  const activities = sortedActivities.slice(0, 5)
+  const activities = sortedActivities.slice(0, 6)
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -88,30 +88,30 @@ export function RecentActivity() {
   }
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+    <Card className="w-full h-full gap-2">
+      <CardHeader className="pb-0">
+        <CardTitle className="text-sm sm:text-base">Recent Activity</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-1 sm:space-y-2">
           {activities.map((activity) => {
             const Icon = getIcon(activity.type)
             return (
               <div
                 key={`${activity.type}-${activity.id}`}
                 onClick={() => handleActivityClick(activity)}
-                className="flex items-center gap-4 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-accent/50 transition-colors group"
+                className="flex items-center gap-3 sm:gap-4 p-2 -mx-2 rounded-lg cursor-pointer hover:bg-accent/50 active:bg-accent/70 transition-colors group"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent group-hover:bg-accent">
-                  <Icon className="h-5 w-5 text-accent-foreground" />
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-accent shrink-0">
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-accent-foreground" />
                 </div>
-                <div className="flex-1 space-y-1 min-w-0">
-                  <p className="text-sm font-medium leading-none truncate">{activity.title}</p>
-                  <p className="text-xs text-muted-foreground">
+                <div className="flex-1 space-y-0.5 sm:space-y-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium leading-tight truncate">{activity.title}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     Updated {formatDistanceToNow(activity.time, { addSuffix: true })}
                   </p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </div>
             )
           })}
