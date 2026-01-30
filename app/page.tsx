@@ -303,19 +303,30 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 px-4 relative overflow-hidden">
+      <section className="py-16 md:py-24 px-4 relative overflow-visible">
         {/* Background Gradients */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -z-10" />
 
         <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/70">
-              Pertanyaan Umum
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Temukan jawaban untuk pertanyaan yang paling sering diajukan oleh pengguna kami.
-            </p>
+          <div className="text-center mb-12 md:mb-16 space-y-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-medium mb-4">
+                <Sparkles className="h-4 w-4" />
+                <span>FAQ</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/70">
+                Pertanyaan Umum
+              </h2>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mt-4">
+                Temukan jawaban untuk pertanyaan yang paling sering diajukan oleh pengguna kami.
+              </p>
+            </motion.div>
           </div>
 
           <Accordion type="single" collapsible className="w-full space-y-4">
@@ -339,20 +350,39 @@ export default function LandingPage() {
                 id: "item-4",
                 q: "Apakah data saya aman?",
                 a: "Tentu saja. Privasi Anda adalah prioritas kami. Materi yang Anda upload hanya digunakan untuk keperluan belajar Anda sendiri dan tidak dibagikan kepada pihak ketiga."
+              },
+              {
+                id: "item-5",
+                q: "Format file apa saja yang didukung?",
+                a: "Pelajaran.gw mendukung berbagai format file termasuk PDF, DOCX, PPTX, dan juga link YouTube. Anda dapat mengupload catatan kuliah, slide presentasi, atau bahkan video pembelajaran untuk dirangkum oleh AI kami."
               }
             ].map((faq, index) => (
-              <AccordionItem
+              <motion.div
                 key={faq.id}
-                value={faq.id}
-                className="group border border-border/50 bg-card/50 backdrop-blur-sm px-6 rounded-2xl hover:border-orange-500/50 hover:bg-card/80 transition-all duration-300 shadow-sm"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
               >
-                <AccordionTrigger className="text-lg font-semibold py-6 hover:no-underline group-data-[state=open]:text-orange-500 transition-colors">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-base pb-6 leading-relaxed">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
+                <AccordionItem
+                  value={faq.id}
+                  className="group border border-border/50 bg-card/50 backdrop-blur-sm rounded-2xl hover:border-orange-500/50 hover:bg-card/80 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500/5 overflow-visible"
+                >
+                  <AccordionTrigger className="text-base md:text-lg font-semibold py-5 md:py-6 px-5 md:px-6 hover:no-underline group-data-[state=open]:text-orange-500 transition-colors text-left">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <span className="shrink-0 h-8 w-8 md:h-10 md:w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 text-sm md:text-base font-bold group-hover:bg-orange-500 group-hover:text-white transition-all duration-300">
+                        {index + 1}
+                      </span>
+                      <span className="leading-snug">{faq.q}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground text-sm md:text-base leading-relaxed overflow-visible">
+                    <div className="px-5 md:px-6 pb-5 md:pb-6 pt-0 pl-17 md:pl-20">
+                      {faq.a}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
             ))}
           </Accordion>
         </div>
