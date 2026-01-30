@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from "react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network } from "lucide-react"
+import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
@@ -322,7 +322,7 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-medium mb-4">
-                <Sparkles className="h-4 w-4" />
+                <HelpCircle className="h-4 w-4" />
                 <span>FAQ</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/70">
