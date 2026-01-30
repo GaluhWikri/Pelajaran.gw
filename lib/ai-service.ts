@@ -1,7 +1,30 @@
 import { Note, Quiz, Flashcard, MindmapNode } from "./types"
-import { AI_SYSTEM_PROMPT, MINDMAP_SYSTEM_PROMPT } from "./ai-prompt"
+import {
+    AI_SYSTEM_PROMPT,
+    MINDMAP_SYSTEM_PROMPT,
+    STYLE_MAP,
+    LEVEL_STYLE_MAP,
+    CONTENT_INSTRUCTION_TEMPLATE,
+    SUBJECT_DETECTION_RULES_TEMPLATE,
+    SUBJECT_RULES_TEMPLATE,
+    JSON_OUTPUT_FORMAT_TEMPLATE,
+    FILE_LEARNING_TASK_TEMPLATE,
+    TEXT_LEARNING_TASK_TEMPLATE,
+    YOUTUBE_LEARNING_TASK_TEMPLATE,
+    YOUTUBE_CONTENT_INSTRUCTION_TEMPLATE,
+    QUIZ_JSON_OUTPUT_FORMAT_TEMPLATE,
+    FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE
+} from "./ai-prompt"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { extractTextFromPPTX } from "./ppt-parser"
+
+// --- Types ---
+
+export interface GenerationOptions {
+    subject: string
+    understandingLevel: string
+    writingStyle: string
+}
 
 // Initialize Gemini
 // Note: In a real production app, you should proxy these requests through a backend
@@ -85,12 +108,156 @@ async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: s
     })
 }
 
+// ============================================
+// PROMPT BUILDER FUNCTIONS (All Logic Here)
+// ============================================
 
-export interface GenerationOptions {
-    subject: string
-    understandingLevel: string
-    writingStyle: string
+/**
+ * Build user preference context for prompts
+ */
+function buildPromptContext(options?: GenerationOptions): string {
+    if (!options) return ""
+
+    const level = options.understandingLevel || "Menengah"
+    const styleGuide = LEVEL_STYLE_MAP[level] || LEVEL_STYLE_MAP["default"]
+    const toneInstruction = STYLE_MAP[options.writingStyle] || STYLE_MAP["relaxed"]
+
+    const subjectContext = options.subject
+        ? `Mata Pelajaran/Kuliah yang dipilih user: "${options.subject}"`
+        : ""
+
+    return `
+    PREFERENSI PENGGUNA:
+    ${subjectContext}
+    - Tingkat Pemahaman Target: ${level}
+    - Kompleksitas Penjelasan: ${styleGuide}
+    - Gaya Penulisan & Tone: ${toneInstruction}
+    
+    ${SUBJECT_RULES_TEMPLATE}
+    `
 }
+
+/**
+ * Build prompt for file/image learning content generation
+ */
+function buildFileLearningPrompt(promptContext: string): string {
+    return `${AI_SYSTEM_PROMPT}
+
+${FILE_LEARNING_TASK_TEMPLATE}
+
+${promptContext}
+
+${CONTENT_INSTRUCTION_TEMPLATE}
+
+${SUBJECT_DETECTION_RULES_TEMPLATE}
+
+${JSON_OUTPUT_FORMAT_TEMPLATE}`
+}
+
+/**
+ * Build prompt for text/transcript learning content generation
+ */
+function buildTextLearningPrompt(text: string, promptContext: string): string {
+    const truncatedText = text.substring(0, 50000)
+    
+    return `${AI_SYSTEM_PROMPT}
+
+${TEXT_LEARNING_TASK_TEMPLATE}
+
+MATERI:
+"${truncatedText}..."
+
+${promptContext}
+
+${CONTENT_INSTRUCTION_TEMPLATE}
+
+${SUBJECT_DETECTION_RULES_TEMPLATE}
+
+${JSON_OUTPUT_FORMAT_TEMPLATE}`
+}
+
+/**
+ * Build prompt for YouTube video learning content generation
+ */
+function buildYouTubeLearningPrompt(promptContext: string): string {
+    return `${AI_SYSTEM_PROMPT}
+
+${YOUTUBE_LEARNING_TASK_TEMPLATE}
+
+${promptContext}
+
+${YOUTUBE_CONTENT_INSTRUCTION_TEMPLATE}
+
+${SUBJECT_DETECTION_RULES_TEMPLATE}
+
+${JSON_OUTPUT_FORMAT_TEMPLATE}`
+}
+
+/**
+ * Build prompt for quiz generation from existing notes
+ */
+function buildQuizPrompt(noteContent: string, questionCount: number): string {
+    const truncatedContent = noteContent.substring(0, 15000)
+    
+    return `${AI_SYSTEM_PROMPT}
+
+Tugas Khusus:
+Buatlah kuis pilihan ganda berdasarkan materi yang disediakan di bawah ini.
+
+Materi:
+"${truncatedContent}..."
+
+PENTING - INSTRUKSI KUANTITAS:
+Anda HARUS menghasilkan TEPAT ${questionCount} pertanyaan. Tidak boleh kurang dari ${questionCount}.
+Jika materi terbatas, gali lebih dalam ke detail spesifik untuk mencapai target ${questionCount} pertanyaan.
+
+Instruksi:
+1. Jumlah Pertanyaan: ${questionCount} (WAJIB).
+2. Pertanyaan harus relevan dengan materi.
+3. Berikan 4 pilihan jawaban untuk setiap pertanyaan.
+4. Sertakan penjelasan singkat untuk jawaban yang benar.
+
+${QUIZ_JSON_OUTPUT_FORMAT_TEMPLATE}`
+}
+
+/**
+ * Build prompt for flashcard generation from existing notes
+ */
+function buildFlashcardPrompt(noteContent: string, count: number): string {
+    const truncatedContent = noteContent.substring(0, 15000)
+    
+    return `${AI_SYSTEM_PROMPT}
+
+Note Content:
+"${truncatedContent}..."
+
+Task:
+Create EXACTLY ${count} flashcards based on the note content above.
+Do not create more or less than ${count}.
+Focus on identifying the most critical concepts, definitions, and key takeaways.
+
+${FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE}`
+}
+
+/**
+ * Build prompt for mindmap generation from existing notes
+ */
+function buildMindmapPrompt(noteTitle: string, noteContent: string): string {
+    const truncatedContent = noteContent.substring(0, 5000)
+    
+    return `${MINDMAP_SYSTEM_PROMPT}
+
+TOPIK: "${noteTitle}"
+KONTEN: "${truncatedContent}"
+
+Buat mindmap JSON untuk konten di atas. Output HANYA JSON valid.`
+}
+
+// ============================================
+// MAIN API FUNCTIONS
+// ============================================
+
+
 
 export async function generateLearningContent(file: File, options?: GenerationOptions): Promise<{
     title?: string
@@ -139,50 +306,7 @@ export async function generateLearningContent(file: File, options?: GenerationOp
 
         const filePart = await fileToGenerativePart(file)
         const promptContext = buildPromptContext(options)
-
-        const prompt = `
-    ${AI_SYSTEM_PROMPT}
-
-    Tugas: Analisis materi yang diberikan (File/Gambar) dan buat output JSON.
-
-    ${promptContext}
-
-    INSTRUKSI KONTEN:
-    1. RINGKASAN (Summary): Tulis rangkuman materi di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
-       - Gunakan format Markdown LLENGKAP & KAYA (Rich Markdown) JIKA DIPERLUKAN/RELEVAN:
-         * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
-         * CODE BLOCK: Gunakan untuk kode program, command line, atau rumus matematika kompleks.
-         * BLOCKQUOTE (>): Gunakan untuk definisi penting, rumus singkat, atau kesimpulan utama.
-         * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
-         * LIST: Gunakan bullet points atau numbering untuk langkah-langkah atau poin materi.
-       - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
-       - JANGAN pakai pembuka/penutup basa-basi.
-    2. KUIS (Quiz): Wajib buat 10 soal pilihan ganda yang relevan.
-    3. FLASHCARDS: Wajib buat minimal 5 flashcards.
-
-    ATURAN DETEKSI MATA PELAJARAN (SANGAT PENTING - WAJIB DIIKUTI):
-    - Field "detectedSubject" WAJIB diisi berdasarkan ISI AKTUAL FILE, BUKAN dari preferensi user
-    - Jika file tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
-    - Jika file tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
-    - ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
-    - detectedSubject HARUS mencerminkan topik SEBENARNYA dari file
-
-    FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
-    {
-      "title": "Judul Materi (Max 5-7 kata)",
-      "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI FILE (contoh: Matematika, Biologi, Sejarah, Pemrograman, Fisika, Kimia, dll) - ABAIKAN pilihan user!",
-      "summary": "String markdown ringkasan...",
-      "quiz": {
-        "title": "Judul Kuis",
-        "questions": [
-          { "id": "q1", "question": "...", "options": ["A","B","C","D"], "correctAnswer": 0, "explanation": "..." }
-        ]
-      },
-      "flashcards": [
-        { "question": "...", "answer": "..." }
-      ]
-    }
-    `
+        const prompt = buildFileLearningPrompt(promptContext)
 
         // Wrap request in retry logic
         const result = await retryGenAI(() => model.generateContent([prompt, filePart]))
@@ -212,57 +336,7 @@ export async function generateLearningContentFromText(text: string, options?: Ge
 
     try {
         const promptContext = buildPromptContext(options)
-
-        const prompt = `
-    ${AI_SYSTEM_PROMPT}
-
-    Tugas: Analisis TEKS/MATERI berikut (bisa berupa Transkrip Video atau Teks Slide Presentasi) dan buat output JSON.
-
-    MATERI:
-    "${text.substring(0, 50000)}..."
-
-    ${promptContext}
-
-    INSTRUKSI KONTEN:
-    1. RINGKASAN (Summary): Tulis rangkuman materi di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
-       - Gunakan format Markdown LLENGKAP & KAYA (Rich Markdown) JIKA DIPERLUKAN/RELEVAN:
-         * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
-         * CODE BLOCK: Gunakan untuk kode program, command line, atau rumus matematika kompleks.
-         * BLOCKQUOTE (>): Gunakan untuk definisi penting, rumus singkat, atau kesimpulan utama.
-         * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
-         * LIST: Gunakan bullet points atau numbering untuk langkah-langkah atau poin materi.
-       - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
-       - JANGAN pakai pembuka/penutup basa-basi.
-    2. KUIS (Quiz): WAJIB ADA. Buat 10 soal pilihan ganda yang relevan. Jika materi SEDIKIT, buatlah minimal 5 soal.
-    3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards. Jika materi sedikit, sesuaikan dengan definisi yang ada.
-
-    PENTING:
-    - Kuis dan Flashcards TIDAK BOLEH KOSONG.
-    - Jika materi sangat singkat, fokus buat pertanyaan dari informasi kunci yang tersedua.
-
-    ATURAN DETEKSI MATA PELAJARAN (SANGAT PENTING - WAJIB DIIKUTI):
-    - Field "detectedSubject" WAJIB diisi berdasarkan ISI AKTUAL MATERI, BUKAN dari preferensi user
-    - Jika materi tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
-    - Jika materi tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
-    - ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
-    - detectedSubject HARUS mencerminkan topik SEBENARNYA dari materi
-
-    FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
-    {
-      "title": "Judul Materi (Max 5-7 kata)",
-      "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI MATERI (contoh: Matematika, Biologi, Sejarah, Pemrograman, Fisika, Kimia, dll) - ABAIKAN pilihan user!",
-      "summary": "String markdown ringkasan...",
-      "quiz": {
-        "title": "Judul Kuis",
-        "questions": [
-          { "id": "q1", "question": "...", "options": ["A","B","C","D"], "correctAnswer": 0, "explanation": "..." }
-        ]
-      },
-      "flashcards": [
-        { "question": "...", "answer": "..." }
-      ]
-    }
-    `
+        const prompt = buildTextLearningPrompt(text, promptContext)
 
         // Send text directly vs filePart
         const result = await retryGenAI(() => model.generateContent(prompt))
@@ -294,59 +368,7 @@ export async function generateLearningContentFromYouTube(youtubeUrl: string, opt
 
     try {
         const promptContext = buildPromptContext(options)
-
-        const prompt = `
-    ${AI_SYSTEM_PROMPT}
-
-    Tugas: Analisis VIDEO YOUTUBE yang diberikan dan buat output JSON berisi ringkasan, kuis, dan flashcards.
-    
-    PENTING: Analisis ISI AKTUAL dari video (audio, visual, narasi) yang diberikan di atas, BUKAN dari informasi lain.
-
-    ${promptContext}
-
-    INSTRUKSI KONTEN:
-    1. RINGKASAN (Summary): Tulis rangkuman lengkap dari isi video di field 'summary'. 
-       - Analisis konten audio/narasi dalam video
-       - Jika ada teks atau slide yang ditampilkan, sertakan informasinya
-       - Gunakan format Markdown yang kaya:
-         * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
-         * CODE BLOCK: Gunakan untuk kode program atau rumus.
-         * BLOCKQUOTE (>): Gunakan untuk definisi penting atau kesimpulan utama.
-         * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
-         * LIST: Gunakan bullet points atau numbering untuk langkah-langkah.
-       - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
-       - JANGAN pakai pembuka/penutup basa-basi.
-    2. KUIS (Quiz): WAJIB ADA. Buat 10 soal pilihan ganda yang relevan dengan isi video.
-    3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards berisi konsep penting dari video.
-
-    PENTING:
-    - Kuis dan Flashcards TIDAK BOLEH KOSONG.
-    - Fokus pada poin-poin pembelajaran utama dari video.
-
-    ATURAN DETEKSI MATA PELAJARAN (SANGAT PENTING - WAJIB DIIKUTI):
-    - Field "detectedSubject" WAJIB diisi berdasarkan ISI AKTUAL VIDEO, BUKAN dari preferensi user
-    - Jika video tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
-    - Jika video tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
-    - Jika video tentang Musik, isi "Musik" meskipun user pilih apapun
-    - ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
-    - detectedSubject HARUS mencerminkan topik SEBENARNYA dari video
-
-    FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
-    {
-      "title": "Judul berdasarkan isi video (Max 5-7 kata)",
-      "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI VIDEO (contoh: Matematika, Biologi, Sejarah, Pemrograman, Musik, Fisika, Kimia, Ekonomi, dll) - ABAIKAN pilihan user!",
-      "summary": "String markdown ringkasan...",
-      "quiz": {
-        "title": "Judul Kuis",
-        "questions": [
-          { "id": "q1", "question": "...", "options": ["A","B","C","D"], "correctAnswer": 0, "explanation": "..." }
-        ]
-      },
-      "flashcards": [
-        { "question": "...", "answer": "..." }
-      ]
-    }
-    `
+        const prompt = buildYouTubeLearningPrompt(promptContext)
 
         // Create video part with fileUri to let Gemini access and analyze the YouTube video
         const videoPart = {
@@ -369,61 +391,6 @@ export async function generateLearningContentFromYouTube(youtubeUrl: string, opt
 }
 
 // --- Helper Functions ---
-
-function buildPromptContext(options?: GenerationOptions): string {
-    if (!options) return ""
-
-    const level = options.understandingLevel || "Menengah"
-    let styleGuide = "Penjelasan seimbang untuk pemahaman umum"
-
-    if (["Pemula", "Dasar"].includes(level)) {
-        styleGuide = "Penjelasan detail dengan analogi sederhana, hindari jargon rumit."
-    } else if (level === "Menengah") {
-        styleGuide = "Penjelasan seimbang, informatif, dan mudah dipahami."
-    } else if (["Mahir", "Ahli"].includes(level)) {
-        styleGuide = "Penjelasan ringkas, padat, dan menggunakan istilah teknis yang tepat."
-    }
-
-    // Map writing style to prompt instruction
-    const styleMap: Record<string, string> = {
-        "relaxed": "Gunakan bahasa yang santai, ramah, dan seperti teman belajar (conversational). Boleh menggunakan sapaan akrab.",
-        "formal": "Gunakan bahasa yang formal, akademis, dan baku. Hindari slang.",
-        "concise": "Langsung pada poinnya (to-the-point), bullet points, tanpa basa-basi.",
-        "humorous": "Gunakan gaya yang lucu, menyenangkan, slang, dan mungkin sedikit jenaka untuk membuat belajar tidak membosankan."
-    }
-    const toneInstruction = styleMap[options.writingStyle] || styleMap["relaxed"]
-
-    // Smart subject context - AI will check relevance
-    const subjectContext = options.subject
-        ? `Mata Pelajaran/Kuliah yang dipilih user: "${options.subject}"`
-        : ""
-
-    return `
-    PREFERENSI PENGGUNA:
-    ${subjectContext}
-    - Tingkat Pemahaman Target: ${level}
-    - Kompleksitas Penjelasan: ${styleGuide}
-    - Gaya Penulisan & Tone: ${toneInstruction}
-    
-    ATURAN CERDAS MATA PELAJARAN (WAJIB DIIKUTI):
-    Langkah 1: Analisis ISI KONTEN dari file/link/materi yang diberikan terlebih dahulu.
-    Langkah 2: Bandingkan dengan "Mata Pelajaran/Kuliah yang dipilih user" di atas.
-    Langkah 3: Tentukan apakah RELEVAN atau TIDAK:
-    
-    ✅ JIKA RELEVAN (konten sesuai dengan mata pelajaran):
-       - Gunakan mata pelajaran untuk MEMPERKAYA konteks dan terminologi
-       - Contoh: Video Kalkulus + Form "Matematika" → Gunakan istilah matematika yang tepat
-       - Contoh: Materi Sel + Form "Biologi" → Gunakan konteks biologi yang akurat
-    
-    ❌ JIKA TIDAK RELEVAN (konten berbeda dari mata pelajaran):
-       - ABAIKAN mata pelajaran yang dipilih user
-       - FOKUS 100% pada ISI KONTEN AKTUAL dari file/link
-       - Contoh: Video Sejarah PDII + Form "Matematika" → Buat konten tentang Sejarah, BUKAN Matematika
-       - Contoh: File tentang Pemrograman + Form "Bahasa Inggris" → Buat konten Pemrograman
-    
-    PRIORITAS: Konten file/link SELALU lebih penting daripada pilihan mata pelajaran user.
-    `
-}
 
 function parseGeminiResponse(responseText: string) {
     let data;
@@ -628,39 +595,7 @@ export async function generateQuizFromNote(
     }
 
     try {
-        const prompt = `
-  ${AI_SYSTEM_PROMPT}
-
-  Tugas Khusus:
-  Buatlah kuis pilihan ganda berdasarkan materi yang disediakan di bawah ini.
-  
-  Materi:
-  "${noteContent.substring(0, 15000)}..."
-
-  PENTING - INSTRUKSI KUANTITAS:
-  Anda HARUS menghasilkan TEPAT ${questionCount} pertanyaan. Tidak boleh kurang dari ${questionCount}.
-  Jika materi terbatas, gali lebih dalam ke detail spesifik untuk mencapai target ${questionCount} pertanyaan.
-
-  Instruksi:
-  1. Jumlah Pertanyaan: ${questionCount} (WAJIB).
-  2. Pertanyaan harus relevan dengan materi.
-  3. Berikan 4 pilihan jawaban untuk setiap pertanyaan.
-  4. Sertakan penjelasan singkat untuk jawaban yang benar.
-  
-  Output JSON format:
-  {
-    "title": "Judul Kuis (Relevan dengan materi)",
-    "questions": [
-      {
-        "id": "q1",
-        "question": "Pertanyaan...",
-        "options": ["A", "B", "C", "D"],
-        "correctAnswer": 0,
-        "explanation": "Penjelasan..."
-      }
-    ]
-  }
-  `
+        const prompt = buildQuizPrompt(noteContent, questionCount)
 
         const result = await retryGenAI(() => model.generateContent(prompt))
         const responseText = result.response.text()
@@ -712,27 +647,7 @@ export async function generateFlashcardsFromNote(
     }
 
     try {
-        const prompt = `
-  ${AI_SYSTEM_PROMPT}
-
-  Note Content:
-  "${noteContent.substring(0, 15000)}..."
-
-  Task:
-  Create EXACTLY ${count} flashcards based on the note content above.
-  Do not create more or less than ${count}.
-  Focus on identifying the most critical concepts, definitions, and key takeaways.
-  
-  Output JSON:
-  {
-    "flashcards": [
-      {
-        "question": "Front of card (Concept/Question)",
-        "answer": "Back of card (Definition/Answer)"
-      }
-    ]
-  }
-  `
+        const prompt = buildFlashcardPrompt(noteContent, count)
         const result = await retryGenAI(() => model.generateContent(prompt))
         const responseText = result.response.text()
 
@@ -774,15 +689,7 @@ export async function generateMindmapFromNote(
     }
 
     try {
-        // Limit content to reduce input tokens, leaving more room for output
-        const truncatedContent = noteContent.substring(0, 5000)
-
-        const prompt = `${MINDMAP_SYSTEM_PROMPT}
-
-TOPIK: "${noteTitle}"
-KONTEN: "${truncatedContent}"
-
-Buat mindmap JSON untuk konten di atas. Output HANYA JSON valid.`
+        const prompt = buildMindmapPrompt(noteTitle, noteContent)
 
         const result = await retryGenAI(() => mindmapModel.generateContent(prompt))
         const responseText = result.response.text()
