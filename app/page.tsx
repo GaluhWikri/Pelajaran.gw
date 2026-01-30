@@ -31,9 +31,9 @@ export default function LandingPage() {
     offset: ["start end", "end start"]
   })
 
-  // 3D scale animation - only scale when highlighted
-  const scale = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0.85, 1.02, 1.02, 0.85])
-  const rotateX = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [8, 0, 0, -8])
+  // 3D scale animation - more dramatic size change
+  const scale = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0.25, 1.05, 1.05, 0.25])
+  const rotateX = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [20, 0, 0, -20])
   const blur = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [4, 0, 0, 4])
   const blurFilter = useMotionTemplate`blur(${blur}px)`
 
