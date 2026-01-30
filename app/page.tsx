@@ -471,9 +471,10 @@ export default function LandingPage() {
                 Pelajaran<span className="text-primary">.gw</span>
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              © 2025 Pelajaran.gw. All rights reserved.
-            </p>
+            <div className="text-sm text-muted-foreground text-right">
+              <p>© 2025 Pelajaran.gw. All rights reserved.</p>
+              <p className="text-xs mt-1">Deployed by <span className="font-medium text-orange-500">Galuh Wikri</span></p>
+            </div>
           </div>
         </div>
       </footer>
