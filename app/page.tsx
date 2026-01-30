@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from "react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
@@ -255,7 +255,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: FileText,
@@ -269,8 +269,13 @@ export default function LandingPage() {
               },
               {
                 icon: Zap,
-                title: "Instant Quiz & Flashcard",
-                description: "Review pemahaman materi secara instan dengan kuis dan kartu hafalan yang dibuatkan AI."
+                title: "Quiz & Flashcard",
+                description: "Review pemahaman materi dengan kuis dan kartu hafalan yang dibuatkan AI."
+              },
+              {
+                icon: Network,
+                title: "Mind Map",
+                description: "Visualisasikan hubungan antar konsep dengan mind map yang dihasilkan AI secara otomatis."
               }
             ].map((feature, i) => (
               <motion.div
