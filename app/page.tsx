@@ -441,12 +441,13 @@ export default function LandingPage() {
               </div>
 
               {/* Feature Highlights Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 gap-y-8 w-full border-t border-border/50 pt-10 mt-8">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6 gap-y-8 w-full border-t border-border/50 pt-10 mt-8">
                 {[
                   { icon: Zap, label: "Proses Cepat" },
                   { icon: CheckCircle2, label: "Gratis Selamanya" },
                   { icon: Brain, label: "AI Cerdas" },
                   { icon: FileText, label: "Unlimited Notes" },
+                  { icon: Network, label: "Mind Map" },
                 ].map((item, i) => (
                   <div key={i} className="flex flex-col items-center gap-2 text-foreground/80">
                     <item.icon className="h-6 w-6 text-orange-500" />
