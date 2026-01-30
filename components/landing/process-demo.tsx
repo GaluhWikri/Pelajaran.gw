@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { FileText, Upload, Sparkles, CheckCircle2, CreditCard, Zap } from "lucide-react"
+import { FileText, Upload, Sparkles, CheckCircle2, CreditCard, Zap ,Network } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Optimized transition variants for mobile performance
@@ -31,12 +31,13 @@ export function ProcessDemo() {
     const resultsData = useMemo(() => [
         { icon: FileText, title: "Ringkasan Materi", subtitle: "Lengkap & Terstruktur", color: "text-orange-400", bg: "bg-orange-400/10", border: "border-orange-400/20" },
         { icon: CreditCard, title: "7 Flashcards", subtitle: "Siap untuk dihafal", color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-        { icon: Zap, title: "10 Soal Kuis", subtitle: "Uji pemahamanmu", color: "text-orange-300", bg: "bg-orange-300/10", border: "border-orange-300/20" }
+        { icon: Zap, title: "10 Soal Kuis", subtitle: "Uji pemahamanmu", color: "text-orange-300", bg: "bg-orange-300/10", border: "border-orange-300/20" },
+        { icon: Network, title: "Mindmap", subtitle: "membantu pemahamanmu", color: "text-orange-300", bg: "bg-orange-300/10", border: "border-orange-300/20" }
     ], [])
 
     // Single robust timer effect for the animation loop
     useEffect(() => {
-        const durations = [4000, 2000, 2000]
+        const durations = [3000, 2000, 3000]
         const timer = setTimeout(() => setStep((prev) => (prev + 1) % 3), durations[step])
         return () => clearTimeout(timer)
     }, [step])
@@ -216,7 +217,7 @@ export function ProcessDemo() {
                                         <motion.div
                                             initial={{ scale: 0, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
-                                            transition={{ delay: idx * 0.1 + 0.2, duration: 0.2 }}
+                                            transition={{ delay: idx * 0.1 + 0.2, duration: 0.7 }}
                                         >
                                             <CheckCircle2 className="h-5 w-5 text-orange-500" />
                                         </motion.div>
