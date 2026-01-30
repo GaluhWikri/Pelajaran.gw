@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, lazy, Suspense } from "react"
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
+import { motion, useScroll, useTransform, AnimatePresence, useMotionTemplate } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle } from "lucide-react"
@@ -28,11 +28,14 @@ export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end end"]
+    offset: ["start end", "end start"]
   })
 
-  const scale = useTransform(scrollYProgress, [0, 0.5], [0.8, 1])
-  const opacity = useTransform(scrollYProgress, [0, 0.3], [0.5, 1])
+  // 3D scale animation - only scale when highlighted
+  const scale = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0.85, 1.02, 1.02, 0.85])
+  const rotateX = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [8, 0, 0, -8])
+  const blur = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [4, 0, 0, 4])
+  const blurFilter = useMotionTemplate`blur(${blur}px)`
 
   // Carousel state
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -128,17 +131,21 @@ export default function LandingPage() {
       </section>
 
       {/* App Screenshot Demo */}
-      <section id="demo" ref={containerRef} className="py-12 md:py-20 px-4 relative scroll-mt-24">
-        <div className="container mx-auto max-w-6xl">
+      <section id="demo" ref={containerRef} className="py-4 md:py-6 px-4 relative scroll-mt-20 perspective-1000">
+        <div className="container mx-auto max-w-4xl">
           <motion.div
-            style={{ scale, opacity }}
-            className="relative"
+            style={{
+              scale,
+              rotateX,
+              filter: blurFilter
+            }}
+            className="relative transform-style-3d"
           >
             {/* Background glow - only on desktop */}
             <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-3xl -z-10" />
 
-            {/* Demo Container */}
-            <div className={`relative rounded-3xl border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-[280px] mx-auto' : ''
+            {/* Demo Container - Limited size for laptop fit */}
+            <div className={`relative rounded-2xl md:rounded-3xl border-4 md:border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-[280px] mx-auto' : ''
               }`}>
               {/* Browser/Phone Header - Only show on desktop */}
               {!isMobile && (
@@ -154,8 +161,8 @@ export default function LandingPage() {
 
               {/* Screenshot/Demo Carousel */}
               <div className="relative bg-background overflow-hidden">
-                {/* Main Image Container - Auto height based on image */}
-                <div className={`relative w-full ${isMobile ? 'aspect-390/844' : 'aspect-2/1'} rounded-xl`}>
+                {/* Main Image Container - Match actual screenshot aspect ratio */}
+                <div className={`relative w-full ${isMobile ? 'aspect-[390/844]' : 'aspect-[2/1]'}`}>
                   <AnimatePresence initial={false} custom={currentSlide}>
                     <motion.div
                       key={currentSlide}
@@ -163,14 +170,13 @@ export default function LandingPage() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -100 }}
                       transition={{ duration: 0.3 }}
-                      className="absolute inset-0 w-full h-full flex items-start justify-center"
+                      className="absolute inset-0 w-full h-full"
                     >
                       <Image
                         src={demoScreenshots[currentSlide].src}
                         alt={demoScreenshots[currentSlide].title}
-                        width={isMobile ? 390 : 1920}
-                        height={isMobile ? 844 : 1080}
-                        className="w-full h-full object-contain object-top"
+                        fill
+                        className="object-contain"
                         priority={currentSlide === 0}
                         loading={currentSlide === 0 ? "eager" : "lazy"}
                         sizes="(max-width: 768px) 100vw, 80vw"
