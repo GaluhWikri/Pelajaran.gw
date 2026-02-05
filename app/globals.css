@@ -155,7 +155,7 @@
 
 /* Custom Modern Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -165,6 +165,8 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: var(--muted);
   border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {

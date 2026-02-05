@@ -114,3 +114,21 @@ export interface Mindmap {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface PodcastDialogue {
+  speaker: "A" | "B"
+  text: string
+  audioDuration?: number // Duration in seconds
+  timestamp?: number     // Start time in seconds relative to full audio
+}
+
+export interface Podcast {
+  id: string
+  noteId: string
+  userId: string
+  title: string
+  dialogues: PodcastDialogue[]
+  audioUrl?: string  // Blob URL after TTS generation
+  duration?: number
+  createdAt: Date
+}

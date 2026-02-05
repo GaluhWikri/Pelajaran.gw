@@ -17,6 +17,7 @@ import {
   Loader2,
   Check,
   GitBranch,
+  Mic,
 } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -34,6 +35,7 @@ import {
 import { FlashcardsTab } from "@/components/flashcards-tab"
 import { QuizTab } from "@/components/quiz-tab"
 import { MindmapTab } from "@/components/mindmap-tab"
+import { PodcastTab } from "@/components/podcast-tab"
 import { useRouter } from "next/navigation"
 import { RichTextEditor } from "@/components/editor/rich-text-editor"
 import { marked } from "marked"
@@ -432,22 +434,28 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
       </div>
 
       <Tabs defaultValue="notes" className="flex-1 flex flex-col min-w-0">
-        <TabsList className="mt-2 border-b-0 px-1 mx-0 md:mx-6 h-auto w-full md:w-fit flex bg-muted/50 rounded-lg p-1 shrink-0">
-          <TabsTrigger value="notes" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-2 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+        <TabsList
+          className="mt-2 border-b-0 px-1 mx-0 md:mx-6 h-auto w-full md:w-fit flex justify-start bg-muted/50 rounded-lg p-1 shrink-0 overflow-x-auto scrollbar-hide mask-[linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] md:mask-none md:[-webkit-mask-image:none]"
+        >
+          <TabsTrigger value="notes" className="shrink-0 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-3 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
             <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Notes
           </TabsTrigger>
-          <TabsTrigger value="flashcards" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-2 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+          <TabsTrigger value="flashcards" className="shrink-0 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-3 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
             <CreditCard className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Flashcards ({noteFlashcards.length})
           </TabsTrigger>
-          <TabsTrigger value="quiz" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-2 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+          <TabsTrigger value="quiz" className="shrink-0 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-3 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
             <Trophy className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Quiz ({noteQuizzes.length})
           </TabsTrigger>
-          <TabsTrigger value="mindmap" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-2 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+          <TabsTrigger value="mindmap" className="shrink-0 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-3 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
             <GitBranch className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             Mindmap
+          </TabsTrigger>
+          <TabsTrigger value="podcast" className="shrink-0 rounded-md data-[state=active]:bg-background data-[state=active]:text-primary! data-[state=active]:shadow-sm px-3 md:px-4 py-2 text-xs md:text-sm whitespace-nowrap">
+            <Mic className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            Podcast
           </TabsTrigger>
         </TabsList>
 
@@ -465,6 +473,10 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
 
         <TabsContent value="mindmap" className="flex-1 h-full data-[state=active]:flex flex-col">
           <MindmapTab noteId={noteId} />
+        </TabsContent>
+
+        <TabsContent value="podcast" forceMount className="flex-1 h-full min-h-0 data-[state=inactive]:hidden flex flex-col">
+          <PodcastTab noteId={noteId} noteTitle={title} noteContent={content} />
         </TabsContent>
       </Tabs>
 
@@ -492,6 +504,6 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </div >
   )
 }

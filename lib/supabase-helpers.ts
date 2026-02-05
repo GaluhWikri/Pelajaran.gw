@@ -290,3 +290,142 @@ export async function deleteMindmapFromSupabase(mindmapId: string) {
     }
 }
 
+// ============================================================================
+// PODCAST FUNCTIONS
+// ============================================================================
+
+/**
+ * Save podcast metadata to Supabase database
+ */
+export async function savePodcastToSupabase(podcast: {
+    id: string
+    noteId: string
+    userId: string
+    title: string
+    dialogues: { speaker: string; text: string }[]
+    audioUrl?: string
+    duration?: number
+}) {
+    try {
+        console.log('Saving podcast for note:', podcast.noteId)
+
+        const { data, error } = await supabase
+            .from('podcasts')
+            .upsert({
+                id: podcast.id,
+                note_id: podcast.noteId,
+                user_id: podcast.userId,
+                title: podcast.title,
+                dialogues: podcast.dialogues,
+                audio_url: podcast.audioUrl || null,
+                duration: podcast.duration || null,
+                updated_at: new Date().toISOString(),
+            })
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Error saving podcast:', error)
+            throw error
+        }
+
+        console.log('Podcast saved:', data?.id)
+        return { data, error: null }
+    } catch (error: any) {
+        console.error('Failed to save podcast:', error)
+        return { data: null, error }
+    }
+}
+
+/**
+ * Get podcast by note ID from Supabase
+ */
+export async function getPodcastByNoteIdFromSupabase(noteId: string) {
+    try {
+        const { data, error } = await supabase
+            .from('podcasts')
+            .select('*')
+            .eq('note_id', noteId)
+            .maybeSingle()
+
+        if (error) {
+            console.error('Error fetching podcast:', error)
+            return { data: null, error: error }
+        }
+
+        return { data, error: null }
+    } catch (error: any) {
+        console.error('Failed to fetch podcast:', error)
+        return { data: null, error: error }
+    }
+}
+
+/**
+ * Upload podcast audio to Supabase Storage
+ * Returns the public URL of the uploaded file
+ */
+export async function uploadPodcastAudio(
+    userId: string,
+    noteId: string,
+    audioBlob: Blob
+): Promise<{ url: string | null; error: any }> {
+    try {
+        const fileName = `${userId}/${noteId}.mp3`
+
+        console.log('Uploading podcast audio:', fileName)
+
+        // Upload to storage
+        const { error: uploadError } = await supabase.storage
+            .from('podcasts')
+            .upload(fileName, audioBlob, {
+                contentType: 'audio/mpeg',
+                upsert: true,
+            })
+
+        if (uploadError) {
+            console.error('Error uploading podcast audio:', uploadError)
+            throw uploadError
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+            .from('podcasts')
+            .getPublicUrl(fileName)
+
+        console.log('Podcast audio uploaded:', urlData.publicUrl)
+        return { url: urlData.publicUrl, error: null }
+    } catch (error: any) {
+        console.error('Failed to upload podcast audio:', error)
+        return { url: null, error }
+    }
+}
+
+/**
+ * Delete podcast from Supabase database and storage
+ */
+export async function deletePodcastFromSupabase(podcastId: string, userId: string, noteId: string) {
+    try {
+        // Delete audio from storage
+        const fileName = `${userId}/${noteId}.mp3`
+        await supabase.storage
+            .from('podcasts')
+            .remove([fileName])
+
+        // Delete from database
+        const { error } = await supabase
+            .from('podcasts')
+            .delete()
+            .eq('id', podcastId)
+
+        if (error) {
+            console.error('Error deleting podcast from Supabase:', error)
+            throw error
+        }
+
+        return { error: null }
+    } catch (error) {
+        console.error('Failed to delete podcast:', error)
+        return { error }
+    }
+}
+

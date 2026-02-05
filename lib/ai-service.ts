@@ -1,4 +1,4 @@
-import { Note, Quiz, Flashcard, MindmapNode } from "./types"
+import { Note, Quiz, Flashcard, MindmapNode, PodcastDialogue } from "./types"
 import {
     AI_SYSTEM_PROMPT,
     MINDMAP_SYSTEM_PROMPT,
@@ -13,7 +13,8 @@ import {
     YOUTUBE_LEARNING_TASK_TEMPLATE,
     YOUTUBE_CONTENT_INSTRUCTION_TEMPLATE,
     QUIZ_JSON_OUTPUT_FORMAT_TEMPLATE,
-    FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE
+    FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE,
+    PODCAST_DIALOG_PROMPT
 } from "./ai-prompt"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { extractTextFromPPTX } from "./ppt-parser"
@@ -159,7 +160,7 @@ ${JSON_OUTPUT_FORMAT_TEMPLATE}`
  */
 function buildTextLearningPrompt(text: string, promptContext: string): string {
     const truncatedText = text.substring(0, 50000)
-    
+
     return `${AI_SYSTEM_PROMPT}
 
 ${TEXT_LEARNING_TASK_TEMPLATE}
@@ -198,7 +199,7 @@ ${JSON_OUTPUT_FORMAT_TEMPLATE}`
  */
 function buildQuizPrompt(noteContent: string, questionCount: number): string {
     const truncatedContent = noteContent.substring(0, 15000)
-    
+
     return `${AI_SYSTEM_PROMPT}
 
 Tugas Khusus:
@@ -225,7 +226,7 @@ ${QUIZ_JSON_OUTPUT_FORMAT_TEMPLATE}`
  */
 function buildFlashcardPrompt(noteContent: string, count: number): string {
     const truncatedContent = noteContent.substring(0, 15000)
-    
+
     return `${AI_SYSTEM_PROMPT}
 
 Note Content:
@@ -244,7 +245,7 @@ ${FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE}`
  */
 function buildMindmapPrompt(noteTitle: string, noteContent: string): string {
     const truncatedContent = noteContent.substring(0, 5000)
-    
+
     return `${MINDMAP_SYSTEM_PROMPT}
 
 TOPIK: "${noteTitle}"
@@ -814,5 +815,80 @@ function mockGenerateMindmap(title: string): MindmapNode[] {
         { id: "2-1", label: "Sub-topik 2.1", parentId: "2", edgeLabel: "contohnya" },
         { id: "3", label: "Topik 3", parentId: "root", edgeLabel: "termasuk" },
     ]
+}
+
+/**
+ * Generate podcast script (2-speaker dialogue) from note content
+ */
+export async function generatePodcastScript(
+    noteContent: string,
+    noteTitle: string
+): Promise<{ title: string; dialogues: PodcastDialogue[] }> {
+    if (!apiKey) {
+        console.warn("Gemini API Key is missing. Returning mock podcast.")
+        return mockGeneratePodcast(noteTitle)
+    }
+
+    try {
+        const truncatedContent = noteContent.substring(0, 10000)
+
+        const prompt = `${PODCAST_DIALOG_PROMPT}
+
+JUDUL MATERI: "${noteTitle}"
+
+ISI MATERI:
+"${truncatedContent}"
+
+Buat script podcast berdasarkan materi di atas. Output HANYA JSON valid.`
+
+        const result = await retryGenAI(() => model.generateContent(prompt))
+        const responseText = result.response.text()
+
+        let data
+        try {
+            let cleanText = responseText.replace(/```json/gi, "").replace(/```/g, "").trim()
+
+            const firstBrace = cleanText.indexOf('{')
+            const lastBrace = cleanText.lastIndexOf('}')
+
+            if (firstBrace !== -1 && lastBrace > firstBrace) {
+                cleanText = cleanText.substring(firstBrace, lastBrace + 1)
+            }
+
+            data = JSON.parse(cleanText)
+        } catch (e) {
+            console.error("Failed to parse podcast JSON:", e)
+            return mockGeneratePodcast(noteTitle)
+        }
+
+        if (data.dialogues && Array.isArray(data.dialogues)) {
+            return {
+                title: data.title || `Podcast: ${noteTitle}`,
+                dialogues: data.dialogues.map((d: any) => ({
+                    speaker: d.speaker === "A" || d.speaker === "B" ? d.speaker : "A",
+                    text: d.text || ""
+                }))
+            }
+        }
+
+        return mockGeneratePodcast(noteTitle)
+    } catch (error) {
+        console.error("Error generating podcast script:", error)
+        return mockGeneratePodcast(noteTitle)
+    }
+}
+
+function mockGeneratePodcast(title: string): { title: string; dialogues: PodcastDialogue[] } {
+    return {
+        title: `Podcast: ${title}`,
+        dialogues: [
+            { speaker: "A", text: "Halo! Selamat datang di podcast belajar bareng. Hari ini kita akan bahas topik yang menarik." },
+            { speaker: "B", text: "Hai juga! Wah, topik ini memang penting untuk dipahami ya." },
+            { speaker: "A", text: "Bisa jelaskan lebih detail gak tentang konsep utamanya?" },
+            { speaker: "B", text: "Tentu! Jadi intinya adalah..." },
+            { speaker: "A", text: "Oh begitu, terima kasih penjelasannya!" },
+            { speaker: "B", text: "Sama-sama! Sampai jumpa di episode berikutnya." },
+        ]
+    }
 }
 
