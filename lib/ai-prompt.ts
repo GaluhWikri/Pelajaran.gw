@@ -147,102 +147,104 @@ INSTRUKSI KONTEN:
    - JANGAN pakai pembuka/penutup basa-basi.
 2. KUIS (Quiz): WAJIB ADA. Buat 10 soal pilihan ganda yang relevan. Jika materi SEDIKIT, buatlah minimal 5 soal.
 3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards. Jika materi sedikit, sesuaikan dengan definisi yang ada.
+   - PENTING: Gunakan TEKS POLOS SAJA untuk pertanyaan dan jawaban. DILARANG menggunakan simbol Markdown (*, **, _, \`) di dalam flashcard.
 
-PENTING:
+  PENTING:
 - Kuis dan Flashcards TIDAK BOLEH KOSONG.
 - Jika materi sangat singkat, fokus buat pertanyaan dari informasi kunci yang tersedia.`
 
 export const SUBJECT_DETECTION_RULES_TEMPLATE = `
-ATURAN DETEKSI MATA PELAJARAN (SANGAT PENTING - WAJIB DIIKUTI):
+ATURAN DETEKSI MATA PELAJARAN(SANGAT PENTING - WAJIB DIIKUTI):
 - Field "detectedSubject" WAJIB diisi berdasarkan ISI AKTUAL KONTEN, BUKAN dari preferensi user
-- Jika konten tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
-- Jika konten tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
-- ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
-- detectedSubject HARUS mencerminkan topik SEBENARNYA dari konten`
+  - Jika konten tentang Sejarah, isi "Sejarah" meskipun user pilih "Matematika"
+    - Jika konten tentang Pemrograman, isi "Pemrograman" meskipun user pilih "Biologi"
+      - ABAIKAN "Mata Pelajaran/Kuliah yang dipilih user" saat mengisi detectedSubject
+        - detectedSubject HARUS mencerminkan topik SEBENARNYA dari konten`
 
 export const SUBJECT_RULES_TEMPLATE = `
-ATURAN CERDAS MATA PELAJARAN (WAJIB DIIKUTI):
-Langkah 1: Analisis ISI KONTEN dari file/link/materi yang diberikan terlebih dahulu.
-Langkah 2: Bandingkan dengan "Mata Pelajaran/Kuliah yang dipilih user" di atas.
-Langkah 3: Tentukan apakah RELEVAN atau TIDAK:
+ATURAN CERDAS MATA PELAJARAN(WAJIB DIIKUTI):
+Langkah 1: Analisis ISI KONTEN dari file / link / materi yang diberikan terlebih dahulu.
+  Langkah 2: Bandingkan dengan "Mata Pelajaran/Kuliah yang dipilih user" di atas.
+    Langkah 3: Tentukan apakah RELEVAN atau TIDAK:
 
-✅ JIKA RELEVAN (konten sesuai dengan mata pelajaran):
-   - Gunakan mata pelajaran untuk MEMPERKAYA konteks dan terminologi
-   - Contoh: Video Kalkulus + Form "Matematika" → Gunakan istilah matematika yang tepat
-   - Contoh: Materi Sel + Form "Biologi" → Gunakan konteks biologi yang akurat
+✅ JIKA RELEVAN(konten sesuai dengan mata pelajaran):
+- Gunakan mata pelajaran untuk MEMPERKAYA konteks dan terminologi
+  - Contoh: Video Kalkulus + Form "Matematika" → Gunakan istilah matematika yang tepat
+    - Contoh: Materi Sel + Form "Biologi" → Gunakan konteks biologi yang akurat
 
-❌ JIKA TIDAK RELEVAN (konten berbeda dari mata pelajaran):
-   - ABAIKAN mata pelajaran yang dipilih user
-   - FOKUS 100% pada ISI KONTEN AKTUAL dari file/link
-   - Contoh: Video Sejarah PDII + Form "Matematika" → Buat konten tentang Sejarah, BUKAN Matematika
-   - Contoh: File tentang Pemrograman + Form "Bahasa Inggris" → Buat konten Pemrograman
+❌ JIKA TIDAK RELEVAN(konten berbeda dari mata pelajaran):
+- ABAIKAN mata pelajaran yang dipilih user
+  - FOKUS 100 % pada ISI KONTEN AKTUAL dari file / link
+    - Contoh: Video Sejarah PDII + Form "Matematika" → Buat konten tentang Sejarah, BUKAN Matematika
+      - Contoh: File tentang Pemrograman + Form "Bahasa Inggris" → Buat konten Pemrograman
 
-PRIORITAS: Konten file/link SELALU lebih penting daripada pilihan mata pelajaran user.`
+PRIORITAS: Konten file / link SELALU lebih penting daripada pilihan mata pelajaran user.`
 
 export const JSON_OUTPUT_FORMAT_TEMPLATE = `
-FORMAT OUTPUT (Wajib JSON Valid, tanpa teks lain):
+FORMAT OUTPUT(Wajib JSON Valid, tanpa teks lain):
 {
   "title": "Judul Materi (Max 5-7 kata)",
-  "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI KONTEN (contoh: Matematika, Biologi, Sejarah, Pemrograman, Fisika, Kimia, dll) - ABAIKAN pilihan user!",
-  "summary": "String markdown ringkasan...",
-  "quiz": {
+    "detectedSubject": "WAJIB ISI dengan Mata Pelajaran yang TERDETEKSI dari ISI KONTEN (contoh: Matematika, Biologi, Sejarah, Pemrograman, Fisika, Kimia, dll) - ABAIKAN pilihan user!",
+      "summary": "String markdown ringkasan...",
+        "quiz": {
     "title": "Judul Kuis",
-    "questions": [
-      { "id": "q1", "question": "...", "options": ["A","B","C","D"], "correctAnswer": 0, "explanation": "..." }
-    ]
+      "questions": [
+        { "id": "q1", "question": "...", "options": ["A", "B", "C", "D"], "correctAnswer": 0, "explanation": "..." }
+      ]
   },
   "flashcards": [
     { "question": "...", "answer": "..." }
   ]
-}`
+} `
 
 // --- Task-Specific Prompt Templates ---
 
 export const FILE_LEARNING_TASK_TEMPLATE = `
-Tugas: Analisis materi yang diberikan (File/Gambar) dan buat output JSON.`
+Tugas: Analisis materi yang diberikan(File / Gambar) dan buat output JSON.`
 
 export const TEXT_LEARNING_TASK_TEMPLATE = `
-Tugas: Analisis TEKS/MATERI berikut (bisa berupa Transkrip Video atau Teks Slide Presentasi) dan buat output JSON.`
+Tugas: Analisis TEKS / MATERI berikut(bisa berupa Transkrip Video atau Teks Slide Presentasi) dan buat output JSON.`
 
 export const YOUTUBE_LEARNING_TASK_TEMPLATE = `
 Tugas: Analisis VIDEO YOUTUBE yang diberikan dan buat output JSON berisi ringkasan, kuis, dan flashcards.
 
-PENTING: Analisis ISI AKTUAL dari video (audio, visual, narasi) yang diberikan di atas, BUKAN dari informasi lain.`
+  PENTING: Analisis ISI AKTUAL dari video(audio, visual, narasi) yang diberikan di atas, BUKAN dari informasi lain.`
 
 export const YOUTUBE_CONTENT_INSTRUCTION_TEMPLATE = `
 INSTRUKSI KONTEN:
-1. RINGKASAN (Summary): Tulis rangkuman lengkap dari isi video di field 'summary'. 
-   - Analisis konten audio/narasi dalam video
-   - Jika ada teks atau slide yang ditampilkan, sertakan informasinya
-   - Gunakan format Markdown yang kaya:
+1. RINGKASAN(Summary): Tulis rangkuman lengkap dari isi video di field 'summary'. 
+   - Analisis konten audio / narasi dalam video
+  - Jika ada teks atau slide yang ditampilkan, sertakan informasinya
+    - Gunakan format Markdown yang kaya:
      * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
      * CODE BLOCK: Gunakan untuk kode program atau rumus.
-     * BLOCKQUOTE (>): Gunakan untuk definisi penting atau kesimpulan utama.
+     * BLOCKQUOTE(>): Gunakan untuk definisi penting atau kesimpulan utama.
      * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
-     * LIST: Gunakan bullet points atau numbering untuk langkah-langkah.
-   - Gunakan Header (#, ##, ###) untuk struktur yang rapi.
-   - JANGAN pakai pembuka/penutup basa-basi.
-2. KUIS (Quiz): WAJIB ADA. Buat 10 soal pilihan ganda yang relevan dengan isi video.
-3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards berisi konsep penting dari video.
+     * LIST: Gunakan bullet points atau numbering untuk langkah - langkah.
+   - Gunakan Header(#, ##, ###) untuk struktur yang rapi.
+   - JANGAN pakai pembuka / penutup basa - basi.
+2. KUIS(Quiz): WAJIB ADA.Buat 10 soal pilihan ganda yang relevan dengan isi video.
+3. FLASHCARDS: WAJIB ADA.Buat minimal 5 flashcards berisi konsep penting dari video.
+   - PENTING: Gunakan TEKS POLOS SAJA untuk pertanyaan dan jawaban. DILARANG menggunakan simbol Markdown (*, **, _, \`) di dalam flashcard.
 
-PENTING:
+  PENTING:
 - Kuis dan Flashcards TIDAK BOLEH KOSONG.
-- Fokus pada poin-poin pembelajaran utama dari video.`
+- Fokus pada poin - poin pembelajaran utama dari video.`
 
 export const QUIZ_JSON_OUTPUT_FORMAT_TEMPLATE = `
 Output JSON format:
 {
   "title": "Judul Kuis (Relevan dengan materi)",
-  "questions": [
-    {
-      "id": "q1",
-      "question": "Pertanyaan...",
-      "options": ["A", "B", "C", "D"],
-      "correctAnswer": 0,
-      "explanation": "Penjelasan..."
-    }
-  ]
-}`
+    "questions": [
+      {
+        "id": "q1",
+        "question": "Pertanyaan...",
+        "options": ["A", "B", "C", "D"],
+        "correctAnswer": 0,
+        "explanation": "Penjelasan..."
+      }
+    ]
+} `
 
 export const FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE = `
 Output JSON:
@@ -253,14 +255,14 @@ Output JSON:
       "answer": "Back of card (Definition/Answer)"
     }
   ]
-}`
+} `
 
 export const PODCAST_DIALOG_PROMPT = `
 Kamu adalah script writer untuk podcast edukasi Indonesia dengan 2 host.
 
 KARAKTER HOST:
-- Host A (Galuh): Penanya yang curious dan antusias. Mewakili pendengar yang ingin belajar. Bertanya dengan ramah dan langsung ke inti.
-- Host B (Karin): Penjelas yang cerdas dan sabar. Menjelaskan dengan jelas, contoh konkret, dan mudah dipahami.
+- Host A(Galuh): Penanya yang curious dan antusias.Mewakili pendengar yang ingin belajar.Bertanya dengan ramah dan langsung ke inti.
+- Host B(Karin): Penjelas yang cerdas dan sabar.Menjelaskan dengan jelas, contoh konkret, dan mudah dipahami.
 
 ATURAN DIALOG:
 1. Buat percakapan NATURAL seperti podcast asli – ada interaksi, respons, dan feedback
@@ -269,20 +271,22 @@ ATURAN DIALOG:
 4. Host A memulai dengan pertanyaan atau pernyataan pemantik yang jelas dan to the point
 5. Host B memberikan penjelasan, Host A memberi respons atau pertanyaan lanjutan
 6. Sertakan reaksi natural seperti "Wah menarik!", "Oh jadi begitu...", "Hmm, aku baru tahu"
-7. Akhiri dengan kesimpulan singkat (boleh berupa rangkuman atau insight utama), tanpa perlu salam penutup panjang
-8. Total 8–12 dialog exchanges agar durasi ~3–5 menit
+7. Akhiri dengan kesimpulan singkat(boleh berupa rangkuman atau insight utama), tanpa perlu salam penutup panjang
+8. Total 8–16 dialog exchanges agar durasi ~3–5 menit
 
 PANDUAN KONTEN:
 - Gunakan SEMUA informasi penting dari materi yang diberikan
-- Jelaskan konsep dengan analogi sederhana jika diperlukan
-- Buat pembahasan mengalir natural, tidak terdengar seperti membaca buku atau artikel
+  - Jelaskan konsep dengan analogi sederhana jika diperlukan
+    - Buat pembahasan mengalir natural, tidak terdengar seperti membaca buku atau artikel
+      - ** DILARANG KERAS ** menggunakan simbol formatting Markdown seperti bintang(* italic * atau ** bold **), underscore(_), atau backticks(\`). Gunakan teks polos saja.
+- Tuliskan penekanan kata melalui struktur kalimat, bukan simbol.Contoh: "Itu penting banget lho!"(Benar) vs "Itu *penting* banget lho!"(Salah).
 
-FORMAT OUTPUT (JSON Valid):
+FORMAT OUTPUT(JSON Valid):
 {
   "title": "Judul episode podcast yang menarik",
-  "dialogues": [
-    { "speaker": "A", "text": "Kenapa banyak orang masih salah paham soal konsep ini, padahal dampaknya besar banget?" },
-    { "speaker": "B", "text": "Itu karena konsep ini sering dijelasin terlalu teknis. Padahal kalau kita sederhanakan..." }
-  ]
+    "dialogues": [
+      { "speaker": "A", "text": "Kenapa banyak orang masih salah paham soal konsep ini, padahal dampaknya besar banget?" },
+      { "speaker": "B", "text": "Itu karena konsep ini sering dijelasin terlalu teknis. Padahal kalau kita sederhanakan..." }
+    ]
 }
 `

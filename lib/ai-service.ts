@@ -661,7 +661,11 @@ export async function generateFlashcardsFromNote(
         }
 
         // Strictly limit the number of cards returned to the requested count
-        return (data.flashcards || []).slice(0, count)
+        return (data.flashcards || []).slice(0, count).map((f: any) => ({
+            ...f,
+            question: (f.question || "").replace(/[*_`]/g, ""),
+            answer: (f.answer || "").replace(/[*_`]/g, "")
+        }))
     } catch (error) {
         console.error("Error generating flashcards:", error)
         return mockGenerateFlashcardsFromNote(count)
@@ -866,7 +870,8 @@ Buat script podcast berdasarkan materi di atas. Output HANYA JSON valid.`
                 title: data.title || `Podcast: ${noteTitle}`,
                 dialogues: data.dialogues.map((d: any) => ({
                     speaker: d.speaker === "A" || d.speaker === "B" ? d.speaker : "A",
-                    text: d.text || ""
+                    // Strip markdown symbols (*, _, `) but keep text
+                    text: (d.text || "").replace(/[*_`]/g, "")
                 }))
             }
         }
