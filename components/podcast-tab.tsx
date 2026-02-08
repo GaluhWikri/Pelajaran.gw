@@ -440,7 +440,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
             {dialogues.length > 0 && !isProcessing && (
                 <div className="flex flex-col flex-1 gap-4 min-h-0">
                     {/* Audio Player */}
-                    <Card className="shrink-0 sticky top-[80px] z-50 shadow-md bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
+                    <Card className="shrink-0 sticky top-[80px] z-10 shadow-md bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base flex items-center gap-2">
                                 <Volume2 className="h-4 w-4 text-orange-500" />
