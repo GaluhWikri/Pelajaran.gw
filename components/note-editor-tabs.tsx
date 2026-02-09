@@ -475,7 +475,7 @@ export function NoteEditorTabs({ noteId }: NoteEditorTabsProps) {
           <MindmapTab noteId={noteId} />
         </TabsContent>
 
-        <TabsContent value="podcast" forceMount className="flex-1 h-full min-h-0 data-[state=inactive]:hidden flex flex-col">
+        <TabsContent value="podcast" className="flex-1 h-full min-h-0 flex flex-col">
           <PodcastTab noteId={noteId} noteTitle={title} noteContent={content} />
         </TabsContent>
       </Tabs>

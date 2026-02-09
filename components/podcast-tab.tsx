@@ -1,21 +1,30 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
     Mic,
     Play,
     Pause,
     Loader2,
     Volume2,
-    SkipBack,
-    SkipForward,
+    VolumeX,
+    RotateCcw,
+    RotateCw,
     Download,
     RefreshCw,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    ChevronDown
 } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { PodcastDialogue } from "@/lib/types"
@@ -25,6 +34,7 @@ import { savePodcastToSupabase, getPodcastByNoteIdFromSupabase, uploadPodcastAud
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useAudioPlayerStore } from "@/lib/audio-player-store"
 
 interface PodcastTabProps {
     noteId: string
@@ -34,6 +44,9 @@ interface PodcastTabProps {
 
 export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) {
     const { user } = useAuth()
+    const pathname = usePathname()
+    const isPlayingRef = useRef(false) // Track if audio was playing before navigation
+
 
     // State
     const [isLoading, setIsLoading] = useState(true)
@@ -48,15 +61,111 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
     const [audioUrl, setAudioUrl] = useState<string | null>(null)
     const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 })
 
-    // Audio player state
+    // Global audio player store
+    const {
+        isPlaying: globalIsPlaying,
+        audioUrl: globalAudioUrl,
+        showMiniPlayer: globalShowMiniPlayer,
+        noteId: globalAudioNoteId,
+        currentTime: globalCurrentTime,
+        duration: globalDuration,
+        volume: globalVolume,
+        playbackSpeed: globalPlaybackSpeed,
+        // Actions
+        play: playGlobal,
+        pause: pauseGlobal,
+        setAudioData,
+        setCurrentTime: setGlobalCurrentTime,
+        setDuration: setGlobalDuration,
+        setVolume: setGlobalVolume,
+        setPlaybackSpeed: setGlobalPlaybackSpeed,
+        hideMini,
+        showMini
+    } = useAudioPlayerStore()
+
+    // Audio player state (local, will be synced with global)
     const [isPlaying, setIsPlaying] = useState(false)
     const [currentTime, setCurrentTime] = useState(0)
     const [duration, setDuration] = useState(0)
     const [volume, setVolume] = useState(1)
+    const [isMuted, setIsMuted] = useState(false)
+    const previousVolumeRef = useRef(1)
     const [activeDialogueIndex, setActiveDialogueIndex] = useState(-1)
 
     const audioRef = useRef<HTMLAudioElement | null>(null)
     const dialogueRefs = useRef<(HTMLDivElement | null)[]>([])
+    // Ref to store resume time to handle race condition between state sync and audio loading
+    const targetResumeTimeRef = useRef<number | null>(null)
+
+    // Refs to store current values for cleanup access
+    const audioStateRef = useRef({
+        audioUrl: null as string | null,
+        podcastTitle: "",
+        noteId: "",
+        dialogues: [] as PodcastDialogue[],
+        currentTime: 0,
+        duration: 0,
+        volume: 1,
+        isPlaying: false,
+    })
+
+    // Ref to store showMini function for cleanup
+    const showMiniRef = useRef(showMini)
+    useEffect(() => {
+        showMiniRef.current = showMini
+    }, [showMini])
+
+    // Keep refs up to date
+    useEffect(() => {
+        const newState = {
+            audioUrl,
+            podcastTitle,
+            noteId,
+            dialogues,
+            currentTime,
+            duration,
+            volume,
+            isPlaying
+        }
+
+        if (audioUrl || !audioStateRef.current.audioUrl) {
+            audioStateRef.current = newState
+        }
+    }, [audioUrl, podcastTitle, noteId, dialogues, currentTime, duration, volume, isPlaying])
+
+    const isUnmountingRef = useRef(false)
+
+    // Detect unmount
+    useEffect(() => {
+        return () => {
+            isUnmountingRef.current = true
+        }
+    }, [])
+
+    // Sync with global audio player - CONTINUOUS SINGLETON MODE
+    useEffect(() => {
+        // If this note is the active global audio context
+        if (globalAudioNoteId === noteId) {
+            // Keep UI in sync with global state
+            setIsPlaying(globalIsPlaying)
+            setCurrentTime(globalCurrentTime)
+            if (globalDuration > 0) setDuration(globalDuration)
+            setVolume(globalVolume)
+
+            // Ensure mini player is hidden when we are on this tab
+            if (globalShowMiniPlayer) {
+                hideMini()
+            }
+        }
+    }, [globalAudioNoteId, noteId, globalShowMiniPlayer, globalIsPlaying, globalCurrentTime, globalDuration, globalVolume, hideMini])
+
+    // Cleanup on unmount - show mini player so it persists navigation
+    useEffect(() => {
+        return () => {
+            console.log('[PodcastTab] Component unmounting, showing mini player')
+            showMiniRef.current()
+        }
+    }, []) // Empty deps - only run on true unmount
 
     // Handle audio download - properly triggers file download instead of navigation
     const handleDownload = async () => {
@@ -273,45 +382,117 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
         }
     }
 
-    // Audio player controls
+    // Audio player controls - DELEGATE TO GLOBAL STORE
     const togglePlay = () => {
-        if (!audioRef.current) return
+        if (!audioUrl) return
 
-        if (isPlaying) {
-            audioRef.current.pause()
+        // If this note is already the active global note
+        if (globalAudioNoteId === noteId) {
+            if (globalIsPlaying) {
+                pauseGlobal()
+            } else {
+                playGlobal()
+            }
         } else {
-            audioRef.current.play()
+            // New playback - Play this note globally
+            setAudioData({
+                audioUrl,
+                podcastTitle,
+                noteId,
+                dialogues,
+                duration: duration || estimatedDurationValue
+            })
+            playGlobal()
+            hideMini()
         }
-        setIsPlaying(!isPlaying)
     }
 
     const handleSeek = (value: number[]) => {
-        if (!audioRef.current) return
-        audioRef.current.currentTime = value[0]
-        setCurrentTime(value[0])
+        const newTime = value[0]
+        setCurrentTime(newTime)
+
+        if (globalAudioNoteId === noteId) {
+            setGlobalCurrentTime(newTime)
+        }
     }
 
     const handleVolumeChange = (value: number[]) => {
-        if (!audioRef.current) return
-        audioRef.current.volume = value[0]
-        setVolume(value[0])
+        const newVolume = value[0]
+        setVolume(newVolume)
+
+        if (globalAudioNoteId === noteId) {
+            setGlobalVolume(newVolume)
+        } else if (audioRef.current) {
+            audioRef.current.volume = newVolume
+        }
+
+        // Update muted state based on volume
+        setIsMuted(newVolume === 0)
+    }
+
+    const toggleMute = () => {
+        if (isMuted) {
+            // Unmute - restore previous volume
+            const restoreVolume = previousVolumeRef.current > 0 ? previousVolumeRef.current : 1
+            handleVolumeChange([restoreVolume])
+        } else {
+            // Mute - save current volume and set to 0
+            previousVolumeRef.current = volume
+            handleVolumeChange([0])
+        }
     }
 
     const skip = (seconds: number) => {
-        if (!audioRef.current) return
-        audioRef.current.currentTime = Math.max(0, Math.min(duration, currentTime + seconds))
+        const newTime = Math.max(0, Math.min(duration, currentTime + seconds))
+        setCurrentTime(newTime)
+
+        if (globalAudioNoteId === noteId) { // Typo fix: globalAudioNoteId
+            setGlobalCurrentTime(newTime)
+        } else if (audioRef.current) {
+            audioRef.current.currentTime = newTime
+        }
     }
 
 
     // Audio element event handlers
     const handleTimeUpdate = () => {
         if (!audioRef.current) return
-        setCurrentTime(audioRef.current.currentTime)
+
+        const time = audioRef.current.currentTime
+        // Prevent overwriting state with 0 during initial load/buffering
+        if (time > 0.5 || Math.abs(time - currentTime) > 1) {
+            setCurrentTime(time)
+        }
     }
 
     const handleLoadedMetadata = () => {
         if (!audioRef.current) return
         setDuration(audioRef.current.duration)
+
+        // Restore playback position from Ref (more reliable than state)
+        if (targetResumeTimeRef.current !== null && targetResumeTimeRef.current > 0) {
+            console.log('[PodcastTab] Restoring playback position from REF:', targetResumeTimeRef.current)
+            audioRef.current.currentTime = targetResumeTimeRef.current
+        } else if (currentTime > 0) {
+            // Fallback to state
+            if (audioRef.current.currentTime < 1) {
+                audioRef.current.currentTime = currentTime
+            }
+        }
+
+        // Auto-resume if playing
+        if (isPlaying) {
+            console.log('[PodcastTab] Auto-resuming playback')
+            audioRef.current.play().catch(e => console.error("Auto-resume failed:", e))
+        }
+    }
+
+    const handleCanPlay = () => {
+        if (audioRef.current && targetResumeTimeRef.current !== null && targetResumeTimeRef.current > 0) {
+            if (Math.abs(audioRef.current.currentTime - targetResumeTimeRef.current) > 1) {
+                audioRef.current.currentTime = targetResumeTimeRef.current
+            }
+        }
     }
 
     const handleEnded = () => {
@@ -360,6 +541,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                 <div className="flex items-center gap-2">
                     <Mic className="h-5 w-5 text-orange-500" />
                     <h2 className="text-lg font-semibold">AI Podcast</h2>
+
                     {podcastId && (
                         <span className="text-xs text-green-600 flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" />
@@ -440,7 +622,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
             {dialogues.length > 0 && !isProcessing && (
                 <div className="flex flex-col flex-1 gap-4 min-h-0">
                     {/* Audio Player */}
-                    <Card className="shrink-0 sticky top-[80px] z-10 shadow-md bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
+                    <Card className="shrink-0 sticky top-[80px] z-20 shadow-md bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base flex items-center gap-2">
                                 <Volume2 className="h-4 w-4 text-orange-500" />
@@ -452,13 +634,17 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {/* Hidden audio element */}
-                            {audioUrl && (
+                            {/* Hidden audio element - ONLY render if not handled by global player */}
+                            {audioUrl && (globalAudioNoteId !== noteId) && (
                                 <audio
                                     ref={audioRef}
                                     src={audioUrl}
+                                    preload="auto"
+                                    onCanPlay={handleCanPlay}
                                     onTimeUpdate={handleTimeUpdate}
                                     onLoadedMetadata={handleLoadedMetadata}
                                     onEnded={handleEnded}
+                                    onPlay={() => setIsPlaying(true)}
                                 />
                             )}
 
@@ -482,11 +668,12 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                             <div className="flex items-center justify-center gap-4">
                                 <Button
                                     variant="ghost"
-                                    size="icon"
                                     onClick={() => skip(-10)}
                                     disabled={!audioUrl}
+                                    className="flex items-center gap-1 px-2"
                                 >
-                                    <SkipBack className="h-5 w-5" />
+                                    <RotateCcw className="h-5 w-5" />
+                                    <span className="text-xs font-medium">10s</span>
                                 </Button>
 
                                 <Button
@@ -504,15 +691,52 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
 
                                 <Button
                                     variant="ghost"
-                                    size="icon"
                                     onClick={() => skip(10)}
                                     disabled={!audioUrl}
+                                    className="flex items-center gap-1 px-2"
                                 >
-                                    <SkipForward className="h-5 w-5" />
+                                    <span className="text-xs font-medium">10s</span>
+                                    <RotateCw className="h-5 w-5" />
                                 </Button>
 
-                                <div className="flex items-center gap-2 ml-4">
-                                    <Volume2 className="h-4 w-4 text-muted-foreground" />
+                                {/* Speed Control */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 px-2 text-xs font-medium gap-1 ml-4"
+                                            disabled={!audioUrl}
+                                        >
+                                            {globalPlaybackSpeed}x
+                                            <ChevronDown className="h-3 w-3 text-white" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="center">
+                                        {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((speed) => (
+                                            <DropdownMenuItem
+                                                key={speed}
+                                                onClick={() => setGlobalPlaybackSpeed(speed)}
+                                                className={globalPlaybackSpeed === speed ? "bg-accent" : ""}
+                                            >
+                                                {speed}x
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={toggleMute}
+                                        className="hover:opacity-70 transition-opacity"
+                                        title={isMuted ? "Unmute" : "Mute"}
+                                    >
+                                        {isMuted || volume === 0 ? (
+                                            <VolumeX className="h-4 w-4 text-white" />
+                                        ) : (
+                                            <Volume2 className="h-4 w-4 text-white" />
+                                        )}
+                                    </button>
                                     <Slider
                                         value={[volume]}
                                         max={1}
