@@ -32,6 +32,9 @@ interface AppState {
   chatPanelOpen: boolean
   hasInitialized: boolean
 
+  // Mindmap generation tracking (global so it persists across navigation)
+  generatingMindmapNoteIds: string[]
+
   // Processing State
   activeUploads: {
     id: string
@@ -95,6 +98,9 @@ interface AppState {
   updateMindmap: (id: string, updates: Partial<Mindmap>) => void
   deleteMindmap: (id: string) => void
   getMindmapByNoteId: (noteId: string) => Mindmap | undefined
+  startMindmapGeneration: (noteId: string) => void
+  stopMindmapGeneration: (noteId: string) => void
+  isMindmapGenerating: (noteId: string) => boolean
 
   // Actions - UI
   toggleSidebar: () => void
@@ -125,6 +131,7 @@ export const useStore = create<AppState>()(
       chatPanelOpen: false,
       hasInitialized: false,
       showDailyLoginEffect: false,
+      generatingMindmapNoteIds: [],
 
       setHasInitialized: (value) => set({ hasInitialized: value }),
 
@@ -541,6 +548,22 @@ export const useStore = create<AppState>()(
 
       getMindmapByNoteId: (noteId) => {
         return get().mindmaps.find((m) => m.noteId === noteId)
+      },
+
+      startMindmapGeneration: (noteId) =>
+        set((state) => ({
+          generatingMindmapNoteIds: state.generatingMindmapNoteIds.includes(noteId)
+            ? state.generatingMindmapNoteIds
+            : [...state.generatingMindmapNoteIds, noteId],
+        })),
+
+      stopMindmapGeneration: (noteId) =>
+        set((state) => ({
+          generatingMindmapNoteIds: state.generatingMindmapNoteIds.filter((id) => id !== noteId),
+        })),
+
+      isMindmapGenerating: (noteId) => {
+        return get().generatingMindmapNoteIds.includes(noteId)
       },
 
       activeUploads: [],

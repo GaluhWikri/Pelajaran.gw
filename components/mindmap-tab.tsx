@@ -293,11 +293,11 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
 }
 
 const MindmapContent = ({ noteId }: MindmapTabProps) => {
-    const { notes, getMindmapByNoteId, addMindmap, updateMindmap, addXP } = useStore()
+    const { notes, getMindmapByNoteId, addMindmap, updateMindmap, addXP, startMindmapGeneration, stopMindmapGeneration, generatingMindmapNoteIds } = useStore()
     const { user } = useAuth()
     const note = notes.find((n) => n.id === noteId)
 
-    const [isGenerating, setIsGenerating] = useState(false)
+    const isGenerating = generatingMindmapNoteIds.includes(noteId)
     const [error, setError] = useState<string | null>(null)
 
     // History state for undo/redo
@@ -550,7 +550,7 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
     const handleGenerateMindmap = async () => {
         if (!note) return
 
-        setIsGenerating(true)
+        startMindmapGeneration(noteId)
         setError(null)
 
         try {
@@ -599,7 +599,7 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
             console.error("Error generating mindmap:", err)
             setError(err.message || "Gagal generate mindmap")
         } finally {
-            setIsGenerating(false)
+            stopMindmapGeneration(noteId)
         }
     }
 
@@ -749,6 +749,16 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
                                     className="bg-card border rounded-lg"
                                 />
                             </ReactFlow>
+                        ) : isGenerating ? (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 animate-pulse">
+                                    <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                                </div>
+                                <h4 className="text-lg font-semibold mb-2">Sedang Membuat Mindmap...</h4>
+                                <p className="text-muted-foreground max-w-sm text-sm">
+                                    AI sedang menganalisis catatan dan membuat peta konsep. Proses ini membutuhkan beberapa saat.
+                                </p>
+                            </div>
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-center p-8">
                                 <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
