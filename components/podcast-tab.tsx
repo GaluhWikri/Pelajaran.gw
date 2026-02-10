@@ -35,6 +35,7 @@ import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useAudioPlayerStore } from "@/lib/audio-player-store"
+import { useStore } from "@/lib/store"
 
 interface PodcastTabProps {
     noteId: string
@@ -48,11 +49,15 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
     const isPlayingRef = useRef(false) // Track if audio was playing before navigation
 
 
+    // Global podcast generation state from store
+    const { startPodcastGeneration, updatePodcastGenerationStatus, stopPodcastGeneration, generatingPodcastNoteIds } = useStore()
+    const podcastGenStatus = generatingPodcastNoteIds[noteId] || null
+    const isGeneratingScript = podcastGenStatus === 'script'
+    const isGeneratingAudio = podcastGenStatus === 'audio'
+    const isSaving = podcastGenStatus === 'saving'
+
     // State
     const [isLoading, setIsLoading] = useState(true)
-    const [isGeneratingScript, setIsGeneratingScript] = useState(false)
-    const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
-    const [isSaving, setIsSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isTableMissing, setIsTableMissing] = useState(false)
     const [podcastId, setPodcastId] = useState<string | null>(null)
@@ -307,7 +312,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
     const handleGenerate = async () => {
         if (!noteContent.trim() || !user) return
 
-        setIsGeneratingScript(true)
+        startPodcastGeneration(noteId, 'script')
         setDialogues([])
         setAudioUrl(null)
         setPodcastTitle("")
@@ -318,10 +323,9 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
             const { title, dialogues: generatedDialogues } = await generatePodcastScript(noteContent, noteTitle)
             setPodcastTitle(title)
             setDialogues(generatedDialogues)
-            setIsGeneratingScript(false)
 
             // Step 2: Save transcript to Supabase IMMEDIATELY (before audio)
-            setIsSaving(true)
+            updatePodcastGenerationStatus(noteId, 'saving')
             const newPodcastId = podcastId || crypto.randomUUID()
             await savePodcastToSupabase({
                 id: newPodcastId,
@@ -333,10 +337,9 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                 duration: estimateDuration(generatedDialogues),
             })
             setPodcastId(newPodcastId)
-            setIsSaving(false)
 
             // Step 3: Try to generate audio (optional, may fail due to network)
-            setIsGeneratingAudio(true)
+            updatePodcastGenerationStatus(noteId, 'audio')
             setGenerationProgress({ current: 0, total: generatedDialogues.length })
 
             try {
@@ -370,15 +373,13 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                 console.error("Audio generation failed:", audioError)
                 setError(`Audio gagal: ${audioError.message}. Transcript sudah tersimpan.`)
             } finally {
-                setIsGeneratingAudio(false)
+                stopPodcastGeneration(noteId)
             }
 
         } catch (error: any) {
             console.error("Failed to generate podcast:", error)
             setError(`Gagal membuat podcast: ${error.message}`)
-            setIsGeneratingScript(false)
-            setIsGeneratingAudio(false)
-            setIsSaving(false)
+            stopPodcastGeneration(noteId)
         }
     }
 

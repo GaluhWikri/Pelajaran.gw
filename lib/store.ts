@@ -35,6 +35,9 @@ interface AppState {
   // Mindmap generation tracking (global so it persists across navigation)
   generatingMindmapNoteIds: string[]
 
+  // Podcast generation tracking (global so it persists across navigation)
+  generatingPodcastNoteIds: Record<string, 'script' | 'audio' | 'saving'>
+
   // Processing State
   activeUploads: {
     id: string
@@ -102,6 +105,12 @@ interface AppState {
   stopMindmapGeneration: (noteId: string) => void
   isMindmapGenerating: (noteId: string) => boolean
 
+  // Actions - Podcast Generation
+  startPodcastGeneration: (noteId: string, status: 'script' | 'audio' | 'saving') => void
+  updatePodcastGenerationStatus: (noteId: string, status: 'script' | 'audio' | 'saving') => void
+  stopPodcastGeneration: (noteId: string) => void
+  getPodcastGenerationStatus: (noteId: string) => 'script' | 'audio' | 'saving' | null
+
   // Actions - UI
   toggleSidebar: () => void
   toggleChatPanel: () => void
@@ -132,6 +141,7 @@ export const useStore = create<AppState>()(
       hasInitialized: false,
       showDailyLoginEffect: false,
       generatingMindmapNoteIds: [],
+      generatingPodcastNoteIds: {},
 
       setHasInitialized: (value) => set({ hasInitialized: value }),
 
@@ -564,6 +574,26 @@ export const useStore = create<AppState>()(
 
       isMindmapGenerating: (noteId) => {
         return get().generatingMindmapNoteIds.includes(noteId)
+      },
+
+      startPodcastGeneration: (noteId, status) =>
+        set((state) => ({
+          generatingPodcastNoteIds: { ...state.generatingPodcastNoteIds, [noteId]: status },
+        })),
+
+      updatePodcastGenerationStatus: (noteId, status) =>
+        set((state) => ({
+          generatingPodcastNoteIds: { ...state.generatingPodcastNoteIds, [noteId]: status },
+        })),
+
+      stopPodcastGeneration: (noteId) =>
+        set((state) => {
+          const { [noteId]: _, ...rest } = state.generatingPodcastNoteIds
+          return { generatingPodcastNoteIds: rest }
+        }),
+
+      getPodcastGenerationStatus: (noteId) => {
+        return get().generatingPodcastNoteIds[noteId] || null
       },
 
       activeUploads: [],
