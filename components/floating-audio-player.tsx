@@ -60,15 +60,42 @@ export function FloatingAudioPlayer() {
     const [localPosition, setLocalPosition] = useState<{ x: number; y: number } | null>(null)
     const [isExpanded, setIsExpanded] = useState(false)
 
+    // Ref to track if a play request is pending to avoid interruption errors
+    const isPlayPendingRef = useRef(false)
+
     // Sync audio element with store state
     useEffect(() => {
         const audio = audioRef.current
         if (!audio || !audioUrl) return
 
         if (isPlaying) {
-            audio.play().catch(console.error)
+            const playPromise = audio.play()
+            if (playPromise !== undefined) {
+                isPlayPendingRef.current = true
+                playPromise
+                    .then(() => {
+                        isPlayPendingRef.current = false
+                        // Check if we need to pause immediately after play success
+                        // (if user paused while we were waiting for play to start)
+                        // However, the next effect run handles that part.
+                    })
+                    .catch(error => {
+                        isPlayPendingRef.current = false
+                        // Ignore "The play() request was interrupted" error
+                        if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
+                            console.error("Audio playback error:", error)
+                        }
+                    })
+            }
         } else {
-            audio.pause()
+            // Only pause if not pending play, or if pending, we rely on the AbortError handling above
+            if (!isPlayPendingRef.current) {
+                audio.pause()
+            } else {
+                // Determine if calling pause() on a pending promise is safe if we catch the error.
+                // Yes, it triggers the AbortError in the promise above.
+                audio.pause()
+            }
         }
     }, [isPlaying, audioUrl])
 
