@@ -625,9 +625,9 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                     {/* Audio Player */}
                     <Card className="shrink-0 sticky top-[80px] z-20 shadow-md bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <Volume2 className="h-4 w-4 text-orange-500" />
-                                {podcastTitle}
+                            <CardTitle className="text-base flex items-start gap-2 line-clamp-2 md:items-center">
+                                <Volume2 className="h-4 w-4 text-orange-500 mt-1 md:mt-0 shrink-0" />
+                                <span className="break-words">{podcastTitle}</span>
                             </CardTitle>
                             <p className="text-xs text-muted-foreground">
                                 Estimasi durasi: ~{Math.ceil(estimatedDurationValue / 60)} menit
@@ -666,7 +666,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                             </div>
 
                             {/* Controls */}
-                            <div className="flex items-center justify-center gap-4">
+                            <div className="flex items-center justify-center gap-2 sm:gap-4">
                                 <Button
                                     variant="ghost"
                                     onClick={() => skip(-10)}
@@ -706,7 +706,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-8 px-2 text-xs font-medium gap-1 ml-4"
+                                            className="h-8 px-2 text-xs font-medium gap-1 ml-0 sm:ml-4"
                                             disabled={!audioUrl}
                                         >
                                             {globalPlaybackSpeed}x
@@ -743,7 +743,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                                         max={1}
                                         step={0.1}
                                         onValueChange={handleVolumeChange}
-                                        className="w-20"
+                                        className="w-20 hidden sm:flex"
                                     />
                                 </div>
 
