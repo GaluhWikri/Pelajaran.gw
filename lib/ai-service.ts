@@ -119,7 +119,7 @@ async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: s
 function buildPromptContext(options?: GenerationOptions): string {
     if (!options) return ""
 
-    const level = options.understandingLevel || "Menengah"
+    const level = options.understandingLevel || "C3-Mengaplikasikan"
     const styleGuide = LEVEL_STYLE_MAP[level] || LEVEL_STYLE_MAP["default"]
     const toneInstruction = STYLE_MAP[options.writingStyle] || STYLE_MAP["relaxed"]
 
@@ -130,7 +130,7 @@ function buildPromptContext(options?: GenerationOptions): string {
     return `
     PREFERENSI PENGGUNA:
     ${subjectContext}
-    - Tingkat Pemahaman Target: ${level}
+    - Level Taksonomi Bloom Target: ${level}
     - Kompleksitas Penjelasan: ${styleGuide}
     - Gaya Penulisan & Tone: ${toneInstruction}
     

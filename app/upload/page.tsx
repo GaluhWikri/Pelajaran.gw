@@ -93,11 +93,24 @@ export default function UploadPage() {
     })
 
     const getUnderstandingLabel = (level: number) => {
-        if (level <= 20) return "Pemula"
-        if (level <= 40) return "Dasar"
-        if (level <= 60) return "Menengah"
-        if (level <= 80) return "Mahir"
-        return "Ahli"
+        if (level <= 17) return "C1-Mengingat"
+        if (level <= 33) return "C2-Memahami"
+        if (level <= 50) return "C3-Mengaplikasikan"
+        if (level <= 67) return "C4-Menganalisis"
+        if (level <= 83) return "C5-Mengevaluasi"
+        return "C6-Mencipta"
+    }
+
+    const getDisplayLabel = (technicalLabel: string) => {
+        switch (technicalLabel) {
+            case "C1-Mengingat": return "Dasar (Hafalan & Konsep)"
+            case "C2-Memahami": return "Pemahaman (Jelaskan Kembali)"
+            case "C3-Mengaplikasikan": return "Penerapan (Studi Kasus)"
+            case "C4-Menganalisis": return "Analisis (Kritis & Pola)"
+            case "C5-Mengevaluasi": return "Evaluasi (Menilai & Argumen)"
+            case "C6-Mencipta": return "Kreasi (Solusi Baru)"
+            default: return technicalLabel
+        }
     }
 
     // Filter notes for "Catatan Anda" section
@@ -211,7 +224,7 @@ export default function UploadPage() {
         // Default config for YouTube processing
         const defaultConfig = {
             subject: "YouTube",
-            understandingLevel: "Menengah",
+            understandingLevel: "C3-Mengaplikasikan",
             writingStyle: "relaxed"
         }
 
@@ -959,28 +972,34 @@ export default function UploadPage() {
 
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <Label>Tingkat Pemahaman</Label>
+                                <Label>Target Pemahaman</Label>
                                 <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded">
-                                    {getUnderstandingLabel(config.understandingLevel)}
+                                    {getDisplayLabel(getUnderstandingLabel(config.understandingLevel))}
                                 </span>
                             </div>
                             <Slider
                                 value={[config.understandingLevel]}
                                 max={100}
-                                step={25}
+                                step={20}
                                 onValueChange={(vals) => setConfig({ ...config, understandingLevel: vals[0] })}
                                 className="[&_.bg-primary]:bg-orange-500 cursor-grab active:cursor-grabbing"
                             />
                             <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                                <span>Pemula</span>
-                                <span>Ahli</span>
+                                <span>Dasar</span>
+                                <span>Mahir</span>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {config.understandingLevel <= 25
-                                    ? "Penjelasan detail dengan analogi sederhana"
-                                    : config.understandingLevel <= 50
-                                        ? "Penjelasan seimbang untuk pemahaman umum"
-                                        : "Penjelasan ringkas dengan istilah teknis"}
+                                {config.understandingLevel <= 17
+                                    ? "Fokus: Mengingat definisi, fakta dasar, dan istilah pending."
+                                    : config.understandingLevel <= 33
+                                        ? "Fokus: Menjelaskan materi dengan kalimat sendiri."
+                                        : config.understandingLevel <= 50
+                                            ? "Fokus: Menerapkan konsep ke studi kasus nyata."
+                                            : config.understandingLevel <= 67
+                                                ? "Fokus: Menganalisa hubungan dan pola antar konsep."
+                                                : config.understandingLevel <= 83
+                                                    ? "Fokus: Mengkritisi dan menilai argumen secara objektif."
+                                                    : "Fokus: Merancang solusi atau ide baru dari konsep."}
                             </p>
                         </div>
 
