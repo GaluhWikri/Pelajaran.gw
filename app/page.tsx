@@ -261,8 +261,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {[
+          {(() => {
+            const features = [
               {
                 icon: FileText,
                 title: "Smart Notes",
@@ -288,9 +288,10 @@ export default function LandingPage() {
                 title: "Podcast",
                 description: "Ubah materi menjadi podcast dialog dua pembicara yang bisa didengarkan kapan saja."
               }
-            ].map((feature, i) => (
+            ]
+
+            const FeatureCard = ({ feature, i }: { feature: typeof features[0]; i: number }) => (
               <motion.div
-                key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -313,8 +314,25 @@ export default function LandingPage() {
                   </p>
                 </div>
               </motion.div>
-            ))}
-          </div>
+            )
+
+            return (
+              <div className="space-y-6">
+                {/* Top row: 3 cards */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {features.slice(0, 3).map((feature, i) => (
+                    <FeatureCard key={i} feature={feature} i={i} />
+                  ))}
+                </div>
+                {/* Bottom row: 2 cards centered */}
+                <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                  {features.slice(3).map((feature, i) => (
+                    <FeatureCard key={i + 3} feature={feature} i={i + 3} />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </section>
 
