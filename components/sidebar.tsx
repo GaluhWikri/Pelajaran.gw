@@ -346,7 +346,7 @@ function SidebarContent() {
           </div>
         </div>
 
-        {/* Premium CTA */}
+        {/* Premium CTA - Disabled for now
         <div className="border-t p-4">
           <Button
             variant="default"
@@ -368,6 +368,7 @@ function SidebarContent() {
             </Link>
           </Button>
         </div>
+        */}
       </aside>
 
       {/* Mobile Overlay */}

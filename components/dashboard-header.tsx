@@ -208,6 +208,7 @@ export function DashboardHeader() {
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </DropdownMenuItem>
+                  {/* Premium menu item - Disabled for now
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     {storeUser?.isPremium ? (
@@ -216,7 +217,7 @@ export function DashboardHeader() {
                       <span>Upgrade to Premium</span>
                     )}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  */}
                   <DropdownMenuItem
                     className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
                     onClick={async () => {

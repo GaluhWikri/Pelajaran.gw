@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         '/upload',
         '/leaderboard',
         '/profile',
-        '/premium'
+        // '/premium' // Disabled for now
     ]
 
     useEffect(() => {
