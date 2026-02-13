@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from "react"
 import { motion, useScroll, useTransform, AnimatePresence, useMotionTemplate } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle } from "lucide-react"
+import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle, Mic } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
@@ -261,7 +261,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
             {[
               {
                 icon: FileText,
@@ -282,6 +282,11 @@ export default function LandingPage() {
                 icon: Network,
                 title: "Mind Map",
                 description: "Visualisasikan hubungan antar konsep dengan mind map yang dihasilkan AI secara otomatis."
+              },
+              {
+                icon: Mic,
+                title: "Podcast",
+                description: "Ubah materi menjadi podcast dialog dua pembicara yang bisa didengarkan kapan saja."
               }
             ].map((feature, i) => (
               <motion.div
@@ -447,13 +452,14 @@ export default function LandingPage() {
               </div>
 
               {/* Feature Highlights Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-6 gap-y-8 w-full border-t border-border/50 pt-10 mt-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 gap-y-8 w-full border-t border-border/50 pt-10 mt-8">
                 {[
                   { icon: Zap, label: "Proses Cepat" },
                   { icon: CheckCircle2, label: "Gratis Selamanya" },
                   { icon: Brain, label: "AI Cerdas" },
                   { icon: FileText, label: "Unlimited Notes" },
                   { icon: Network, label: "Mind Map" },
+                  { icon: Mic, label: "Podcast" },
                 ].map((item, i) => (
                   <div key={i} className="flex flex-col items-center gap-2 text-foreground/80">
                     <item.icon className="h-6 w-6 text-orange-500" />
