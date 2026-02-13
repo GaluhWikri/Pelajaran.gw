@@ -135,7 +135,13 @@
   .will-change-transform {
     will-change: transform;
   }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
 }
+
 
 /* Flashcard Flip Animation Utilities */
 .perspective-1000 {
