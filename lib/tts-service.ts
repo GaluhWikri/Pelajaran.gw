@@ -32,7 +32,7 @@ export async function textToSpeech(
     console.log(`[TTS] Generating audio for: "${text.substring(0, 30)}..." with voice: ${voiceName}`)
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
+        model: "gemini-2.5-pro-preview-tts",
         contents: [{ parts: [{ text }] }],
         config: {
             responseModalities: ["AUDIO"],

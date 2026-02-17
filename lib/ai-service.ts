@@ -34,7 +34,7 @@ const apiKey = (process.env.NEXT_PUBLIC_GEMINI_API_KEY || "").trim()
 const genAI = new GoogleGenerativeAI(apiKey)
 
 const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.7,
@@ -46,7 +46,7 @@ const model = genAI.getGenerativeModel({
 
 // Separate model for mindmap generation - lower temperature for consistent structure
 const mindmapModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     generationConfig: {
         temperature: 0.5, // Lower for more consistent JSON structure
         topP: 0.9,
@@ -56,7 +56,7 @@ const mindmapModel = genAI.getGenerativeModel({
 })
 
 const chatModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     generationConfig: {
         temperature: 0.7,
         topP: 0.95,
