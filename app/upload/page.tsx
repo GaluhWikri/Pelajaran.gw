@@ -221,11 +221,11 @@ export default function UploadPage() {
 
         const ytId = crypto.randomUUID()
 
-        // Default config for YouTube processing
+        // Use user's actual config (from slider), not hardcoded defaults
         const defaultConfig = {
-            subject: "YouTube",
-            understandingLevel: "C3-Mengaplikasikan",
-            writingStyle: "relaxed"
+            subject: config.subject || "YouTube",
+            understandingLevel: getUnderstandingLabel(config.understandingLevel),
+            writingStyle: config.writingStyle
         }
 
         addActiveUpload({
