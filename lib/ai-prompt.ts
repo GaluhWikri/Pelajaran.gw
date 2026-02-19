@@ -39,11 +39,9 @@ Tugas Utama AI:
 Gunakan materi yang diunggah sebagai basis pengetahuan UTAMA (Primary Source) untuk melakukan tugas-tugas berikut:
 
 1. Ringkasan Materi (Notes)
-   - Buat ringkasan yang terstruktur, mendalam, dan mendorong pemahaman (bukan sekadar daftar poin).
-   - Gunakan pendekatan elaboratif: jelaskan MENGAPA konsep itu penting, bukan hanya APA isinya.
-   - Hubungkan antar konsep untuk membangun pemahaman holistik.
-   - Sertakan implikasi praktis atau contoh penerapan jika relevan.
-   - Hindari menyalin teks mentah secara langsung.
+   - Buat ringkasan yang DETAIL, KOMPREHENSIF, dan terstruktur berdasarkan materi yang diunggah.
+   - Sesuaikan kedalaman dan gaya dengan level Taksonomi Bloom yang dipilih user.
+   - (Instruksi detail ada di INSTRUKSI KONTEN di bawah.)
 
 2. Kuis (Quiz)
    - Buat soal kuis yang TERSEBAR di berbagai level Taksonomi Bloom.
@@ -146,12 +144,55 @@ export const STYLE_MAP: Record<string, string> = {
 // --- Understanding Level Style Guide Map ---
 
 export const LEVEL_STYLE_MAP: Record<string, string> = {
-  "C1-Mengingat": "Fokus pada definisi, fakta dasar, dan identifikasi konsep kunci. Gunakan bahasa sederhana dan contoh konkret untuk membantu mengingat.",
-  "C2-Memahami": "Jelaskan konsep dengan parafrase, analogi, dan contoh. Dorong mahasiswa memahami MENGAPA, bukan hanya APA.",
-  "C3-Mengaplikasikan": "Sajikan penjelasan dengan penekanan pada penerapan konsep dalam situasi nyata. Gunakan studi kasus dan contoh problem-solving.",
-  "C4-Menganalisis": "Tekankan perbandingan, hubungan sebab-akibat, dan identifikasi pola. Dorong mahasiswa mengurai konsep menjadi komponen-komponen dan menemukan keterkaitan.",
-  "C5-Mengevaluasi": "Dorong pemikiran kritis: assessment, argumentasi, dan justifikasi. Sajikan sudut pandang berbeda dan minta mahasiswa menilai kelebihan/kekurangan.",
-  "C6-Mencipta": "Dorong sintesis dan inovasi: merancang solusi baru, merumuskan hipotesis, dan menghasilkan karya orisinal berdasarkan konsep yang dipelajari.",
+  "C1-Mengingat": `FOKUS UTAMA: Level C1 — Mengingat (Remember).
+Ringkasan harus BERFOKUS pada penyajian FAKTA, DEFINISI, dan ISTILAH KUNCI secara lengkap dan jelas.
+- Sebutkan semua konsep penting beserta definisinya secara eksplisit.
+- Gunakan daftar/list untuk memudahkan menghafal poin-poin penting.
+- Berikan contoh konkret yang sederhana untuk setiap konsep agar mudah diingat.
+- Gunakan bahasa yang lugas dan mudah dipahami.
+- JANGAN menambahkan analisis mendalam, evaluasi kritis, atau sintesis — cukup sajikan informasi FAKTUAL yang lengkap.
+- Struktur: Pengenalan topik → Daftar konsep/definisi → Contoh sederhana.`,
+  "C2-Memahami": `FOKUS UTAMA: Level C2 — Memahami (Understand).
+Ringkasan harus BERFOKUS pada PENJELASAN MAKNA dan PEMAHAMAN KONSEPTUAL, bukan sekadar daftar fakta.
+- Untuk setiap konsep, jelaskan ARTINYA dengan kata-kata sendiri (parafrase), bukan copy-paste definisi.
+- Jawab pertanyaan "Apa artinya?", "Mengapa ini penting?", dan "Bagaimana hubungannya dengan konsep lain?".
+- Gunakan ANALOGI dan PERBANDINGAN SEDERHANA untuk mempermudah pemahaman.
+- Berikan contoh yang membantu mahasiswa MEMAHAMI, bukan sekadar menghafal.
+- Rangkum ide-ide utama dan hubungkan satu sama lain secara naratif.
+- JANGAN hanya menyebutkan fakta tanpa penjelasan — setiap poin harus disertai elaborasi MENGAPA dan APA MAKNANYA.
+- Struktur: Penjelasan konsep → Analogi/parafrase → Hubungan antar konsep → Contoh pemahaman.`,
+  "C3-Mengaplikasikan": `FOKUS UTAMA: Level C3 — Mengaplikasikan (Apply).
+Ringkasan harus BERFOKUS pada PENERAPAN KONSEP dalam situasi nyata dan problem-solving.
+- Untuk setiap konsep, tunjukkan BAGAIMANA konsep tersebut DIGUNAKAN dalam praktik.
+- Berikan STUDI KASUS, skenario praktis, atau contoh penerapan dunia nyata.
+- Jika ada prosedur atau langkah-langkah, tuliskan secara LENGKAP dan STEP-BY-STEP.
+- Sertakan contoh problem-solving: sajikan masalah → tunjukkan cara menyelesaikannya menggunakan konsep.
+- Gunakan code block untuk kode program, rumus, atau command yang bisa langsung dipraktikkan.
+- Struktur: Konsep dasar (ringkas) → Cara penggunaan → Contoh penerapan → Langkah-langkah praktis.`,
+  "C4-Menganalisis": `FOKUS UTAMA: Level C4 — Menganalisis (Analyze).
+Ringkasan harus BERFOKUS pada ANALISIS, PERBANDINGAN, dan IDENTIFIKASI POLA/HUBUNGAN.
+- Bandingkan dan KONTRASKAN konsep-konsep terkait — WAJIB gunakan TABEL perbandingan.
+- Identifikasi HUBUNGAN SEBAB-AKIBAT: apa yang menyebabkan apa dan mengapa.
+- Urai konsep menjadi KOMPONEN-KOMPONEN dan jelaskan bagaimana komponen saling terkait.
+- Identifikasi POLA, STRUKTUR, dan PRINSIP DASAR di balik konsep.
+- Sajikan dari berbagai SUDUT PANDANG untuk memperlihatkan kedalaman analisis.
+- Struktur: Konsep dasar (ringkas) → Analisis komponen → Tabel perbandingan → Hubungan sebab-akibat → Pola yang ditemukan.`,
+  "C5-Mengevaluasi": `FOKUS UTAMA: Level C5 — Mengevaluasi (Evaluate).
+Ringkasan harus BERFOKUS pada PENILAIAN KRITIS, ARGUMENTASI, dan JUSTIFIKASI.
+- Untuk setiap konsep/pendekatan, evaluasi KELEBIHAN dan KELEMAHAN — gunakan tabel pro/kontra.
+- Sajikan ARGUMENTASI: mengapa satu pendekatan lebih baik dari yang lain dalam konteks tertentu.
+- Berikan KRITIK konstruktif terhadap konsep atau metode yang dibahas.
+- Sertakan beberapa SUDUT PANDANG BERBEDA dan minta pembaca menimbang mana yang lebih tepat.
+- Ajak pembaca berpikir kritis: "Apakah pendekatan ini selalu benar?" "Kapan ini gagal?"
+- Struktur: Konsep dasar (ringkas) → Evaluasi kritis → Pro/kontra (tabel) → Argumentasi → Konteks kapan tepat/tidak tepat.`,
+  "C6-Mencipta": `FOKUS UTAMA: Level C6 — Mencipta (Create).
+Ringkasan harus BERFOKUS pada SINTESIS, INOVASI, dan PENGEMBANGAN IDE BARU.
+- Dorong pembaca untuk MERANCANG solusi baru atau MERUMUSKAN pendekatan orisinal.
+- Hubungkan konsep dari materi dengan ide-ide dari bidang lain untuk menghasilkan KONEKSI KREATIF.
+- Ajukan pertanyaan provokatif: "Bagaimana jika...?" "Apa yang terjadi kalau kita menggabungkan X dan Y?"
+- Berikan KERANGKA BERPIKIR untuk merancang atau menciptakan sesuatu berdasarkan konsep yang dipelajari.
+- Jika relevan, usulkan HIPOTESIS atau skenario pengembangan.
+- Struktur: Konsep inti (ringkas) → Sintesis antar konsep → Peluang inovasi → Kerangka kreasi → Pertanyaan pengembangan.`,
   "default": "Penjelasan seimbang yang mencakup pemahaman konseptual dan penerapan praktis, sesuai standar perguruan tinggi."
 }
 
@@ -159,8 +200,30 @@ export const LEVEL_STYLE_MAP: Record<string, string> = {
 
 export const CONTENT_INSTRUCTION_TEMPLATE = `
 INSTRUKSI KONTEN (Berbasis Taksonomi Bloom untuk Mahasiswa):
-1. RINGKASAN (Summary): Tulis rangkuman materi di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
+1. RINGKASAN (Summary): Tulis rangkuman materi yang DETAIL dan KOMPREHENSIF di field 'summary'. Sesuaikan kedalaman dan gaya bahasa dengan 'KONTEKS PENGGUNA' di atas.
+   - PENTING: JANGAN membuat ringkasan yang terlalu singkat atau dangkal. Ringkasan harus MENYELURUH dan MENDALAM.
+   - Jelaskan setiap konsep/topik secara TUNTAS — seolah-olah mahasiswa hanya membaca ringkasan ini tanpa perlu kembali ke materi asli.
    - Gunakan pendekatan elaboratif: jelaskan konsep secara mendalam, hubungkan antar ide, dan soroti implikasi praktis.
+   - Untuk setiap poin penting, berikan penjelasan yang memadai, contoh konkret, analogi, atau konteks tambahan.
+   - Jika ada definisi, rumus, proses, atau langkah-langkah, tulislah secara LENGKAP, jangan disingkat berlebihan.
+   
+   PENERAPAN TAKSONOMI BLOOM DALAM RINGKASAN (SANGAT PENTING — WAJIB DIIKUTI):
+   Ringkasan WAJIB disesuaikan dengan LEVEL TAKSONOMI BLOOM yang dipilih user (lihat 'Level Taksonomi Bloom Target' di PREFERENSI PENGGUNA di atas).
+   
+   ATURAN UTAMA:
+   - FOKUSKAN isi, gaya, dan kedalaman ringkasan pada LEVEL YANG DIPILIH USER.
+   - Level-level DI BAWAH level target boleh disertakan sebagai FONDASI singkat (misalnya, definisi dasar sebelum masuk analisis).
+   - Level-level DI ATAS level target JANGAN dijadikan fokus utama — hanya sertakan jika sangat relevan dan natural.
+   - Ikuti instruksi detail di field 'Kompleksitas Penjelasan' pada PREFERENSI PENGGUNA — itu adalah panduan UTAMA untuk gaya ringkasan.
+   
+   Contoh penerapan:
+   - Jika user pilih C1: Fokus pada fakta, definisi, dan daftar konsep. Jangan paksakan analisis mendalam.
+   - Jika user pilih C2: Fokus pada penjelasan makna, parafrase, dan analogi. Definisi boleh ada tapi bukan fokus utama.
+   - Jika user pilih C3: Fokus pada contoh penerapan, studi kasus, dan langkah-langkah praktis.
+   - Jika user pilih C4: Fokus pada perbandingan, hubungan antar konsep, dan tabel analisis.
+   - Jika user pilih C5: Fokus pada evaluasi kritis, pro/kontra, dan argumentasi.
+   - Jika user pilih C6: Fokus pada sintesis ide baru, inovasi, dan kerangka kreasi.
+
    - Gunakan format Markdown LENGKAP & KAYA (Rich Markdown) JIKA DIPERLUKAN/RELEVAN:
      * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
      * CODE BLOCK: Gunakan untuk kode program, command line, atau rumus matematika kompleks.
@@ -231,44 +294,18 @@ FORMAT OUTPUT(Wajib JSON Valid, tanpa teks lain):
 // --- Task-Specific Prompt Templates ---
 
 export const FILE_LEARNING_TASK_TEMPLATE = `
-Tugas: Analisis materi yang diberikan(File / Gambar) dan buat output JSON.`
+Tugas: Analisis materi yang diberikan (bisa berupa file PDF, gambar, atau dokumen lainnya) dan buat output JSON berisi ringkasan, kuis, dan flashcards.
+PENTING: Fokus pada ISI KONTEN AKTUAL dari file yang diberikan.`
 
 export const TEXT_LEARNING_TASK_TEMPLATE = `
-Tugas: Analisis TEKS / MATERI berikut(bisa berupa Transkrip Video atau Teks Slide Presentasi) dan buat output JSON.`
+Tugas: Analisis TEKS / MATERI berikut (bisa berupa Transkrip Video atau Teks Slide Presentasi) dan buat output JSON berisi ringkasan, kuis, dan flashcards.
+PENTING: Fokus pada ISI KONTEN AKTUAL dari teks yang diberikan.`
 
 export const YOUTUBE_LEARNING_TASK_TEMPLATE = `
 Tugas: Analisis VIDEO YOUTUBE yang diberikan dan buat output JSON berisi ringkasan, kuis, dan flashcards.
+PENTING: Analisis ISI AKTUAL dari video (audio, visual, narasi), BUKAN dari informasi lain.`
 
-  PENTING: Analisis ISI AKTUAL dari video(audio, visual, narasi) yang diberikan di atas, BUKAN dari informasi lain.`
 
-export const YOUTUBE_CONTENT_INSTRUCTION_TEMPLATE = `
-INSTRUKSI KONTEN (Berbasis Taksonomi Bloom untuk Mahasiswa):
-1. RINGKASAN(Summary): Tulis rangkuman lengkap dari isi video di field 'summary'. 
-   - Analisis konten audio / narasi dalam video
-   - Jika ada teks atau slide yang ditampilkan, sertakan informasinya
-   - Gunakan pendekatan elaboratif: jelaskan konsep secara mendalam dan hubungkan antar ide.
-   - Gunakan format Markdown yang kaya:
-     * TABEL: WAJIB gunakan tabel untuk perbandingan, data terstruktur, atau list kategori.
-     * CODE BLOCK: Gunakan untuk kode program atau rumus.
-     * BLOCKQUOTE(>): Gunakan untuk definisi penting atau kesimpulan utama.
-     * BOLD & ITALIC: Gunakan untuk menekankan kata kunci penting.
-     * LIST: Gunakan bullet points atau numbering untuk langkah-langkah.
-   - Gunakan Header(#, ##, ###) untuk struktur yang rapi.
-   - JANGAN pakai pembuka / penutup basa-basi.
-2. KUIS(Quiz): WAJIB ADA. Buat 10 soal pilihan ganda yang relevan dengan isi video.
-   - DISTRIBUSI LEVEL BLOOM WAJIB:
-     * 2-3 soal level C1-C2 (Mengingat & Memahami): definisi, fakta, parafrase konsep.
-     * 3-4 soal level C3-C4 (Mengaplikasikan & Menganalisis): penerapan, perbandingan, identifikasi hubungan.
-     * 3 soal level C5-C6 (Mengevaluasi & Mencipta): penilaian kritis, argumentasi, sintesis.
-   - Setiap soal WAJIB mencantumkan level Bloom-nya di field explanation (contoh: "[C4-Menganalisis] Penjelasan...").
-3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards berisi konsep penting dari video.
-   - Variasikan level kognitif: definisi (C1), penerapan (C3), perbandingan (C4), evaluasi (C5).
-   - PENTING: Gunakan TEKS POLOS SAJA untuk pertanyaan dan jawaban. DILARANG menggunakan simbol Markdown (*, **, _, \`) di dalam flashcard.
-
-  PENTING:
-- Kuis dan Flashcards TIDAK BOLEH KOSONG.
-- Kuis HARUS mencakup soal Higher Order Thinking Skills (HOTS) level C4-C6.
-- Fokus pada poin-poin pembelajaran utama dari video.`
 
 export const QUIZ_JSON_OUTPUT_FORMAT_TEMPLATE = `
 Output JSON format:

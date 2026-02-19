@@ -11,7 +11,6 @@ import {
     FILE_LEARNING_TASK_TEMPLATE,
     TEXT_LEARNING_TASK_TEMPLATE,
     YOUTUBE_LEARNING_TASK_TEMPLATE,
-    YOUTUBE_CONTENT_INSTRUCTION_TEMPLATE,
     QUIZ_JSON_OUTPUT_FORMAT_TEMPLATE,
     FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE,
     PODCAST_DIALOG_PROMPT
@@ -128,11 +127,16 @@ function buildPromptContext(options?: GenerationOptions): string {
         : ""
 
     return `
-    PREFERENSI PENGGUNA:
+    KONTEKS PENGGUNA (WAJIB DIIKUTI):
     ${subjectContext}
-    - Level Taksonomi Bloom Target: ${level}
-    - Kompleksitas Penjelasan: ${styleGuide}
-    - Gaya Penulisan & Tone: ${toneInstruction}
+    
+    LEVEL TAKSONOMI BLOOM TARGET (SANGAT PENTING — INI MENENTUKAN GAYA RINGKASAN):
+    Level yang dipilih: ${level}
+    
+    Kompleksitas Penjelasan (IKUTI INSTRUKSI INI UNTUK GAYA RINGKASAN):
+    ${styleGuide}
+    
+    Gaya Penulisan & Tone: ${toneInstruction}
     
     ${SUBJECT_RULES_TEMPLATE}
     `
@@ -187,7 +191,7 @@ ${YOUTUBE_LEARNING_TASK_TEMPLATE}
 
 ${promptContext}
 
-${YOUTUBE_CONTENT_INSTRUCTION_TEMPLATE}
+${CONTENT_INSTRUCTION_TEMPLATE}
 
 ${SUBJECT_DETECTION_RULES_TEMPLATE}
 
