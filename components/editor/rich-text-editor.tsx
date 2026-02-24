@@ -336,12 +336,9 @@ export function RichTextEditor({ content, onChange, editable = true }: RichTextE
 
         const handleDrop = () => {
             // Instantly remove the dropcursor element from DOM.
-            // prosemirror-dropcursor appends it to editorDom.offsetParent
-            // with class 'prosemirror-dropcursor-block' or 'prosemirror-dropcursor-inline'.
-            // The plugin itself delays removal by 20ms, but we remove it immediately.
             const parent = editorDom.offsetParent || document.body
             parent.querySelectorAll('.prosemirror-dropcursor-block, .prosemirror-dropcursor-inline').forEach(el => {
-                el.remove()
+                ; (el as HTMLElement).style.display = 'none'
             })
 
             editorDom.classList.remove('is-dragging')
