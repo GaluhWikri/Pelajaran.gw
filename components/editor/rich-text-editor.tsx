@@ -45,7 +45,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Toggle } from "@/components/ui/toggle"
 import {
     Tooltip,
@@ -58,7 +58,12 @@ const extensions = [
     StarterKit.configure({
         heading: {
             levels: [1, 2, 3]
-        }
+        },
+        dropcursor: {
+            color: '#ffffff',
+            width: 2,
+        },
+        gapcursor: false,
     }),
     Underline,
     Link.configure({
@@ -290,6 +295,7 @@ export function RichTextEditor({ content, onChange, editable = true }: RichTextE
 
     // Use a ref to track if the update comes from the editor itself to prevent loops
     const isInternalUpdate = useState(false)
+    const isDropRefresh = useRef(false)
 
     useEffect(() => {
         setIsMounted(true)
@@ -307,18 +313,58 @@ export function RichTextEditor({ content, onChange, editable = true }: RichTextE
             },
         },
         onUpdate: ({ editor }) => {
-            // isInternalUpdate.current = true
+            if (isDropRefresh.current) return // Skip onChange during drop content refresh
             onChange(editor.getHTML())
-            // setTimeout(() => isInternalUpdate.current = false, 0)
         },
     })
 
-    // Sync external content changes if needed
-    // useEffect(() => {
-    //   if (editor && content !== editor.getHTML() && !isInternalUpdate.current) {
-    //     editor.commands.setContent(content)
-    //   }
-    // }, [content, editor])
+    // Fix: Listen for drop events directly on the editor DOM and force a full content refresh
+    // This fixes the TipTap DragHandle bug where text visually disappears after drag-and-drop
+    useEffect(() => {
+        if (!editor) return
+
+        const editorDom = editor.view.dom
+
+        // Hide the browser's native drag caret during drag
+        const handleDragStart = () => {
+            editorDom.classList.add('is-dragging')
+        }
+
+        const handleDragEnd = () => {
+            editorDom.classList.remove('is-dragging')
+        }
+
+        const handleDrop = () => {
+            // Immediately hide the native browser caret
+            editorDom.classList.remove('is-dragging')
+            editorDom.classList.add('drop-finished')
+
+            // Then refresh content to fix text disappearing bug
+            requestAnimationFrame(() => {
+                if (!editor || editor.isDestroyed) return
+                const currentHTML = editor.getHTML()
+                isDropRefresh.current = true
+                editor.commands.setContent(currentHTML)
+                isDropRefresh.current = false
+                onChange(currentHTML)
+                editor.commands.blur()
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur()
+                }
+                window.getSelection()?.removeAllRanges()
+                editorDom.classList.remove('drop-finished')
+            })
+        }
+
+        editorDom.addEventListener('dragstart', handleDragStart)
+        editorDom.addEventListener('dragend', handleDragEnd)
+        editorDom.addEventListener('drop', handleDrop)
+        return () => {
+            editorDom.removeEventListener('dragstart', handleDragStart)
+            editorDom.removeEventListener('dragend', handleDragEnd)
+            editorDom.removeEventListener('drop', handleDrop)
+        }
+    }, [editor, onChange])
 
     if (!isMounted) return null
 
