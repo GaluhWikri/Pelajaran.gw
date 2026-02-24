@@ -335,9 +335,16 @@ export function RichTextEditor({ content, onChange, editable = true }: RichTextE
         }
 
         const handleDrop = () => {
-            // Immediately hide the native browser caret
+            // Instantly remove the dropcursor element from DOM.
+            // prosemirror-dropcursor appends it to editorDom.offsetParent
+            // with class 'prosemirror-dropcursor-block' or 'prosemirror-dropcursor-inline'.
+            // The plugin itself delays removal by 20ms, but we remove it immediately.
+            const parent = editorDom.offsetParent || document.body
+            parent.querySelectorAll('.prosemirror-dropcursor-block, .prosemirror-dropcursor-inline').forEach(el => {
+                el.remove()
+            })
+
             editorDom.classList.remove('is-dragging')
-            editorDom.classList.add('drop-finished')
 
             // Then refresh content to fix text disappearing bug
             requestAnimationFrame(() => {
@@ -352,7 +359,6 @@ export function RichTextEditor({ content, onChange, editable = true }: RichTextE
                     document.activeElement.blur()
                 }
                 window.getSelection()?.removeAllRanges()
-                editorDom.classList.remove('drop-finished')
             })
         }
 
