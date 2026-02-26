@@ -134,17 +134,18 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex items-center justify-center gap-3 pt-6"
             >
-              <div className="flex -space-x-3">
+              <div className="flex -space-x-4">
                 {[
-                  { letter: "A", bg: "bg-[#5B8C5A]", text: "text-white" },
-                  { letter: "F", bg: "bg-[#3B3B3B]", text: "text-white" },
-                  { letter: "Z", bg: "bg-[#00A99D]", text: "text-white" },
-                  { letter: "A", bg: "bg-[#E8E8E8]", text: "text-gray-700" },
+                  { letter: "G", bg: "bg-[#29170F]", text: "text-white" },
+                  { letter: "A", bg: "bg-[#422216]", text: "text-white" },
+                  { letter: "L", bg: "bg-[#66361E]", text: "text-white" },
+                  { letter: "U", bg: "bg-[#914F2B]", text: "text-white" },
+                  { letter: "H", bg: "bg-[#F58F50]", text: "text-[#29170F]" },
                 ].map((avatar, i) => (
                   <div
                     key={i}
                     className={`h-10 w-10 rounded-full ${avatar.bg} ${avatar.text} flex items-center justify-center text-sm font-bold border-2 border-background shadow-sm`}
-                    style={{ zIndex: 4 - i }}
+                    style={{ zIndex: 5 - i }}
                   >
                     {avatar.letter}
                   </div>
@@ -396,25 +397,20 @@ export default function LandingPage() {
               {
                 id: "item-1",
                 q: "Apa itu Pelajaran.gw?",
-                a: "Pelajaran.gw adalah asisten belajar berbasis AI yang membantu Anda mengubah materi pelajaran (PDF, dokumen, video) menjadi ringkasan interaktif, flashcard, dan kuis secara otomatis. Tujuannya agar proses belajar Anda lebih efisien dan menyenangkan."
+                a: "Pelajaran.gw adalah asisten belajar berbasis AI yang membantu Anda mengubah materi pelajaran (PDF, dokumen, video) menjadi ringkasan interaktif, flashcard, kuis, mind map, podcast secara otomatis. Tujuannya agar proses belajar Anda lebih efisien dan menyenangkan."
               },
               {
                 id: "item-2",
-                q: "Apakah aplikasi ini gratis?",
-                a: "Ya! Pelajaran.gw menyediakan paket gratis yang memungkinkan Anda menggunakan fitur dasar selamanya. Kami juga menawarkan fitur premium bagi pengguna yang membutuhkan kapasitas lebih besar dan fitur AI lanjutan."
-              },
-              {
-                id: "item-3",
                 q: "Bagaimana cara kerjanya?",
                 a: "Cukup upload file materi Anda atau tempel link YouTube. AI kami akan memprosesnya dalam hitungan detik untuk menghasilkan ringkasan lengkap, kartu hafalan (flashcard), dan kuis latihan."
               },
               {
-                id: "item-4",
-                q: "Apakah data saya aman?",
-                a: "Tentu saja. Privasi Anda adalah prioritas kami. Materi yang Anda upload hanya digunakan untuk keperluan belajar Anda sendiri dan tidak dibagikan kepada pihak ketiga."
+                id: "item-3",
+                q: "Berapa lama Proses Generate Materi?",
+                a: "tergantung pada ukuran dan kompleksitas materi yang diupload. Namun, rata-rata proses generate materi memakan waktu sekitar 1-2 menit."
               },
               {
-                id: "item-5",
+                id: "item-4",
                 q: "Format file apa saja yang didukung?",
                 a: "Pelajaran.gw mendukung berbagai format file termasuk PDF, DOCX, PPTX, dan juga link YouTube. Anda dapat mengupload catatan kuliah, slide presentasi, atau bahkan video pembelajaran untuk dirangkum oleh AI kami."
               }
@@ -466,7 +462,7 @@ export default function LandingPage() {
 
             <div className="relative z-10 flex flex-col items-center justify-center text-center p-12 md:p-20 space-y-8">
 
-   
+
 
               {/* Typography */}
               <div className="space-y-6 max-w-3xl">
