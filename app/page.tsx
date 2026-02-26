@@ -100,7 +100,7 @@ export default function LandingPage() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50 text-sm">
               <Sparkles className="h-4 w-4 text-orange-500" />
-              <span>Powered by Gemini AI</span>
+              <span>Didukung oleh Gemini AI</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
