@@ -89,7 +89,7 @@ const MindmapNodeComponent = memo(({ data }: { data: { label: string; level: num
                     // Layout & Stability - Exclusive sizing to prevent conflicts
                     "flex flex-col items-center justify-center text-center",
                     level === 0 ? "w-[280px] min-h-[90px] text-lg rounded-2xl" : "w-[220px] min-h-[70px] text-sm",
-                    "break-words overflow-visible",
+                    "wrap-break-word overflow-visible",
                     // Performance Optimization - Stable 2D Transform
                     "will-change-transform transition-transform duration-200 ease-out",
                     data.isActivePath ? "scale-105 shadow-xl brightness-110 ring-2 ring-white/40" : "hover:scale-105 hover:-translate-y-2 hover:shadow-2xl",

@@ -142,7 +142,7 @@ export default function LandingPage() {
             className="relative transform-style-3d"
           >
             {/* Background glow - only on desktop */}
-            <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-3xl -z-10" />
+            <div className="hidden md:block absolute inset-0 bg-linear-to-r from-orange-500/10 to-orange-600/10 rounded-3xl -z-10" />
 
             {/* Demo Container - Limited size for laptop fit */}
             <div className={`relative rounded-2xl md:rounded-3xl border-4 md:border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-[280px] mx-auto' : ''
@@ -162,7 +162,7 @@ export default function LandingPage() {
               {/* Screenshot/Demo Carousel */}
               <div className="relative bg-background overflow-hidden">
                 {/* Main Image Container - Match actual screenshot aspect ratio */}
-                <div className={`relative w-full ${isMobile ? 'aspect-[390/844]' : 'aspect-[2/1]'}`}>
+                <div className={`relative w-full ${isMobile ? 'aspect-390/844' : 'aspect-2/1'}`}>
                   <AnimatePresence initial={false} custom={currentSlide}>
                     <motion.div
                       key={currentSlide}

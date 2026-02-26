@@ -56,7 +56,7 @@ export function ProcessDemo() {
                     {/* Active Progress Line - Using transform for GPU acceleration */}
                     <div
                         className={cn(
-                            "absolute top-13 left-11 md:left-17 h-0.5 bg-gradient-to-r from-orange-500 to-amber-500 -z-10 -translate-y-1/2 transition-[width] duration-500 ease-out will-change-[width]",
+                            "absolute top-13 left-11 md:left-17 h-0.5 bg-linear-to-r from-orange-500 to-amber-500 -z-10 -translate-y-1/2 transition-[width] duration-500 ease-out will-change-[width]",
                             step === 0 ? "w-0" : step === 1 ? "w-[calc(50%-2.75rem)] md:w-[calc(50%-4.25rem)]" : "w-[calc(100%-5.5rem)] md:w-[calc(100%-8.5rem)]"
                         )}
                     />
@@ -125,7 +125,7 @@ export function ProcessDemo() {
                                     {/* Progress Bar Container - Optimized */}
                                     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden relative">
                                         <motion.div
-                                            className="absolute inset-y-0 left-0 right-0 bg-gradient-to-r from-orange-500 to-orange-300 will-change-transform"
+                                            className="absolute inset-y-0 left-0 right-0 bg-linear-to-r from-orange-500 to-orange-300 will-change-transform"
                                             initial={{ scaleX: 0 }}
                                             animate={{ scaleX: 1 }}
                                             transition={{ duration: 3.5, ease: "easeOut" }}
@@ -172,7 +172,7 @@ export function ProcessDemo() {
                                 </div>
 
                                 <motion.h3
-                                    className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-white mb-2"
+                                    className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-orange-400 to-white mb-2"
                                     animate={{ opacity: [0.7, 1, 0.7] }}
                                     transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                                 >

@@ -627,7 +627,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base flex items-start gap-2 line-clamp-2 md:items-center">
                                 <Volume2 className="h-4 w-4 text-orange-500 mt-1 md:mt-0 shrink-0" />
-                                <span className="break-words">{podcastTitle}</span>
+                                <span className="wrap-break-word">{podcastTitle}</span>
                             </CardTitle>
                             <p className="text-xs text-muted-foreground">
                                 Estimasi durasi: ~{Math.ceil(estimatedDurationValue / 60)} menit

@@ -332,7 +332,7 @@ export function FloatingAudioPlayer() {
                 <div
                     ref={containerRef}
                     className={cn(
-                        "fixed z-[100] bg-background/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl",
+                        "fixed z-100 bg-background/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl",
                         !isDragging && "transition-all duration-200",
                         isDragging && "cursor-grabbing",
                         isExpanded ? "w-80" : "w-72"
