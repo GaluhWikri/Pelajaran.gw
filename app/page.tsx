@@ -58,6 +58,8 @@ export default function LandingPage() {
     { src: "/image/demo desktop/note.png", title: "Smart Notes", description: "Catatan AI yang terstruktur" },
     { src: "/image/demo desktop/flashcard.png", title: "Flashcards", description: "Review cepat dengan flashcard" },
     { src: "/image/demo desktop/quiz.png", title: "Quiz", description: "Test pemahaman Anda" },
+    { src: "/image/demo desktop/mindmap.png", title: "Mind Map", description: "Visualisasikan ide Anda" },
+    { src: "/image/demo desktop/podcast.png", title: "Podcast", description: "Dengarkan materi belajar Anda" },
     { src: "/image/demo desktop/upload.png", title: "Upload", description: "Upload catatan Anda" },
     { src: "/image/demo desktop/leaderboard.png", title: "LeaderBoard", description: "LeaderBoard Anda" },
   ]
