@@ -110,7 +110,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Transform materi belajar Anda menjadi catatan interaktif, flashcard, dan quiz dengan bantuan AI dalam hitungan detik.
+              Transform materi & video belajar Anda menjadi catatan interaktif, ringkasan, flashcard, quiz, mind map,dan podcast dengan bantuan AI dalam hitungan detik.
             </p>
 
             <div className="flex items-center justify-center gap-4 pt-4">
