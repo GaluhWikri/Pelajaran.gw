@@ -132,3 +132,10 @@ export interface Podcast {
   duration?: number
   createdAt: Date
 }
+
+export interface ActivityLogEntry {
+  id: string
+  type: 'note_created' | 'note_edited' | 'flashcard_created' | 'quiz_completed' | 'mindmap_created' | 'mindmap_edited'
+  date: Date       // tanggal activity terjadi
+  noteTitle?: string // judul note sebagai referensi
+}

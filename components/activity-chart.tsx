@@ -9,7 +9,7 @@ import { subDays, format } from "date-fns"
 import { id } from "date-fns/locale"
 
 export function ActivityChart() {
-  const { notes, quizzes, flashcards, studySessions, mindmaps } = useStore()
+  const { notes, quizzes, flashcards, studySessions, mindmaps, activityLog } = useStore()
   const [mounted, setMounted] = useState(false)
   const [timeRange, setTimeRange] = useState("14")
 
@@ -135,8 +135,42 @@ export function ActivityChart() {
       }
     })
 
+    // Count activity log entries (history from deleted notes)
+    // These fill in activity that was lost when notes were deleted
+    activityLog.forEach((log) => {
+      const logDay = getDayItem(log.date)
+      if (logDay) {
+        switch (log.type) {
+          case 'note_created':
+            logDay.notesCount += 1
+            logDay.total += 1
+            break
+          case 'note_edited':
+            logDay.editsCount += 1
+            logDay.total += 1
+            break
+          case 'flashcard_created':
+            logDay.flashcardsCount += 1
+            logDay.total += 1
+            break
+          case 'quiz_completed':
+            logDay.quizzesTakenCount += 1
+            logDay.total += 1
+            break
+          case 'mindmap_created':
+            logDay.mindmapsCreatedCount += 1
+            logDay.total += 1
+            break
+          case 'mindmap_edited':
+            logDay.mindmapsEditedCount += 1
+            logDay.total += 1
+            break
+        }
+      }
+    })
+
     return daysData
-  }, [notes, quizzes, flashcards, studySessions, mindmaps, timeRange])
+  }, [notes, quizzes, flashcards, studySessions, mindmaps, activityLog, timeRange])
 
   if (!mounted) {
     return (

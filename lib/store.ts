@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Note, Flashcard, Quiz, Material, ChatMessage, StudySession, ActivityStats, Mindmap } from "./types"
+import type { Note, Flashcard, Quiz, Material, ChatMessage, StudySession, ActivityStats, Mindmap, ActivityLogEntry } from "./types"
 import { supabase } from "@/lib/supabase"
 
 interface AppState {
@@ -24,6 +24,7 @@ interface AppState {
   materials: Material[]
   chatMessages: ChatMessage[]
   studySessions: StudySession[]
+  activityLog: ActivityLogEntry[]
   mindmaps: Mindmap[]
 
   // UI state
@@ -95,6 +96,9 @@ interface AppState {
   // Actions - Study Sessions
   addStudySession: (session: Omit<StudySession, "id">) => void
 
+  // Actions - Activity Log (persistent history)
+  addActivityLog: (entry: Omit<ActivityLogEntry, "id">) => void
+
   // Actions - Mindmaps
   setMindmaps: (mindmaps: Mindmap[]) => void
   addMindmap: (mindmap: Omit<Mindmap, "id" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: Date; updatedAt?: Date }) => void
@@ -135,6 +139,7 @@ export const useStore = create<AppState>()(
       chatMessages: [],
       mindmaps: [],
       studySessions: [],
+      activityLog: [],
       activeNoteId: null,
       sidebarOpen: true,
       chatPanelOpen: false,
@@ -343,12 +348,57 @@ export const useStore = create<AppState>()(
           notes: state.notes.map((note) => (note.id === id ? { ...note, ...updates, updatedAt: new Date() } : note)),
         })),
 
-      deleteNote: (id) =>
+      deleteNote: (id) => {
+        const state = get()
+        const note = state.notes.find((n) => n.id === id)
+        const noteFlashcards = state.flashcards.filter((c) => c.noteId === id)
+        const noteQuizzes = state.quizzes.filter((q) => q.noteId === id)
+        const noteMindmaps = state.mindmaps.filter((m) => m.noteId === id)
+
+        // Snapshot activity dates into permanent log before deletion
+        const logEntries: Omit<ActivityLogEntry, "id">[] = []
+
+        if (note) {
+          logEntries.push({ type: 'note_created', date: new Date(note.createdAt), noteTitle: note.title })
+          // If updated on a different day than created, log the edit too
+          const createdStr = new Date(note.createdAt).toLocaleDateString('en-CA')
+          const updatedStr = new Date(note.updatedAt).toLocaleDateString('en-CA')
+          if (createdStr !== updatedStr) {
+            logEntries.push({ type: 'note_edited', date: new Date(note.updatedAt), noteTitle: note.title })
+          }
+        }
+
+        noteFlashcards.forEach((card) => {
+          logEntries.push({ type: 'flashcard_created', date: new Date(card.createdAt), noteTitle: note?.title })
+        })
+
+        noteQuizzes.forEach((quiz) => {
+          if (quiz.completedAt) {
+            logEntries.push({ type: 'quiz_completed', date: new Date(quiz.completedAt), noteTitle: note?.title })
+          }
+        })
+
+        noteMindmaps.forEach((mindmap) => {
+          logEntries.push({ type: 'mindmap_created', date: new Date(mindmap.createdAt), noteTitle: note?.title })
+          if (mindmap.updatedAt) {
+            const createdTime = new Date(mindmap.createdAt).getTime()
+            const updatedTime = new Date(mindmap.updatedAt).getTime()
+            if (updatedTime - createdTime > 60 * 1000) {
+              logEntries.push({ type: 'mindmap_edited', date: new Date(mindmap.updatedAt), noteTitle: note?.title })
+            }
+          }
+        })
+
+        // Add all log entries
+        logEntries.forEach((entry) => get().addActivityLog(entry))
+
+        // Now remove the data
         set((state) => ({
           notes: state.notes.filter((note) => note.id !== id),
           flashcards: state.flashcards.filter((card) => card.noteId !== id),
           quizzes: state.quizzes.filter((quiz) => quiz.noteId !== id),
-        })),
+        }))
+      },
 
       setActiveNote: (id) => set({ activeNoteId: id }),
 
@@ -504,6 +554,18 @@ export const useStore = create<AppState>()(
           ],
         })),
 
+      // Activity Log (persistent history — survives note deletion)
+      addActivityLog: (entry) =>
+        set((state) => ({
+          activityLog: [
+            ...state.activityLog,
+            {
+              ...entry,
+              id: Math.random().toString(36).substring(7),
+            },
+          ],
+        })),
+
       // Mindmaps actions
       setMindmaps: (mindmaps) => set({ mindmaps }),
 
@@ -631,6 +693,7 @@ export const useStore = create<AppState>()(
         materials: [],
         chatMessages: [],
         studySessions: [],
+        activityLog: [],
         mindmaps: [],
         activeNoteId: null,
         sidebarOpen: true,
@@ -700,6 +763,8 @@ export const useStore = create<AppState>()(
           addDate(m.createdAt)
           addDate(m.updatedAt)
         })
+        // Include persistent activity log (history from deleted notes)
+        state.activityLog.forEach(log => addDate(log.date))
 
         const sortedDates = Array.from(activityDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
 
@@ -787,6 +852,7 @@ export const useStore = create<AppState>()(
           materials: state.materials,
           chatMessages: state.chatMessages,
           studySessions: state.studySessions,
+          activityLog: state.activityLog,
           mindmaps: state.mindmaps,
           activeNoteId: state.activeNoteId,
           sidebarOpen: state.sidebarOpen,
