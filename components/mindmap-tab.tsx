@@ -626,87 +626,75 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
                     ? "fixed inset-0 z-50 h-screen animate-out fade-out"
                     : "h-full"
         )}>
-            {/* Header with reduced padding */}
-            <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b">
-                <div>
-                    <h3 className="text-lg font-semibold leading-none">Mindmap</h3>
-                </div>
+            {/* ===== DESKTOP Header (md+): single row, original layout ===== */}
+            <div className="hidden md:flex items-center justify-between px-6 py-3 border-b">
+                <h3 className="text-lg font-semibold leading-none">Mindmap</h3>
                 <div className="flex gap-2">
                     {hasMindmap && (
                         <>
-                            {/* Undo/Redo/Fullscreen Buttons */}
                             <div className="flex gap-1">
-                                <Button
-                                    onClick={handleUndo}
-                                    disabled={!canUndo}
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    title="Undo (Batalkan drag terakhir)"
-                                >
+                                <Button onClick={handleUndo} disabled={!canUndo} variant="outline" size="sm" className="h-8 w-8 p-0" title="Undo (Batalkan drag terakhir)">
                                     <Undo2 className="h-3.5 w-3.5" />
                                 </Button>
-                                <Button
-                                    onClick={handleRedo}
-                                    disabled={!canRedo}
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    title="Redo (Ulangi drag yang dibatalkan)"
-                                >
+                                <Button onClick={handleRedo} disabled={!canRedo} variant="outline" size="sm" className="h-8 w-8 p-0" title="Redo (Ulangi drag yang dibatalkan)">
                                     <Redo2 className="h-3.5 w-3.5" />
                                 </Button>
-                                <Button
-                                    onClick={toggleFullscreen}
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
-                                >
-                                    {isFullscreen ? (
-                                        <Minimize2 className="h-3.5 w-3.5" />
-                                    ) : (
-                                        <Maximize2 className="h-3.5 w-3.5" />
-                                    )}
+                                <Button onClick={toggleFullscreen} variant="outline" size="sm" className="h-8 w-8 p-0" title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}>
+                                    {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
                                 </Button>
                             </div>
-                            <Button
-                                onClick={handleResetLayout}
-                                variant="outline"
-                                size="sm"
-                                className="h-8 gap-2"
-                                title="Reset posisi node ke layout asli"
-                            >
+                            <Button onClick={handleResetLayout} variant="outline" size="sm" className="h-8 gap-2" title="Reset posisi node ke layout asli">
                                 <LayoutGrid className="h-3.5 w-3.5" />
                                 Reset Layout
                             </Button>
                         </>
                     )}
-                    <Button
-                        onClick={handleGenerateMindmap}
-                        disabled={isGenerating}
-                        variant={hasMindmap ? "outline" : "default"}
-                        className="h-8 gap-2"
-                        size="sm"
-                    >
+                    <Button onClick={handleGenerateMindmap} disabled={isGenerating} variant={hasMindmap ? "outline" : "default"} className="h-8 gap-2" size="sm">
                         {isGenerating ? (
-                            <>
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                Generating...
-                            </>
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" />Generating...</>
                         ) : hasMindmap ? (
-                            <>
-                                <RefreshCw className="h-3.5 w-3.5" />
-                                Regenerate
-                            </>
+                            <><RefreshCw className="h-3.5 w-3.5" />Regenerate</>
                         ) : (
-                            <>
-                                <Sparkles className="h-3.5 w-3.5" />
-                                Generate Mindmap
-                            </>
+                            <><Sparkles className="h-3.5 w-3.5" />Generate Mindmap</>
                         )}
                     </Button>
                 </div>
+            </div>
+
+            {/* ===== MOBILE Header (<md): two-row layout ===== */}
+            <div className="flex flex-col gap-2 px-4 py-3 border-b md:hidden">
+                {/* Row 1: Title + Generate/Regenerate */}
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold leading-none">Mindmap</h3>
+                    <Button onClick={handleGenerateMindmap} disabled={isGenerating} variant={hasMindmap ? "outline" : "default"} className="h-8 gap-1.5" size="sm">
+                        {isGenerating ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="sr-only">Generating</span>...</>
+                        ) : hasMindmap ? (
+                            <><RefreshCw className="h-3.5 w-3.5" />Regenerate</>
+                        ) : (
+                            <><Sparkles className="h-3.5 w-3.5" />Generate</>
+                        )}
+                    </Button>
+                </div>
+                {/* Row 2: Tool buttons */}
+                {hasMindmap && (
+                    <div className="flex items-center gap-1.5">
+                        <Button onClick={handleUndo} disabled={!canUndo} variant="outline" size="sm" className="h-8 w-8 p-0 shrink-0" title="Undo">
+                            <Undo2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button onClick={handleRedo} disabled={!canRedo} variant="outline" size="sm" className="h-8 w-8 p-0 shrink-0" title="Redo">
+                            <Redo2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button onClick={toggleFullscreen} variant="outline" size="sm" className="h-8 w-8 p-0 shrink-0" title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}>
+                            {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                        </Button>
+                        <div className="w-px h-5 bg-border shrink-0 mx-0.5" />
+                        <Button onClick={handleResetLayout} variant="outline" size="sm" className="h-8 gap-1.5 shrink-0" title="Reset Layout">
+                            <LayoutGrid className="h-3.5 w-3.5" />
+                            Reset Layout
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {
