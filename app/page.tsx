@@ -100,7 +100,7 @@ export default function LandingPage() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50 text-sm">
               <Sparkles className="h-4 w-4 text-orange-500" />
-              <span>Powered by AI</span>
+              <span>Powered by Gemini AI</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
@@ -126,6 +126,34 @@ export default function LandingPage() {
                 Lihat Demo
               </Button>
             </div>
+
+            {/* Social Proof */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex items-center justify-center gap-3 pt-6"
+            >
+              <div className="flex -space-x-3">
+                {[
+                  { letter: "A", bg: "bg-[#5B8C5A]", text: "text-white" },
+                  { letter: "F", bg: "bg-[#3B3B3B]", text: "text-white" },
+                  { letter: "Z", bg: "bg-[#00A99D]", text: "text-white" },
+                  { letter: "A", bg: "bg-[#E8E8E8]", text: "text-gray-700" },
+                ].map((avatar, i) => (
+                  <div
+                    key={i}
+                    className={`h-10 w-10 rounded-full ${avatar.bg} ${avatar.text} flex items-center justify-center text-sm font-bold border-2 border-background shadow-sm`}
+                    style={{ zIndex: 4 - i }}
+                  >
+                    {avatar.letter}
+                  </div>
+                ))}
+              </div>
+              <span className="text-muted-foreground font-medium">
+                Loved by <span className="text-foreground font-bold">2,000,000+</span> learners
+              </span>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -423,7 +451,6 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      {/* CTA Section */}
       <section className="py-16 md:py-24 px-4 relative">
         <div className="container mx-auto max-w-5xl">
           <motion.div
@@ -439,11 +466,7 @@ export default function LandingPage() {
 
             <div className="relative z-10 flex flex-col items-center justify-center text-center p-12 md:p-20 space-y-8">
 
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 backdrop-blur-md border border-orange-500/20 text-orange-600 dark:text-orange-400 font-medium shadow-inner">
-                <Sparkles className="h-4 w-4 text-orange-500 fill-orange-500" />
-                <span className="text-sm">Teknologi AI Terbaru 2025</span>
-              </div>
+   
 
               {/* Typography */}
               <div className="space-y-6 max-w-3xl">
@@ -463,7 +486,7 @@ export default function LandingPage() {
                     size="lg"
                     className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg h-14 px-10 rounded-full shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-300"
                   >
-                    Mulai Gratis Sekarang
+                    Mulai Sekarang
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
