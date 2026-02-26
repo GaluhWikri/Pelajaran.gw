@@ -152,7 +152,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <span className="text-muted-foreground font-medium">
-                Disukai oleh lebih dari<span className="text-foreground font-bold">2,000,000+</span> Pelajar
+                Disukai oleh lebih dari <span className="text-foreground font-bold">2,000,000+</span> Pelajar
               </span>
             </motion.div>
           </motion.div>
