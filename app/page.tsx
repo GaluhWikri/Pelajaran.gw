@@ -116,7 +116,7 @@ export default function LandingPage() {
             <div className="flex items-center justify-center gap-4 pt-4">
               <Link href="/register">
                 <Button size="lg" className="gap-2 text-lg h-12 px-8">
-                  Coba Sekarang
+                  Mulai Belajar
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
