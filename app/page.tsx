@@ -484,7 +484,7 @@ export default function LandingPage() {
                     size="lg"
                     className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg h-14 px-10 rounded-full shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-300"
                   >
-                    Mulai Sekarang
+                    Mulai Belajar
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
