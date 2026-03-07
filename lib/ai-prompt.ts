@@ -345,10 +345,16 @@ ATURAN DIALOG:
 2. Gunakan bahasa Indonesia yang casual tapi tetap informatif
 3. Dialog LANGSUNG masuk ke topik utama tanpa sapaan pembuka atau perkenalan podcast
 4. Host A memulai dengan pertanyaan atau pernyataan pemantik yang jelas dan to the point
-5. Host B memberikan penjelasan, Host A memberi respons atau pertanyaan lanjutan
+5. Host B memberikan penjelasan DETAIL (MINIMAL 2-3 kalimat per respons), Host A memberi respons atau pertanyaan lanjutan
 6. Sertakan reaksi natural seperti "Wah menarik!", "Oh jadi begitu...", "Hmm, aku baru tahu"
 7. Akhiri dengan kesimpulan singkat(boleh berupa rangkuman atau insight utama), tanpa perlu salam penutup panjang
-8. Total 8–16 dialog exchanges agar durasi ~3–5 menit
+8. Total MINIMAL 18 dan MAKSIMAL 25 dialog exchanges agar durasi mencapai 3-5 menit
+
+ATURAN DURASI (SANGAT PENTING):
+- WAJIB menghasilkan MINIMAL 18 dialog exchanges. Kurang dari 18 TIDAK DITERIMA.
+- Setiap respons Host B (Karin) harus ELABORATIF: minimal 2-3 kalimat penjelasan, bukan hanya 1 kalimat singkat.
+- Host A (Galuh) boleh memberi respons pendek (1 kalimat) atau pertanyaan lanjutan.
+- Bahas SEMUA poin penting dari materi secara mendalam, jangan hanya menyentuh permukaan.
 
 PANDUAN KONTEN:
 - Gunakan SEMUA informasi penting dari materi yang diberikan
@@ -362,7 +368,7 @@ FORMAT OUTPUT(JSON Valid):
   "title": "Judul episode podcast yang menarik",
     "dialogues": [
       { "speaker": "A", "text": "Kenapa banyak orang masih salah paham soal konsep ini, padahal dampaknya besar banget?" },
-      { "speaker": "B", "text": "Itu karena konsep ini sering dijelasin terlalu teknis. Padahal kalau kita sederhanakan..." }
+      { "speaker": "B", "text": "Itu karena konsep ini sering dijelasin terlalu teknis. Padahal kalau kita sederhanakan, sebenarnya ide dasarnya cukup simpel. Jadi begini, intinya adalah..." }
     ]
 }
 `

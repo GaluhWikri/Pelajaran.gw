@@ -14,54 +14,6 @@ const VOICES = {
 }
 
 /**
- * Generate speech audio using Gemini TTS (Single Utterance)
- * Used as a fallback or for individual lines if needed
- */
-export async function textToSpeech(
-    text: string,
-    voice: "male" | "female"
-): Promise<Blob> {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
-    if (!apiKey) {
-        throw new Error("Gemini API key not configured")
-    }
-
-    const ai = new GoogleGenAI({ apiKey })
-    const voiceName = VOICES[voice]
-
-    console.log(`[TTS] Generating audio for: "${text.substring(0, 30)}..." with voice: ${voiceName}`)
-
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro-preview-tts",
-        contents: [{ parts: [{ text }] }],
-        config: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-                voiceConfig: {
-                    prebuiltVoiceConfig: {
-                        voiceName: voiceName
-                    }
-                }
-            }
-        }
-    })
-
-    const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
-
-    if (!audioData) {
-        throw new Error("No audio generated from Gemini TTS")
-    }
-
-    // Convert base64 to Blob
-    const audioBuffer = Uint8Array.from(atob(audioData), c => c.charCodeAt(0))
-
-    // Create WAV blob from PCM data
-    const wavBlob = createWavBlob(audioBuffer, 24000, 1, 16)
-
-    return wavBlob
-}
-
-/**
  * Generate speech audio for a batch of dialogues using Multi-Speaker TTS
  * Returns raw PCM and sample rate
  */
@@ -73,8 +25,8 @@ async function generateRawAudioMultiSpeaker(
 
     const ai = new GoogleGenAI({ apiKey })
 
-    // Construct conversation text
-    let conversationText = "TTS the following conversation between Galuh and Kq:\n\n"
+    // Construct conversation text with explicit verbatim instruction
+    let conversationText = "Read the following conversation between Galuh and Karin EXACTLY as written, word for word. Do not add, remove, or change any words:\n\n"
     dialogues.forEach(d => {
         const speakerName = d.speaker === "A" ? "Galuh" : "Karin"
         conversationText += `${speakerName}: ${d.text}\n`
@@ -110,91 +62,60 @@ async function generateRawAudioMultiSpeaker(
 }
 
 /**
- * Generate complete podcast audio from dialogues with optimized chunking
- * Balances rate limits (few requests) with sync accuracy (anchored every chunk)
+ * Generate complete podcast audio from ALL dialogues in a SINGLE TTS request.
+ * Total per podcast: 1 script request + 1 TTS request = 2 requests.
+ * 
+ * Note: Dialogue highlight timestamps are proportional estimates.
+ * Perfect sync would require 1 TTS request per dialogue (20+ requests).
  */
 export async function generatePodcastAudio(
     dialogues: PodcastDialogue[],
     onProgress?: (current: number, total: number) => void
-): Promise<{ audioBlob: Blob, dialogues: PodcastDialogue[] }> {
-    // SINGLE REQUEST MODE:
-    // BATCH_SIZE = 100 generates all dialogues at once.
-    // - Pros: Only 1 API request per podcast (saves quota)
-    // - Cons: Sync may drift 1-2 seconds over long audio
-    // User accepted this trade-off for quota efficiency.
-    const BATCH_SIZE = 100
+): Promise<{ audioBlob: Blob, dialogues: PodcastDialogue[], actualDuration: number }> {
     const updatedDialogues = [...dialogues]
-    const pcmChunks: Uint8Array[] = []
 
-    let currentTimestamp = 0
-    let processedCount = 0
+    onProgress?.(0, dialogues.length)
 
-    // Process in chunks
-    for (let i = 0; i < dialogues.length; i += BATCH_SIZE) {
-        const batch = dialogues.slice(i, i + BATCH_SIZE)
+    try {
+        // Single TTS request for ALL dialogues
+        const { pcm, sampleRate } = await generateRawAudioMultiSpeaker(dialogues)
 
-        try {
-            // Generate audio for the whole batch (1 request)
-            const { pcm, sampleRate } = await generateRawAudioMultiSpeaker(batch)
+        // Calculate actual audio duration from PCM data (24kHz, 1ch, 16-bit)
+        const totalDuration = pcm.length / (sampleRate * 1 * 2)
 
-            // Current chunk duration
-            const chunkDuration = pcm.length / (sampleRate * 1 * 2) // 1 channel, 16-bit
+        console.log(`[TTS] Generated ${totalDuration.toFixed(1)}s audio for ${dialogues.length} dialogues in 1 request`)
 
-            // Distribute duration to lines based on text length ratios
-            // This is "Smart Estimation" - accurate per-chunk, estimated per-line
-            const totalChars = batch.reduce((sum, d) => sum + d.text.length, 0)
+        // Distribute timestamps proportionally (approximate, not exact)
+        const PAUSE_WEIGHT = 15
+        const weights = dialogues.map(d => d.text.length + PAUSE_WEIGHT)
+        const totalWeight = weights.reduce((sum, w) => sum + w, 0)
 
-            let batchTimeOffset = 0
+        let currentTimestamp = 0
+        dialogues.forEach((d, index) => {
+            const ratio = weights[index] / totalWeight
+            const dialogueDuration = totalDuration * ratio
 
-            batch.forEach((d, index) => {
-                const globalIndex = i + index
-                const ratio = d.text.length / totalChars
+            updatedDialogues[index].timestamp = currentTimestamp
+            updatedDialogues[index].audioDuration = dialogueDuration
 
-                // Assign provisional duration
-                const duration = chunkDuration * ratio
+            currentTimestamp += dialogueDuration
+        })
 
-                updatedDialogues[globalIndex].timestamp = currentTimestamp + batchTimeOffset
-                updatedDialogues[globalIndex].audioDuration = duration
+        onProgress?.(dialogues.length, dialogues.length)
 
-                batchTimeOffset += duration
-            })
+        // Create WAV blob (24kHz, 1 channel, 16-bit)
+        const wavBlob = createWavBlob(pcm, 24000, 1, 16)
 
-            pcmChunks.push(pcm)
-            currentTimestamp += chunkDuration
+        return { audioBlob: wavBlob, dialogues: updatedDialogues, actualDuration: totalDuration }
 
-            processedCount += batch.length
-            onProgress?.(processedCount, dialogues.length)
+    } catch (err: any) {
+        console.error(`Error generating podcast audio:`, err)
 
-            // Polite delay to avoid burst limits
-            // 3 RPM = 1 request per 20s. We wait 20s between batches.
-            if (i + BATCH_SIZE < dialogues.length) {
-                await new Promise(resolve => setTimeout(resolve, 20000))
-            }
-
-        } catch (err: any) {
-            console.error(`Error generating chunk starting at ${i}:`, err)
-
-            // Handle Limit Error with clearer message
-            if (err.message.includes("429") || err.message.includes("quota")) {
-                throw new Error("Limit Audio Tercapai. Coba kurangi panjang materi atau tunggu sebentar.")
-            }
-            throw err
+        if (err.message.includes("429") || err.message.includes("quota")) {
+            throw new Error("Limit Audio Tercapai. Coba kurangi panjang materi atau tunggu sebentar.")
         }
+        throw err
     }
-
-    // Concatenate all PCM chunks
-    const totalLength = pcmChunks.reduce((acc, chunk) => acc + chunk.length, 0)
-    const combinedPCM = new Uint8Array(totalLength)
-    let offset = 0
-    pcmChunks.forEach(chunk => {
-        combinedPCM.set(chunk, offset)
-        offset += chunk.length
-    })
-
-    // Create final WAV blob (24kHz, 1 channel, 16-bit)
-    const wavBlob = createWavBlob(combinedPCM, 24000, 1, 16)
-
-    return { audioBlob: wavBlob, dialogues: updatedDialogues }
 }
 
 /**

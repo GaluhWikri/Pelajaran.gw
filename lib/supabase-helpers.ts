@@ -370,7 +370,7 @@ export async function uploadPodcastAudio(
     audioBlob: Blob
 ): Promise<{ url: string | null; error: any }> {
     try {
-        const fileName = `${userId}/${noteId}.mp3`
+        const fileName = `${userId}/${noteId}.wav`
 
         console.log('Uploading podcast audio:', fileName)
 
@@ -378,7 +378,7 @@ export async function uploadPodcastAudio(
         const { error: uploadError } = await supabase.storage
             .from('podcasts')
             .upload(fileName, audioBlob, {
-                contentType: 'audio/mpeg',
+                contentType: 'audio/wav',
                 upsert: true,
             })
 
@@ -406,7 +406,7 @@ export async function uploadPodcastAudio(
 export async function deletePodcastFromSupabase(podcastId: string, userId: string, noteId: string) {
     try {
         // Delete audio from storage
-        const fileName = `${userId}/${noteId}.mp3`
+        const fileName = `${userId}/${noteId}.wav`
         await supabase.storage
             .from('podcasts')
             .remove([fileName])

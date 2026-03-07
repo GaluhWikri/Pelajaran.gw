@@ -221,6 +221,9 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                     setPodcastId(data.id)
                     setPodcastTitle(data.title)
                     setDialogues(data.dialogues as PodcastDialogue[])
+                    if (data.duration) {
+                        setDuration(data.duration)
+                    }
                     if (data.audio_url) {
                         setAudioUrl(data.audio_url)
                     }
@@ -264,13 +267,15 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
         const hasTimestamps = dialogues.some(d => d.timestamp !== undefined)
 
         if (hasTimestamps) {
-            // Find dialogue matching current time
-            const index = dialogues.findIndex(d => {
-                const start = d.timestamp || 0
-                const end = start + (d.audioDuration || 0)
-                // Add specific buffer to end to prevent early switching
-                return currentTime >= start && currentTime < end
-            })
+            // Find the LAST dialogue whose audio has clearly started
+            let index = 0 // Default to first dialogue
+            for (let i = dialogues.length - 1; i >= 0; i--) {
+                const start = dialogues[i].timestamp || 0
+                if (currentTime >= start) {
+                    index = i
+                    break
+                }
+            }
 
             if (index !== -1 && activeDialogueIndex !== index) {
                 setActiveDialogueIndex(index)
@@ -343,8 +348,8 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
             setGenerationProgress({ current: 0, total: generatedDialogues.length })
 
             try {
-                // generatePodcastAudio now returns object with blob and updated dialogues with timestamps
-                const { audioBlob, dialogues: dialoguesWithTimestamps } = await generatePodcastAudio(generatedDialogues, (current, total) => {
+                // generatePodcastAudio returns blob, timestamped dialogues, and actual PCM duration
+                const { audioBlob, dialogues: dialoguesWithTimestamps, actualDuration } = await generatePodcastAudio(generatedDialogues, (current, total) => {
                     setGenerationProgress({ current, total })
                 })
 
@@ -354,6 +359,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                 // Generate local URL for immediate playback
                 const localUrl = createAudioUrl(audioBlob)
                 setAudioUrl(uploadedUrl || localUrl)
+                setDuration(actualDuration) // Set actual duration immediately
 
                 // Update local state with timestamped dialogues
                 setDialogues(dialoguesWithTimestamps)
@@ -367,7 +373,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                     title,
                     dialogues: dialoguesWithTimestamps,
                     audioUrl: uploadedUrl || undefined,
-                    duration: estimateDuration(generatedDialogues),
+                    duration: Math.round(actualDuration),
                 })
             } catch (audioError: any) {
                 console.error("Audio generation failed:", audioError)
@@ -502,7 +508,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
     }
 
     const hasContent = noteContent && noteContent.trim().length > 0
-    const estimatedDurationValue = dialogues.length > 0 ? estimateDuration(dialogues) : 0
+    const estimatedDurationValue = duration > 0 ? duration : (dialogues.length > 0 ? estimateDuration(dialogues) : 0)
     const isProcessing = isGeneratingScript || isGeneratingAudio || isSaving
 
     // Loading state
@@ -630,13 +636,12 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                                 <span className="wrap-break-word">{podcastTitle}</span>
                             </CardTitle>
                             <p className="text-xs text-muted-foreground">
-                                Estimasi durasi: ~{Math.ceil(estimatedDurationValue / 60)} menit
+                                Durasi: {duration > 0 ? formatTime(duration) : `~${Math.ceil(estimatedDurationValue / 60)} menit`}
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {/* Hidden audio element */}
-                            {/* Hidden audio element - ONLY render if not handled by global player */}
-                            {audioUrl && (globalAudioNoteId !== noteId) && (
+                            {audioUrl && (
                                 <audio
                                     ref={audioRef}
                                     src={audioUrl}
@@ -802,9 +807,72 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                                                             {isHostA ? "Galuh" : "Karin"}
                                                         </span>
                                                     </div>
-                                                    <p className="text-sm leading-relaxed text-foreground pl-4">
-                                                        {dialogue.text}
-                                                    </p>
+                                                    {(() => {
+                                                        // Fallback for non-active or unmeasured dialogues
+                                                        if (activeDialogueIndex !== index || dialogue.timestamp === undefined || !dialogue.audioDuration || dialogue.audioDuration <= 0) {
+                                                            return (
+                                                                <p className="text-sm leading-relaxed text-foreground pl-4">
+                                                                    {dialogue.text}
+                                                                </p>
+                                                            );
+                                                        }
+
+                                                        // Calculate progress
+                                                        const progressInDialogue = Math.max(0, currentTime - dialogue.timestamp) / dialogue.audioDuration;
+                                                        const clampedProgress = Math.min(1, Math.max(0, progressInDialogue));
+
+                                                        // Words splitting
+                                                        const words = dialogue.text.split(" ");
+
+                                                        // Calculate true total weight of the string
+                                                        let totalWeightedChars = 0;
+                                                        const wordWeights = words.map(word => {
+                                                            const hasPunctuation = /[.,?!]/.test(word);
+                                                            // Base length + 4 for punctuation + 1 for space
+                                                            const weight = word.length + (hasPunctuation ? 4 : 0) + 1;
+                                                            totalWeightedChars += weight;
+                                                            return weight;
+                                                        });
+
+                                                        // Adjust for the trailing silence space (TTS adds ~15 chars worth of pause after sentences)
+                                                        const totalDurationWeight = totalWeightedChars + 15;
+                                                        const adjustedProgress = Math.min(1, clampedProgress);
+
+                                                        let cumulativeWeight = 0;
+
+                                                        return (
+                                                            <p className="text-sm leading-relaxed text-foreground pl-4">
+                                                                {words.map((word, wIndex) => {
+                                                                    const currentWordWeight = wordWeights[wIndex];
+                                                                    const wordStartRatio = cumulativeWeight / totalDurationWeight;
+
+                                                                    cumulativeWeight += currentWordWeight;
+                                                                    const wordEndRatio = cumulativeWeight / totalDurationWeight;
+
+                                                                    const isActiveWord = adjustedProgress >= wordStartRatio && adjustedProgress < wordEndRatio;
+                                                                    const isPast = adjustedProgress >= wordEndRatio;
+
+                                                                    return (
+                                                                        <span key={wIndex}>
+                                                                            <span
+                                                                                className={cn(
+                                                                                    "transition-colors duration-150 rounded-sm px-[2px] py-px",
+                                                                                    isActiveWord
+                                                                                        ? "text-orange-700 dark:text-orange-300 font-medium bg-orange-500/20"
+                                                                                        : isPast
+                                                                                            ? "text-foreground"
+                                                                                            : "text-foreground/50"
+                                                                                )}
+                                                                            >
+                                                                                {word}
+                                                                            </span>
+                                                                            {wIndex < words.length - 1 ? " " : ""}
+                                                                        </span>
+                                                                    );
+                                                                })}
+                                                            </p>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
                                         )
