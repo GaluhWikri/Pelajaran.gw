@@ -122,6 +122,7 @@ export default function DashboardPage() {
               content: note.content,
               tags: note.tags || [],
               isFavorite: note.is_favorite || false,
+              materialId: note.material_id, // Add this line
               createdAt: new Date(note.created_at),
               updatedAt: new Date(note.updated_at),
               lastAccessedAt: lastAccessedAt
@@ -191,6 +192,27 @@ export default function DashboardPage() {
           })))
         } else {
           useStore.getState().setMindmaps([])
+        }
+
+        // Fetch materials
+        const { data: materialsData } = await supabase
+          .from('materials')
+          .select('*')
+          .eq('user_id', user.id)
+
+        if (materialsData) {
+          useStore.getState().setMaterials(materialsData.map((material) => ({
+            id: material.id,
+            userId: material.user_id,
+            title: material.title,
+            type: material.type,
+            fileUrl: material.file_url,
+            fileName: material.file_name,
+            fileSize: material.file_size,
+            uploadedAt: new Date(material.created_at),
+          })))
+        } else {
+          useStore.getState().setMaterials([])
         }
 
         // 3. LOGIC: Calculate Streak & Daily Login AFTER content is loaded

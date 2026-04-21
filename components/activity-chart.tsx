@@ -9,7 +9,7 @@ import { subDays, format } from "date-fns"
 import { id } from "date-fns/locale"
 
 export function ActivityChart() {
-  const { notes, quizzes, flashcards, studySessions, mindmaps, activityLog } = useStore()
+  const { notes, quizzes, flashcards, studySessions, mindmaps, activityLog, materials } = useStore()
   const [mounted, setMounted] = useState(false)
   const [timeRange, setTimeRange] = useState("14")
 
@@ -135,6 +135,25 @@ export function ActivityChart() {
       }
     })
 
+    // Count material uploads (merged into Notes Created based on user request)
+    materials.forEach((material) => {
+      const uploadDay = getDayItem(material.uploadedAt)
+      if (uploadDay) {
+        // Prevent double counting if the note still exists
+        const hasDoubleCounted = notes.some(n => 
+          n.materialId === material.id && 
+          format(new Date(n.createdAt), "yyyy-MM-dd") === format(new Date(material.uploadedAt), "yyyy-MM-dd")
+        )
+
+        // Only count the material as a "note created" if the note itself was deleted
+        // or wasn't tracked by the notes map on that specific day
+        if (!hasDoubleCounted) {
+          uploadDay.notesCount += 1
+          uploadDay.total += 1
+        }
+      }
+    })
+
     // Count activity log entries (history from deleted notes)
     // These fill in activity that was lost when notes were deleted
     activityLog.forEach((log) => {
@@ -170,7 +189,7 @@ export function ActivityChart() {
     })
 
     return daysData
-  }, [notes, quizzes, flashcards, studySessions, mindmaps, activityLog, timeRange])
+  }, [notes, quizzes, flashcards, studySessions, mindmaps, activityLog, materials, timeRange])
 
   if (!mounted) {
     return (

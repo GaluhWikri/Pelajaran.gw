@@ -86,6 +86,7 @@ interface AppState {
   deleteQuiz: (id: string) => void
 
   // Actions - Materials
+  setMaterials: (materials: Material[]) => void
   addMaterial: (material: Omit<Material, "id" | "uploadedAt"> & { id?: string }) => void
   deleteMaterial: (id: string) => void
 
@@ -510,6 +511,7 @@ export const useStore = create<AppState>()(
         })),
 
       // Materials actions
+      setMaterials: (materials) => set({ materials }),
       addMaterial: (material) =>
         set((state) => ({
           materials: [
@@ -763,7 +765,13 @@ export const useStore = create<AppState>()(
           addDate(m.createdAt)
           addDate(m.updatedAt)
         })
-        // Include persistent activity log (history from deleted notes)
+        // Track material uploads (so even if note is deleted, the upload activity survives!)
+        state.materials.forEach(m => {
+          if (m.uploadedAt) {
+            addDate(m.uploadedAt)
+          }
+        })
+        // Include persistent activity log (history from deleted notes locally)
         state.activityLog.forEach(log => addDate(log.date))
 
         const sortedDates = Array.from(activityDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
