@@ -23,6 +23,7 @@ export async function saveNoteToSupabase(note: Partial<Note> & { userId: string 
                 content: note.content || '',
                 tags: note.tags || [],
                 is_favorite: note.isFavorite || false,
+                material_id: note.materialId || null,
                 updated_at: new Date().toISOString(),
             })
             .select()
@@ -426,6 +427,93 @@ export async function deletePodcastFromSupabase(podcastId: string, userId: strin
     } catch (error) {
         console.error('Failed to delete podcast:', error)
         return { error }
+    }
+}
+
+// ============================================================================
+// MATERIALS FUNCTIONS
+// ============================================================================
+
+/**
+ * Upload material file (PDF, Video, Audio) to Supabase Storage
+ * Returns the public URL of the uploaded file
+ */
+export async function uploadMaterialToStorage(
+    userId: string,
+    file: File
+): Promise<{ url: string | null; error: any }> {
+    try {
+        // Create unique filename to prevent overwrites
+        const fileExt = file.name.split('.').pop()
+        const uniqueId = crypto.randomUUID()
+        const fileName = `${userId}/${uniqueId}.${fileExt}`
+
+        console.log('Uploading material to storage:', fileName)
+
+        // Upload to storage bucket
+        const { error: uploadError } = await supabase.storage
+            .from('materials')
+            .upload(fileName, file, {
+                upsert: false,
+            })
+
+        if (uploadError) {
+            console.error('Error uploading material:', uploadError)
+            throw uploadError
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+            .from('materials')
+            .getPublicUrl(fileName)
+
+        console.log('Material uploaded successfully:', urlData.publicUrl)
+        return { url: urlData.publicUrl, error: null }
+    } catch (error: any) {
+        console.error('Failed to upload material:', error)
+        return { url: null, error }
+    }
+}
+
+/**
+ * Save material metadata to Supabase database
+ */
+export async function saveMaterialToSupabase(material: {
+    id: string
+    userId: string
+    title: string
+    type: string
+    fileUrl: string
+    fileName: string
+    fileSize: number
+}) {
+    try {
+        console.log('Saving material metadata:', material.id)
+
+        const { data, error } = await supabase
+            .from('materials')
+            .upsert({
+                id: material.id,
+                user_id: material.userId,
+                title: material.title,
+                type: material.type,
+                file_url: material.fileUrl,
+                file_name: material.fileName,
+                file_size: material.fileSize,
+            })
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Error saving material:', error)
+            throw error
+        }
+
+        console.log('Material saved successfully:', data?.id)
+        return { data, error: null }
+    } catch (error: any) {
+        console.error('Failed to save material:', error)
+        return { data: null, error }
     }
 }
 

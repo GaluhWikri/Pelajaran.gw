@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { formatDistanceToNow } from "date-fns"
-import { saveNoteToSupabase, saveFlashcardToSupabase, saveQuizToSupabase, deleteNoteFromSupabase } from "@/lib/supabase-helpers"
+import { saveNoteToSupabase, saveFlashcardToSupabase, saveQuizToSupabase, deleteNoteFromSupabase, uploadMaterialToStorage, saveMaterialToSupabase } from "@/lib/supabase-helpers"
 import { useAuth } from "@/lib/auth-context"
 import {
     AlertDialog,
@@ -253,13 +253,39 @@ export default function UploadPage() {
 
             // Generate proper UUID for note ID
             const noteId = crypto.randomUUID()
+            const materialId = crypto.randomUUID()
             const htmlContent = await marked.parse(summary)
+
+            // Save material metadata to database
+            if (user && user.id !== 'demo-user') {
+                await saveMaterialToSupabase({
+                    id: materialId,
+                    userId: user.id,
+                    title: generatedTitle || "YouTube Video",
+                    type: "video",
+                    fileUrl: url,
+                    fileName: "YouTube Video",
+                    fileSize: 0,
+                })
+            }
+
+            // Save material to local store
+            addMaterial({
+                id: materialId,
+                userId: user?.id || "demo-user",
+                title: generatedTitle || "YouTube Video",
+                type: "video",
+                fileUrl: url,
+                fileName: "YouTube Video",
+                fileSize: 0,
+            })
 
             // Save to Supabase first
             if (user) {
                 const { error: saveError } = await saveNoteToSupabase({
                     id: noteId,
                     userId: user.id,
+                    materialId: materialId,
                     title: generatedTitle || "YouTube Summary",
                     content: htmlContent as string,
                     tags: [finalSubject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
@@ -274,6 +300,7 @@ export default function UploadPage() {
             // Then update local store
             addNote({
                 id: noteId,
+                materialId: materialId,
                 userId: user?.id || "demo-user",
                 title: generatedTitle || "YouTube Summary",
                 content: htmlContent as string,
@@ -416,13 +443,39 @@ export default function UploadPage() {
 
                 // Generate proper UUID for note ID
                 const noteId = crypto.randomUUID()
+                const materialId = crypto.randomUUID()
                 const htmlContent = await marked.parse(summary)
+
+                // Save material metadata to database
+                if (user && user.id !== 'demo-user') {
+                    await saveMaterialToSupabase({
+                        id: materialId,
+                        userId: user.id,
+                        title: generatedTitle || "YouTube Video",
+                        type: "video",
+                        fileUrl: youtubeTask.url,
+                        fileName: "YouTube Video",
+                        fileSize: 0,
+                    })
+                }
+
+                // Save material to local store
+                addMaterial({
+                    id: materialId,
+                    userId: user?.id || "demo-user",
+                    title: generatedTitle || "YouTube Video",
+                    type: "video",
+                    fileUrl: youtubeTask.url,
+                    fileName: "YouTube Video",
+                    fileSize: 0,
+                })
 
                 // Save to Supabase first
                 if (user) {
                     const { data: savedNote, error: saveError } = await saveNoteToSupabase({
                         id: noteId,
                         userId: user.id,
+                        materialId: materialId,
                         title: generatedTitle || "YouTube Summary",
                         content: htmlContent as string,
                         tags: [finalSubject, "YouTube", "AI Generated"].filter((t) => t && t.trim() !== ""),
@@ -438,6 +491,7 @@ export default function UploadPage() {
                 // Then update local store
                 addNote({
                     id: noteId,
+                    materialId: materialId,
                     userId: user?.id || "demo-user",
                     title: generatedTitle || "YouTube Summary",
                     content: htmlContent as string,
@@ -514,11 +568,37 @@ export default function UploadPage() {
         updateActiveUpload(uploadId, { status: "processing", progress: 95 })
 
         try {
+            const materialId = crypto.randomUUID()
+            let fileUrl = URL.createObjectURL(file) // Fallback for local/demo
+
+            // 1. Upload to Supabase Storage if user is logged in
+            if (user && user.id !== 'demo-user') {
+                const { url, error: uploadErr } = await uploadMaterialToStorage(user.id, file)
+                if (url) {
+                    fileUrl = url // Use persistent URL
+                }
+            }
+
+            // 2. Save material metadata to database
+            if (user && user.id !== 'demo-user') {
+                await saveMaterialToSupabase({
+                    id: materialId,
+                    userId: user.id,
+                    title: file.name.replace(/\.[^/.]+$/, ""),
+                    type: fileType,
+                    fileUrl: fileUrl,
+                    fileName: file.name,
+                    fileSize: file.size,
+                })
+            }
+
+            // 3. Save to local store
             addMaterial({
-                userId: "demo-user",
+                id: materialId,
+                userId: user?.id || "demo-user",
                 title: file.name.replace(/\.[^/.]+$/, ""),
                 type: fileType as any,
-                fileUrl: URL.createObjectURL(file), // Warning: Object URL lifecycle
+                fileUrl: fileUrl,
                 fileName: file.name,
                 fileSize: file.size,
             })
@@ -541,6 +621,7 @@ export default function UploadPage() {
                 const { data: savedNote, error: saveError } = await saveNoteToSupabase({
                     id: noteId,
                     userId: user.id,
+                    materialId: materialId,
                     title: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
                     content: htmlContent as string,
                     tags: [finalSubject, fileType, "AI Generated"].filter((t) => t && t.trim() !== ""),
@@ -556,6 +637,7 @@ export default function UploadPage() {
             // Then update local store
             addNote({
                 id: noteId,
+                materialId: materialId,
                 userId: user?.id || "demo-user",
                 title: generatedTitle || file.name.replace(/\.[^/.]+$/, ""),
                 content: htmlContent as string,
