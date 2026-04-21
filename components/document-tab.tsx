@@ -117,11 +117,11 @@ export function DocumentTab({ noteId }: DocumentTabProps) {
 
   const getIconRow = () => {
     switch (material.type) {
-      case "pdf": case "docx": case "pptx": return <FileText className="h-5 w-5 text-blue-500" />
-      case "video": return material.fileUrl.includes("youtu") ? <Video className="h-5 w-5 text-red-500" /> : <Video className="h-5 w-5 text-purple-500" />
-      case "audio": return <Mic className="h-5 w-5 text-emerald-500" />
+      case "pdf": case "docx": case "pptx": return <FileText className="h-5 w-5 text-orange-500" />
+      case "video": return material.fileUrl.includes("youtu") ? <Video className="h-5 w-5 text-orange-500" /> : <Video className="h-5 w-5 text-orange-500" />
+      case "audio": return <Mic className="h-5 w-5 text-orange-500" />
       case "image": return <ImageIcon className="h-5 w-5 text-orange-500" />
-      default: return <FileText className="h-5 w-5 text-muted-foreground" />
+      default: return <FileText className="h-5 w-5 text-orange-500" />
     }
   }
 
