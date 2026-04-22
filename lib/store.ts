@@ -395,9 +395,10 @@ export const useStore = create<AppState>()(
 
         // Now remove the data
         set((state) => ({
-          notes: state.notes.filter((note) => note.id !== id),
+          notes: state.notes.filter((n) => n.id !== id),
           flashcards: state.flashcards.filter((card) => card.noteId !== id),
           quizzes: state.quizzes.filter((quiz) => quiz.noteId !== id),
+          materials: note?.materialId ? state.materials.filter((m) => m.id !== note.materialId) : state.materials,
         }))
       },
 

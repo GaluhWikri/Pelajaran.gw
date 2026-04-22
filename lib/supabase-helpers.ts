@@ -56,6 +56,13 @@ export async function saveNoteToSupabase(note: Partial<Note> & { userId: string 
  */
 export async function deleteNoteFromSupabase(noteId: string) {
     try {
+        // Pre-fetch `material_id` to delete the material too
+        const { data: note } = await supabase
+            .from('notes')
+            .select('material_id')
+            .eq('id', noteId)
+            .single()
+
         const { error } = await supabase
             .from('notes')
             .delete()
@@ -64,6 +71,36 @@ export async function deleteNoteFromSupabase(noteId: string) {
         if (error) {
             console.error('Error deleting note from Supabase:', error)
             throw error
+        }
+
+        // Delete associated material
+        if (note?.material_id) {
+            // First we need the file URL to extract the path.
+            const { data: material } = await supabase
+                .from('materials')
+                .select('file_url')
+                .eq('id', note.material_id)
+                .single()
+            
+            // Delete from database
+            await supabase.from('materials').delete().eq('id', note.material_id)
+
+            // Delete from storage if it is a Supabase Storage URL
+            if (material?.file_url && material.file_url.includes('/storage/v1/object/public/materials/')) {
+                try {
+                    const url = new URL(material.file_url)
+                    const pathParts = url.pathname.split('/public/materials/')
+                    if (pathParts.length > 1) {
+                        const filePath = decodeURIComponent(pathParts[1])
+                        if (filePath) {
+                            await supabase.storage.from('materials').remove([filePath])
+                            console.log('Deleted material file from storage:', filePath)
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to parse or delete material file from storage', e);
+                }
+            }
         }
 
         return { error: null }
