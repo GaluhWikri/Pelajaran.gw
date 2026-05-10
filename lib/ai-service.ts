@@ -47,10 +47,10 @@ const model = genAI.getGenerativeModel({
 const mindmapModel = genAI.getGenerativeModel({
     model: "gemini-3-flash-preview",
     generationConfig: {
-        temperature: 0.5, // Lower for more consistent JSON structure
+        temperature: 0.5,
         topP: 0.9,
         topK: 40,
-        maxOutputTokens: 16384, // Increased to prevent truncation
+        maxOutputTokens: 16384,
     },
 })
 
