@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Logo } from "@/components/logo"
 
 export function LandingNavbar() {
     return (
@@ -10,13 +12,7 @@ export function LandingNavbar() {
             <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <Image
-                        src="/favicon/android-chrome-192x192.png"
-                        alt="Pelajaran.gw Logo"
-                        width={32}
-                        height={32}
-                        className="h-8 w-8 md:h-10 md:w-10 object-contain"
-                    />
+                    <Logo width={32} height={32} className="h-8 w-8 md:h-10 md:w-10 object-contain" />
                     <h1 className="text-base md:text-xl font-bold whitespace-nowrap">
                         Pelajaran<span className="text-primary">.gw</span>
                     </h1>
@@ -24,6 +20,7 @@ export function LandingNavbar() {
 
                 {/* Auth Buttons */}
                 <div className="flex items-center gap-2 md:gap-4">
+                    <ThemeToggle />
                     <Link href="/login">
                         <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-sm font-medium px-3 h-9">
                             Masuk

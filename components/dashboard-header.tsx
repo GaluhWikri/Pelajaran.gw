@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useStore } from "@/lib/store"
 import { useAuth } from "@/lib/auth-context"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Logo } from "@/components/logo"
 
 export function DashboardHeader() {
   const { user: storeUser, toggleSidebar, notes, flashcards, quizzes } = useStore()
@@ -69,13 +71,7 @@ export function DashboardHeader() {
         </Button>
 
         <div className="flex items-center gap-3">
-          <Image
-            src="/favicon/android-chrome-192x192.png"
-            alt="Pelajaran.gw Logo"
-            width={40}
-            height={40}
-            className="h-10 w-auto object-contain"
-          />
+          <Logo />
           <h1 className="text-xl font-bold">
             Pelajaran<span className="text-primary">.gw</span>
           </h1>
@@ -162,6 +158,7 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
+          <ThemeToggle />
           {loading ? (
             // Show login/register buttons while loading
             <>

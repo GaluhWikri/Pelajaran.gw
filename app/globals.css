@@ -6,39 +6,39 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.12 0.01 264);
-  --foreground: oklch(0.98 0.01 264);
-  --card: oklch(0.16 0.01 264);
-  --card-foreground: oklch(0.98 0.01 264);
-  --popover: oklch(0.14 0.01 264);
-  --popover-foreground: oklch(0.98 0.01 264);
-  --primary: oklch(0.68 0.19 42);
-  --primary-foreground: oklch(0.12 0.01 264);
-  --secondary: oklch(0.65 0.18 145);
+  --background: oklch(0.98 0.005 264);
+  --foreground: oklch(0.12 0.01 264);
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.12 0.01 264);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.12 0.01 264);
+  --primary: oklch(0.62 0.19 42);
+  --primary-foreground: oklch(0.98 0.01 264);
+  --secondary: oklch(0.55 0.18 145);
   --secondary-foreground: oklch(0.98 0.01 264);
-  --muted: oklch(0.24 0.01 264);
-  --muted-foreground: oklch(0.62 0.01 264);
-  --accent: oklch(0.28 0.02 264);
-  --accent-foreground: oklch(0.98 0.01 264);
+  --muted: oklch(0.95 0.005 264);
+  --muted-foreground: oklch(0.45 0.01 264);
+  --accent: oklch(0.95 0.01 264);
+  --accent-foreground: oklch(0.12 0.01 264);
   --destructive: oklch(0.58 0.22 25);
   --destructive-foreground: oklch(0.98 0.01 264);
-  --border: oklch(0.24 0.01 264);
-  --input: oklch(0.24 0.01 264);
-  --ring: oklch(0.68 0.19 42);
-  --chart-1: oklch(0.68 0.19 42);
-  --chart-2: oklch(0.65 0.18 145);
-  --chart-3: oklch(0.72 0.21 265);
+  --border: oklch(0.9 0.008 264);
+  --input: oklch(0.9 0.008 264);
+  --ring: oklch(0.62 0.19 42);
+  --chart-1: oklch(0.62 0.19 42);
+  --chart-2: oklch(0.55 0.18 145);
+  --chart-3: oklch(0.65 0.21 265);
   --chart-4: oklch(0.58 0.22 25);
-  --chart-5: oklch(0.76 0.16 70);
+  --chart-5: oklch(0.7 0.16 70);
   --radius: 0.75rem;
-  --sidebar: oklch(0.14 0.01 264);
-  --sidebar-foreground: oklch(0.98 0.01 264);
-  --sidebar-primary: oklch(0.68 0.19 42);
-  --sidebar-primary-foreground: oklch(0.12 0.01 264);
-  --sidebar-accent: oklch(0.2 0.01 264);
-  --sidebar-accent-foreground: oklch(0.98 0.01 264);
-  --sidebar-border: oklch(0.24 0.01 264);
-  --sidebar-ring: oklch(0.68 0.19 42);
+  --sidebar: oklch(0.97 0.005 264);
+  --sidebar-foreground: oklch(0.12 0.01 264);
+  --sidebar-primary: oklch(0.62 0.19 42);
+  --sidebar-primary-foreground: oklch(0.98 0.01 264);
+  --sidebar-accent: oklch(0.93 0.01 264);
+  --sidebar-accent-foreground: oklch(0.12 0.01 264);
+  --sidebar-border: oklch(0.9 0.008 264);
+  --sidebar-ring: oklch(0.62 0.19 42);
 }
 
 .dark {
@@ -129,6 +129,32 @@
   body {
     @apply bg-background text-foreground;
     overflow-x: hidden;
+  }
+
+  /* Targeted theme transitions to avoid global wildcard flickering/layout recalculations */
+  body,
+  [class*="bg-background"],
+  [class*="bg-card"],
+  [class*="bg-popover"],
+  [class*="bg-muted"],
+  [class*="bg-sidebar"],
+  [class*="bg-accent"],
+  [class*="text-foreground"],
+  [class*="text-muted-foreground"],
+  [class*="text-card-foreground"],
+  [class*="text-popover-foreground"],
+  [class*="text-sidebar-foreground"],
+  [class*="border-border"],
+  [class*="border-input"],
+  [class*="border-sidebar-border"],
+  input,
+  textarea,
+  button,
+  a {
+    transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Improve animation smoothness with GPU acceleration */

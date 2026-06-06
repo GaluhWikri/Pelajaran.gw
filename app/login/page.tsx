@@ -12,6 +12,7 @@ import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-
 import Link from 'next/link'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
+import { Logo } from '@/components/logo'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -78,14 +79,7 @@ export default function LoginPage() {
                         {/* Branding Header */}
                         <div className="flex flex-col items-center justify-center gap-3 mb-2">
                             <div className="flex items-center gap-3">
-                                <Image
-                                    src="/favicon/android-chrome-192x192.png"
-                                    alt="Logo"
-                                    width={64}
-                                    height={64}
-                                    className="w-16 h-16 object-contain"
-                                    priority
-                                />
+                                <Logo width={64} height={64} className="w-16 h-16 object-contain" />
                                 <div className="text-4xl font-bold tracking-tight">
                                     <span className="text-foreground">Pelajaran</span>
                                     <span className="text-orange-500">.gw</span>
@@ -131,7 +125,7 @@ export default function LoginPage() {
 
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-gray-700" />
+                                <span className="w-full border-t border-border" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
                                 <span className="bg-card px-2 text-muted-foreground uppercase tracking-wider">Atau</span>

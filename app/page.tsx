@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { LandingNavbar } from "@/components/landing-navbar"
 import dynamic from "next/dynamic"
+import { Logo } from "@/components/logo"
 
 // Dynamic import for heavy component
 const ProcessDemo = dynamic(() => import("@/components/landing/process-demo").then(mod => ({ default: mod.ProcessDemo })), {
@@ -87,7 +88,7 @@ export default function LandingPage() {
   }, [user, router])
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/20">
+    <div className="min-h-screen bg-background">
       {/* Landing Page Navbar */}
       <LandingNavbar />
 
@@ -517,13 +518,7 @@ export default function LandingPage() {
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Image
-                src="/favicon/android-chrome-192x192.png"
-                alt="Pelajaran.gw Logo"
-                width={32}
-                height={32}
-                className="h-8 w-auto object-contain"
-              />
+              <Logo width={32} height={32} className="h-8 w-auto object-contain" />
               <span className="font-bold text-xl">
                 Pelajaran<span className="text-primary">.gw</span>
               </span>

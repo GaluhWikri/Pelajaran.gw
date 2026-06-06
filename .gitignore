@@ -40,3 +40,6 @@ next-env.d.ts
 
 # documentation (thesis/skripsi)
 /doc/
+
+# AI Agent instructions
+agent.md

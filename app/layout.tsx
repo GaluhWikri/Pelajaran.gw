@@ -7,6 +7,8 @@ import { FloatingAudioPlayer } from "@/components/floating-audio-player"
 import "./globals.css"
 import "./print.css"
 
+import { ThemeProvider } from "@/components/theme-provider"
+
 const geist = Geist({
   subsets: ["latin"],
   display: 'swap',
@@ -25,17 +27,17 @@ export const metadata: Metadata = {
   description: "Transform your learning materials into interactive notes, flashcards, and quizzes with AI assistance",
   icons: {
     icon: [
-      { url: "/favicon/favicon.ico", sizes: "any" },
-      { url: "/favicon/favicon-16x16.png", type: "image/png", sizes: "16x16" },
-      { url: "/favicon/favicon-32x32.png", type: "image/png", sizes: "32x32" },
-      { url: "/favicon/android-chrome-192x192.png", type: "image/png", sizes: "192x192" },
-      { url: "/favicon/android-chrome-512x512.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon/dark/favicon.ico", sizes: "any" },
+      { url: "/favicon/dark/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/favicon/dark/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon/dark/android-chrome-192x192.png", type: "image/png", sizes: "192x192" },
+      { url: "/favicon/dark/android-chrome-512x512.png", type: "image/png", sizes: "512x512" },
     ],
     apple: [
-      { url: "/favicon/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/favicon/dark/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
-  manifest: "/favicon/site.webmanifest",
+  manifest: "/favicon/dark/site.webmanifest",
 }
 
 export default function RootLayout({
@@ -44,12 +46,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-          <FloatingAudioPlayer />
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+        >
+          <AuthProvider>
+            {children}
+            <FloatingAudioPlayer />
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

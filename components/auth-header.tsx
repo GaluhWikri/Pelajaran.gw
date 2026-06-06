@@ -4,6 +4,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { LogIn, UserPlus } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { Logo } from '@/components/logo'
 
 interface AuthHeaderProps {
     currentPage?: 'login' | 'register'
@@ -14,19 +16,14 @@ export function AuthHeader({ currentPage }: AuthHeaderProps) {
         <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
             <div className="flex h-16 items-center justify-between px-6">
                 <Link href="/" className="flex items-center gap-3">
-                    <Image
-                        src="/favicon/android-chrome-192x192.png"
-                        alt="Pelajaran.gw Logo"
-                        width={40}
-                        height={40}
-                        className="h-10 w-auto object-contain"
-                    />
+                    <Logo />
                     <h1 className="text-xl font-bold">
                         Pelajaran<span className="text-primary">.gw</span>
                     </h1>
                 </Link>
 
                 <div className="flex items-center gap-3">
+                    <ThemeToggle />
                     {currentPage === 'login' ? (
                         <Link href="/register">
                             <Button className="gap-2 bg-primary hover:bg-primary/90">

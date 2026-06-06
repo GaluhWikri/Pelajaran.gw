@@ -12,6 +12,7 @@ import { Loader2, Mail, Lock, Eye, EyeOff, User, CheckCircle2, ArrowRight, Arrow
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { Logo } from '@/components/logo'
 
 export default function RegisterPage() {
     const [fullName, setFullName] = useState('')
@@ -80,14 +81,7 @@ export default function RegisterPage() {
                         {/* Branding Header */}
                         <div className="flex flex-col items-center justify-center gap-3 mb-2">
                             <div className="flex items-center gap-3">
-                                <Image
-                                    src="/favicon/android-chrome-192x192.png"
-                                    alt="Logo"
-                                    width={64}
-                                    height={64}
-                                    className="w-16 h-16 object-contain"
-                                    priority
-                                />
+                                <Logo width={64} height={64} className="w-16 h-16 object-contain" />
                                 <div className="text-4xl font-bold tracking-tight">
                                     <span className="text-foreground">Pelajaran</span>
                                     <span className="text-orange-500">.gw</span>
@@ -128,7 +122,7 @@ export default function RegisterPage() {
                                         placeholder="Galuh wikri"
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
-                                        className="pl-10"
+                                        className="pl-10 h-11 bg-background"
                                         disabled={loading}
                                         required
                                     />
@@ -145,7 +139,7 @@ export default function RegisterPage() {
                                         placeholder="you@example.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="pl-10"
+                                        className="pl-10 h-11 bg-background"
                                         disabled={loading}
                                         required
                                     />
@@ -162,7 +156,7 @@ export default function RegisterPage() {
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="pl-10 pr-10"
+                                        className="pl-10 pr-10 h-11 bg-background"
                                         disabled={loading}
                                         required
                                     />
