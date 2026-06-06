@@ -46,12 +46,12 @@ export function ProcessDemo() {
     return (
         <div className="w-full max-w-2xl mx-auto p-4">
             {/* Main Card Container */}
-            <div className="relative rounded-3xl overflow-hidden bg-[#080A0E] border border-white/10 shadow-2xl flex flex-col will-change-transform">
+            <div className="relative rounded-3xl overflow-hidden bg-card border border-border shadow-2xl flex flex-col will-change-transform">
 
                 {/* Top Progress / Stepper Header - Removed backdrop-blur for mobile performance */}
-                <div className="flex items-center justify-between px-6 md:px-12 pt-8 pb-12 relative z-20 bg-[#0f1219]/80 border-b border-white/5">
+                <div className="flex items-center justify-between px-6 md:px-12 pt-8 pb-12 relative z-20 bg-muted/80 border-b border-border">
                     {/* Connector Line Background */}
-                    <div className="absolute top-13 left-11 md:left-17 right-11 md:right-17 h-0.5 bg-white/10 -z-10 -translate-y-1/2" />
+                    <div className="absolute top-13 left-11 md:left-17 right-11 md:right-17 h-0.5 bg-border -z-10 -translate-y-1/2" />
 
                     {/* Active Progress Line - Using transform for GPU acceleration */}
                     <div
@@ -73,15 +73,15 @@ export function ProcessDemo() {
                                         "h-10 w-10 rounded-full flex items-center justify-center border-2 relative z-10 transition-[background-color,border-color,transform] duration-300 will-change-transform",
                                         isActive
                                             ? "bg-orange-500 border-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.3)] scale-110"
-                                            : "bg-[#1a1f2e] border-white/10 text-muted-foreground scale-100"
+                                            : "bg-muted border-border text-muted-foreground scale-100"
                                     )}
                                 >
                                     <s.icon className="h-5 w-5" />
                                 </div>
                                 <span className={cn(
                                     "text-xs font-medium absolute -bottom-8 whitespace-nowrap transition-colors duration-200",
-                                    isActive ? "text-white" : "text-muted-foreground/50",
-                                    isCurrent && "text-orange-400"
+                                    isActive ? "text-foreground font-semibold" : "text-muted-foreground/50",
+                                    isCurrent && "text-orange-500 font-bold"
                                 )}>
                                     {s.label}
                                 </span>
@@ -105,7 +105,7 @@ export function ProcessDemo() {
                                 transition={{ duration: 0.3, ease: "easeOut" }}
                                 className="w-full max-w-sm mx-auto will-change-transform"
                             >
-                                <div className="rounded-2xl border-2 border-dashed border-white/10 bg-white/5 p-8 text-center relative overflow-hidden">
+                                <div className="rounded-2xl border-2 border-dashed border-border bg-muted/20 p-8 text-center relative overflow-hidden">
                                     <div className="absolute inset-0 bg-orange-500/5" />
 
                                     <motion.div
@@ -115,15 +115,15 @@ export function ProcessDemo() {
                                     >
                                         <div className="relative">
                                             <div className="absolute inset-0 bg-orange-500/20 rounded-full scale-150" />
-                                            <Upload className="h-16 w-16 text-orange-400 relative z-10" />
+                                            <Upload className="h-16 w-16 text-orange-500 relative z-10" />
                                         </div>
                                     </motion.div>
 
-                                    <h3 className="text-lg font-bold text-white mb-2">lecture-notes.pdf</h3>
+                                    <h3 className="text-lg font-bold text-foreground mb-2">lecture-notes.pdf</h3>
                                     <p className="text-sm text-muted-foreground mb-6">2.4 MB • PDF Document</p>
 
                                     {/* Progress Bar Container - Optimized */}
-                                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden relative">
+                                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden relative">
                                         <motion.div
                                             className="absolute inset-y-0 left-0 right-0 bg-linear-to-r from-orange-500 to-orange-300 will-change-transform"
                                             initial={{ scaleX: 0 }}
@@ -172,7 +172,7 @@ export function ProcessDemo() {
                                 </div>
 
                                 <motion.h3
-                                    className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-orange-400 to-white mb-2"
+                                    className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-orange-500 to-foreground mb-2"
                                     animate={{ opacity: [0.7, 1, 0.7] }}
                                     transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                                 >
@@ -202,7 +202,7 @@ export function ProcessDemo() {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.1, duration: 0.3, ease: "easeOut" }}
                                         className={cn(
-                                            "flex items-center p-3.5 rounded-xl border bg-white/5 cursor-default group will-change-transform",
+                                            "flex items-center p-3.5 rounded-xl border border-border/50 bg-muted/10 cursor-default group will-change-transform",
                                             item.border
                                         )}
                                     >
@@ -211,7 +211,7 @@ export function ProcessDemo() {
                                         </div>
 
                                         <div className="flex-1 text-left">
-                                            <h4 className="text-white font-semibold text-sm">{item.title}</h4>
+                                            <h4 className="text-foreground font-semibold text-sm">{item.title}</h4>
                                             <p className="text-xs text-muted-foreground">{item.subtitle}</p>
                                         </div>
 
@@ -231,7 +231,7 @@ export function ProcessDemo() {
                                     transition={{ delay: 0.5 }}
                                     className="text-center pt-2"
                                 >
-                                    <span className="text-xs font-mono text-orange-400 bg-orange-400/10 px-3 py-1 rounded-full border border-orange-400/20">
+                                    <span className="text-xs font-mono text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
                                         Selesai dalam 10 detik
                                     </span>
                                 </motion.div>
