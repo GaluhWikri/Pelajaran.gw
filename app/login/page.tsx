@@ -99,7 +99,8 @@ export default function LoginPage() {
                                 variant="outline"
                                 className="w-full h-11 bg-[#1e293b] hover:bg-[#334155] border-transparent text-white justify-start relative px-4"
                                 onClick={() => handleOAuthLogin('google')}
-                                disabled={loading}
+                                disabled={true}
+                                title="Fitur login dengan Google sedang dinonaktifkan"
                             >
                                 <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24">
                                     <path
