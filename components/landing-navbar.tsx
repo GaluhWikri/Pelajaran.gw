@@ -14,7 +14,7 @@ export function LandingNavbar() {
                 <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <Logo width={32} height={32} className="h-8 w-8 md:h-10 md:w-10 object-contain" />
                     <h1 className="text-base md:text-xl font-bold whitespace-nowrap">
-                        Pelajaran<span className="text-primary">.gw</span>
+                        Pelajaran<span className="text-primary">ku</span>
                     </h1>
                 </Link>
 

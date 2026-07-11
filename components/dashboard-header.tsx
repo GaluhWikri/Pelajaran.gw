@@ -73,7 +73,7 @@ export function DashboardHeader() {
         <div className="flex items-center gap-3">
           <Logo />
           <h1 className="text-xl font-bold">
-            Pelajaran<span className="text-primary">.gw</span>
+            Pelajaran<span className="text-primary">ku</span>
           </h1>
         </div>
 

@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Pelajaran gw - Learning Platform",
+  title: "Pelajaranku - Learning Platform",
   description: "Transform your learning materials into interactive notes, flashcards, and quizzes with AI assistance",
   icons: {
     icon: [

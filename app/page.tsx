@@ -187,7 +187,7 @@ export default function LandingPage() {
                     <div className="h-3 w-3 rounded-full bg-yellow-500" />
                     <div className="h-3 w-3 rounded-full bg-green-500" />
                   </div>
-                  <span className="text-sm text-muted-foreground ml-4">pelajaran.gw - DEMO</span>
+                  <span className="text-sm text-muted-foreground ml-4">Pelajaranku - DEMO</span>
                 </div>
               )}
 
@@ -399,8 +399,8 @@ export default function LandingPage() {
             {[
               {
                 id: "item-1",
-                q: "Apa itu Pelajaran.gw?",
-                a: "Pelajaran.gw adalah asisten belajar berbasis AI yang membantu Anda mengubah materi pelajaran (PDF, dokumen, video) menjadi ringkasan interaktif, flashcard, kuis, mind map, podcast secara otomatis. Tujuannya agar proses belajar Anda lebih efisien dan menyenangkan."
+                q: "Apa itu Pelajaranku?",
+                a: "Pelajaranku adalah asisten belajar berbasis AI yang membantu Anda mengubah materi pelajaran (PDF, dokumen, video) menjadi ringkasan interaktif, flashcard, kuis, mind map, podcast secara otomatis. Tujuannya agar proses belajar Anda lebih efisien dan menyenangkan."
               },
               {
                 id: "item-2",
@@ -415,7 +415,7 @@ export default function LandingPage() {
               {
                 id: "item-4",
                 q: "Format file apa saja yang didukung?",
-                a: "Pelajaran.gw mendukung berbagai format file termasuk PDF, DOCX, PPTX, dan juga link YouTube. Anda dapat mengupload catatan kuliah, slide presentasi, atau bahkan video pembelajaran untuk dirangkum oleh AI kami."
+                a: "Pelajaranku mendukung berbagai format file termasuk PDF, DOCX, PPTX, dan juga link YouTube. Anda dapat mengupload catatan kuliah, slide presentasi, atau bahkan video pembelajaran untuk dirangkum oleh AI kami."
               }
             ].map((faq, index) => (
               <motion.div
@@ -520,11 +520,11 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <Logo width={32} height={32} className="h-8 w-auto object-contain" />
               <span className="font-bold text-xl">
-                Pelajaran<span className="text-primary">.gw</span>
+                Pelajaran<span className="text-primary">ku</span>
               </span>
             </div>
             <div className="text-sm text-muted-foreground text-right">
-              <p>© 2025 Pelajaran.gw. All rights reserved.</p>
+              <p>© 2025 Pelajaranku. All rights reserved.</p>
               <p className="text-xs mt-1">Deployed by <span className="font-medium text-orange-500">Galuh Wikri</span></p>
             </div>
           </div>

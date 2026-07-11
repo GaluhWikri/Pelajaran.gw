@@ -25,7 +25,7 @@ export function Logo({ width = 40, height = 40, className = "h-10 w-auto object-
   return (
     <Image
       src={`/favicon/${themeDir}/android-chrome-192x192.png`}
-      alt="Pelajaran.gw Logo"
+      alt="Pelajaranku Logo"
       width={width}
       height={height}
       className={className}
