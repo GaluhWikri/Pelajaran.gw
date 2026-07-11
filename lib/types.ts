@@ -103,6 +103,7 @@ export interface MindmapNode {
   label: string
   parentId: string | null
   edgeLabel?: string // Teks penghubung seperti "adalah", "yaitu", "meliputi"
+  description?: string // Penjelasan detail node untuk modal popup
   position?: { x: number; y: number }
 }
 

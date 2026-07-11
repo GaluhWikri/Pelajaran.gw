@@ -802,6 +802,7 @@ export async function generateMindmapFromNote(
                 label: node.label || "Untitled",
                 parentId: node.parentId,
                 edgeLabel: node.edgeLabel || undefined,
+                description: node.description || undefined,
                 position: undefined // Will be calculated by layout
             }))
         }

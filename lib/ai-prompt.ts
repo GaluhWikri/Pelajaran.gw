@@ -91,6 +91,7 @@ INSTRUKSI:
 4. Jika relevan, tambahkan detail penting sebagai level 3 atau lebih dalam
 5. Setiap label node harus singkat (maksimal 5-7 kata)
 6. PENTING: Setiap node (kecuali root) HARUS memiliki "edgeLabel" - teks yang menjelaskan hubungan dengan parent-nya
+7. PENTING: Setiap node HARUS memiliki "description" - penjelasan singkat 1-25 kalimat tentang konsep tersebut
 
 ATURAN JUMLAH NODE:
 - TIDAK ADA BATASAN TETAP untuk jumlah node atau sub-node
@@ -115,12 +116,12 @@ CONTOH edgeLabel yang bisa digunakan:
 FORMAT OUTPUT (JSON Valid):
 {
   "nodes": [
-    { "id": "root", "label": "Judul Utama", "parentId": null, "edgeLabel": null },
-    { "id": "1", "label": "Topik 1", "parentId": "root", "edgeLabel": "meliputi" },
-    { "id": "1-1", "label": "Sub-topik 1.1", "parentId": "1", "edgeLabel": "adalah" },
-    { "id": "1-2", "label": "Sub-topik 1.2", "parentId": "1", "edgeLabel": "yaitu" },
-    { "id": "2", "label": "Topik 2", "parentId": "root", "edgeLabel": "memiliki" },
-    { "id": "2-1", "label": "Sub-topik 2.1", "parentId": "2", "edgeLabel": "contohnya" }
+    { "id": "root", "label": "Judul Utama", "parentId": null, "edgeLabel": null, "description": "Penjelasan singkat tentang topik utama ini." },
+    { "id": "1", "label": "Topik 1", "parentId": "root", "edgeLabel": "meliputi", "description": "Penjelasan 1-3 kalimat tentang Topik 1 dan relevansinya." },
+    { "id": "1-1", "label": "Sub-topik 1.1", "parentId": "1", "edgeLabel": "adalah", "description": "Definisi atau penjelasan detail Sub-topik 1.1." },
+    { "id": "1-2", "label": "Sub-topik 1.2", "parentId": "1", "edgeLabel": "yaitu", "description": "Penjelasan tentang Sub-topik 1.2 beserta konteksnya." },
+    { "id": "2", "label": "Topik 2", "parentId": "root", "edgeLabel": "memiliki", "description": "Gambaran umum Topik 2 dan hubungannya dengan topik utama." },
+    { "id": "2-1", "label": "Sub-topik 2.1", "parentId": "2", "edgeLabel": "contohnya", "description": "Contoh konkret dan penjelasan Sub-topik 2.1." }
   ]
 }
 
@@ -128,9 +129,11 @@ PENTING:
 - Jumlah node FLEKSIBEL sesuai kebutuhan materi
 - Pastikan semua parentId valid (merujuk ke id yang ada)
 - Root node HARUS memiliki parentId: null dan edgeLabel: null
+- SETIAP node WAJIB memiliki "description" berisi penjelasan 1-3 kalimat
 - SETIAP node lain WAJIB memiliki edgeLabel yang sesuai konteks
 - Tidak boleh ada node orphan (kecuali root)
 `
+
 
 // --- Writing Style Map ---
 

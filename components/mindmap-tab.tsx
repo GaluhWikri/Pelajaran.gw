@@ -19,20 +19,159 @@ import ReactFlow, {
 import "reactflow/dist/style.css"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog"
 import { useStore } from "@/lib/store"
 import { useAuth } from "@/lib/auth-context"
 import { generateMindmapFromNote } from "@/lib/ai-service"
 import { saveMindmapToSupabase } from "@/lib/supabase-helpers"
-import { Loader2, Sparkles, RefreshCw, LayoutGrid, Undo2, Redo2, Maximize2, Minimize2 } from "lucide-react"
+import { Loader2, Sparkles, RefreshCw, LayoutGrid, Undo2, Redo2, Maximize2, Minimize2, BookOpen, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MindmapNode } from "@/lib/types"
+
+// --- Node Detail Modal ---
+interface NodeDetailData {
+    label: string
+    description?: string
+    edgeLabel?: string
+    level: number
+    children?: { label: string; edgeLabel?: string }[]
+}
+
+interface NodeDetailModalProps {
+    node: NodeDetailData | null
+    onClose: () => void
+}
+
+// Level themes using app CSS variables (dark/light mode aware)
+const levelTheme = [
+    { iconBg: "bg-primary/15",    iconColor: "text-primary",    badge: "bg-primary/10 text-primary border-primary/25 hover:bg-primary/10",       label: "Topik Utama" },
+    { iconBg: "bg-blue-500/15",   iconColor: "text-blue-500",   badge: "bg-blue-500/10 text-blue-500 border-blue-500/25 hover:bg-blue-500/10",   label: "Cabang Utama" },
+    { iconBg: "bg-secondary/15",  iconColor: "text-secondary",  badge: "bg-secondary/10 text-secondary border-secondary/25 hover:bg-secondary/10", label: "Sub-Cabang" },
+    { iconBg: "bg-rose-500/15",   iconColor: "text-rose-500",   badge: "bg-rose-500/10 text-rose-500 border-rose-500/25 hover:bg-rose-500/10",   label: "Detail" },
+    { iconBg: "bg-violet-500/15", iconColor: "text-violet-500", badge: "bg-violet-500/10 text-violet-500 border-violet-500/25 hover:bg-violet-500/10", label: "Sub-Detail" },
+]
+
+const NodeDetailModal = memo(({ node, onClose }: NodeDetailModalProps) => {
+    const isOpen = !!node
+    const level = Math.min(node?.level ?? 0, 4)
+    const theme = levelTheme[level]
+    const hasChildren = (node?.children?.length ?? 0) > 0
+
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+            <DialogContent
+                showCloseButton={false}
+                className="sm:max-w-[420px] p-0 gap-0 overflow-hidden rounded-2xl border-border/60"
+            >
+                <div className="p-5 pb-4 space-y-4">
+
+                    {/* ── Top row: icon · badges · close ── */}
+                    <div className="flex items-center gap-2">
+                        {/* Icon */}
+                        <div className={cn("flex-shrink-0 rounded-xl p-2.5", theme.iconBg)}>
+                            <BookOpen className={cn("h-4 w-4", theme.iconColor)} />
+                        </div>
+
+                        {/* Badges */}
+                        <div className="flex gap-1.5 flex-wrap flex-1 min-w-0">
+                            {node?.edgeLabel && (
+                                <Badge
+                                    variant="outline"
+                                    className={cn(
+                                        "text-[9px] uppercase tracking-[0.12em] font-bold px-2.5 py-0.5 rounded-full border",
+                                        theme.badge
+                                    )}
+                                >
+                                    {node.edgeLabel}
+                                </Badge>
+                            )}
+                            <Badge
+                                variant="outline"
+                                className="text-[9px] uppercase tracking-[0.12em] font-bold px-2.5 py-0.5 rounded-full text-muted-foreground border-border/60 hover:bg-transparent"
+                            >
+                                {theme.label}
+                            </Badge>
+                        </div>
+
+                        {/* Close button */}
+                        <button
+                            onClick={onClose}
+                            className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            aria-label="Tutup"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    {/* ── Title ── */}
+                    <DialogHeader className="gap-0 space-y-0">
+                        <DialogTitle className="text-xl font-bold text-foreground leading-tight">
+                            {node?.label}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {/* ── Description ── */}
+                    <DialogDescription asChild>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            {node?.description ?? (
+                                <span className="italic">
+                                    Belum ada penjelasan. Coba regenerate mindmap untuk mendapatkan deskripsi.
+                                </span>
+                            )}
+                        </p>
+                    </DialogDescription>
+
+                    {/* ── Child nodes grid ── */}
+                    {hasChildren && (
+                        <div className={cn(
+                            "grid gap-2",
+                            (node!.children!.length === 1) ? "grid-cols-1" : "grid-cols-2"
+                        )}>
+                            {node!.children!.slice(0, 4).map((child, i) => (
+                                <div
+                                    key={i}
+                                    className="rounded-xl bg-muted/60 border border-border/50 px-3.5 py-3"
+                                >
+                                    {child.edgeLabel && (
+                                        <p className="text-[9px] uppercase tracking-[0.12em] font-bold text-muted-foreground mb-1.5">
+                                            {child.edgeLabel}
+                                        </p>
+                                    )}
+                                    <p className="text-sm font-semibold text-foreground leading-snug">
+                                        {child.label}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Footer: full-width primary button ── */}
+                <div className="px-5 pb-5">
+                    <Button onClick={onClose} className="w-full h-11 text-sm font-semibold rounded-xl">
+                        Tutup
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+})
+NodeDetailModal.displayName = "NodeDetailModal"
+
 
 interface MindmapTabProps {
     noteId: string
 }
 
 // Memoize the node component to prevent unnecessary re-renders in large maps
-const MindmapNodeComponent = memo(({ data }: { data: { label: string; level: number; edgeLabel?: string; side?: 'left' | 'right' | 'center'; isActivePath?: boolean } }) => {
+const MindmapNodeComponent = memo(({ data }: { data: { label: string; level: number; edgeLabel?: string; description?: string; nodeId?: string; side?: 'left' | 'right' | 'center'; isActivePath?: boolean; onNodeClick?: (data: { label: string; description?: string; edgeLabel?: string; level: number; nodeId?: string }) => void } }) => {
     // Determining styling level
     const level = Math.min(data.level, 4)
     const side = data.side || 'right'
@@ -81,6 +220,7 @@ const MindmapNodeComponent = memo(({ data }: { data: { label: string; level: num
 
             {/* Node Content */}
             <div
+                onClick={() => data.onNodeClick?.({ label: data.label, description: data.description, edgeLabel: data.edgeLabel, level: data.level, nodeId: data.nodeId })}
                 className={cn(
                     // Shape & Base
                     "relative px-5 py-4 rounded-xl",
@@ -93,7 +233,7 @@ const MindmapNodeComponent = memo(({ data }: { data: { label: string; level: num
                     // Performance Optimization - Stable 2D Transform
                     "will-change-transform transition-transform duration-200 ease-out",
                     data.isActivePath ? "scale-105 shadow-xl brightness-110 ring-2 ring-white/40" : "hover:scale-105 hover:-translate-y-2 hover:shadow-2xl",
-                    "cursor-pointer",
+                    "cursor-pointer select-none",
                 )}
             >
                 {/* Relationship Badge (Pill) - Removed backdrop-blur for SVG stability */}
@@ -272,7 +412,7 @@ function convertToReactFlow(mindmapNodes: MindmapNode[]): { nodes: Node[]; edges
             id: node.id,
             type: "mindmapNode",
             position,
-            data: { label: node.label, level, edgeLabel: edgeLabel || undefined, side },
+            data: { label: node.label, level, edgeLabel: edgeLabel || undefined, side, description: node.description || undefined, nodeId: node.id },
         })
 
         if (node.parentId && nodePositions.has(node.parentId)) {
@@ -299,6 +439,30 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
 
     const isGenerating = generatingMindmapNoteIds.includes(noteId)
     const [error, setError] = useState<string | null>(null)
+
+    // Modal state for node detail popup
+    const [selectedNodeData, setSelectedNodeData] = useState<NodeDetailData | null>(null)
+
+    // Callback for node click - looks up children from existing mindmap nodes
+    const handleNodeDetailClick = useCallback((data: { label: string; description?: string; edgeLabel?: string; level: number; nodeId?: string }) => {
+        const existingNodes = getMindmapByNoteId(noteId)?.nodes ?? []
+        const children = data.nodeId
+            ? existingNodes
+                .filter(n => n.parentId === data.nodeId)
+                .map(n => ({ label: n.label, edgeLabel: n.edgeLabel }))
+            : []
+        setSelectedNodeData({
+            label: data.label,
+            description: data.description,
+            edgeLabel: data.edgeLabel,
+            level: data.level,
+            children,
+        })
+    }, [getMindmapByNoteId, noteId])
+
+    const handleCloseModal = useCallback(() => {
+        setSelectedNodeData(null)
+    }, [])
 
     // History state for undo/redo
     const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([])
@@ -354,6 +518,12 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+
+    // Inject stable onNodeClick handler into every node's data so MindmapNodeComponent can call it
+    const nodesWithHandler = useMemo(() => nodes.map(n => ({
+        ...n,
+        data: { ...n.data, onNodeClick: handleNodeDetailClick }
+    })), [nodes, handleNodeDetailClick])
 
     // Sync ReactFlow state when a mindmap is loaded or regenerated
     const nodesJson = JSON.stringify(existingMindmap?.nodes)
@@ -711,7 +881,7 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
                     <CardContent className="p-0 h-full relative">
                         {hasMindmap ? (
                             <ReactFlow
-                                nodes={nodes}
+                                nodes={nodesWithHandler}
                                 edges={edges}
                                 onNodesChange={handleNodesChange}
                                 onEdgesChange={onEdgesChange}
@@ -774,7 +944,10 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
                     </CardContent>
                 </Card>
             </div>
-        </div >
+
+            {/* Node Detail Modal */}
+            <NodeDetailModal node={selectedNodeData} onClose={handleCloseModal} />
+        </div>
     )
 }
 
