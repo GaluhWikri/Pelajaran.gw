@@ -69,9 +69,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         '/profile',
         // '/premium' // Disabled for now
     ]
+    // Route yang dikecualikan dari proteksi (proses OAuth berlangsung di sini)
+    const excludedRoutes = ['/auth/callback']
 
     useEffect(() => {
         if (loading) return
+        if (excludedRoutes.some(route => pathname?.startsWith(route))) return
 
         const isProtectedRoute = protectedRoutes.some(route => pathname?.startsWith(route))
 
@@ -167,8 +170,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check for redirect conditions to prevent flashing content
     const isProtectedRoute = protectedRoutes.some(route => pathname?.startsWith(route))
     const isAuthRoute = pathname === '/login' || pathname === '/register'
+    const isExcludedRoute = excludedRoutes.some(route => pathname?.startsWith(route))
 
-    if ((isProtectedRoute && !session) || (isAuthRoute && session)) {
+    if (!isExcludedRoute && ((isProtectedRoute && !session) || (isAuthRoute && session))) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />

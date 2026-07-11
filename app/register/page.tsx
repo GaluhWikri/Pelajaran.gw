@@ -101,8 +101,7 @@ export default function RegisterPage() {
                             <div className="flex items-center gap-3">
                                 <Logo width={64} height={64} className="w-16 h-16 object-contain" />
                                 <div className="text-4xl font-bold tracking-tight">
-                                    <span className="text-foreground">Pelajaran</span>
-                                    <span className="text-orange-500">.gw</span>
+                                    Pelajaran<span className="text-orange-500">ku</span>
                                 </div>
                             </div>
                         </div>
@@ -120,8 +119,7 @@ export default function RegisterPage() {
                                 variant="outline"
                                 className="w-full h-11 bg-[#1e293b] hover:bg-[#334155] border-transparent text-white justify-start relative px-4"
                                 onClick={() => handleOAuthLogin('google')}
-                                disabled={true}
-                                title="Fitur pendaftaran dengan Google sedang dinonaktifkan"
+                                disabled={loading}
                             >
                                 <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24">
                                     <path

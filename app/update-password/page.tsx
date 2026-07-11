@@ -82,8 +82,7 @@ export default function UpdatePasswordPage() {
                                     className="w-16 h-16 object-contain"
                                 />
                                 <div className="text-4xl font-bold tracking-tight">
-                                    <span className="text-foreground">Pelajaran</span>
-                                    <span className="text-orange-500">.gw</span>
+                                    Pelajaran<span className="text-orange-500">ku</span>
                                 </div>
                             </div>
                         </div>
