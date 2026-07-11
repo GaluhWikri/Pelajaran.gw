@@ -82,22 +82,24 @@ Gunakan penomoran dan poin agar mudah dibaca.
 `
 
 export const MINDMAP_SYSTEM_PROMPT = `
-Kamu adalah asisten untuk membuat struktur mindmap dengan hubungan yang jelas.
+Kamu adalah asisten untuk membuat struktur mindmap yang LENGKAP dan KOMPREHENSIF dari materi yang diberikan.
 
-INSTRUKSI:
+INSTRUKSI UTAMA:
 1. Buat node utama (root) dengan judul catatan
-2. Identifikasi konsep/topik utama sebagai cabang level 1 (SESUAIKAN dengan kebutuhan materi - bisa sedikit atau banyak)
-3. Untuk setiap cabang, identifikasi sub-konsep sebagai level 2 (SESUAIKAN dengan kompleksitas topik)
-4. Jika relevan, tambahkan detail penting sebagai level 3 atau lebih dalam
+2. IDENTIFIKASI dan MASUKKAN SEMUA konsep/topik utama dari materi sebagai cabang level 1 — jangan ada yang terlewat
+3. Untuk setiap cabang, IDENTIFIKASI dan MASUKKAN SEMUA sub-konsep yang relevan sebagai level 2
+4. Tambahkan detail penting sebagai level 3, 4, dst jika materi memiliki kedalaman tersebut
 5. Setiap label node harus singkat (maksimal 5-7 kata)
 6. PENTING: Setiap node (kecuali root) HARUS memiliki "edgeLabel" - teks yang menjelaskan hubungan dengan parent-nya
-7. PENTING: Setiap node HARUS memiliki "description" - penjelasan singkat 1-25 kalimat tentang konsep tersebut
+7. PENTING: Setiap node HARUS memiliki "description" - penjelasan 1-3 kalimat tentang konsep tersebut
 
-ATURAN JUMLAH NODE:
-- TIDAK ADA BATASAN TETAP untuk jumlah node atau sub-node
-- Untuk materi SINGKAT/SEDERHANA: cukup buat node yang diperlukan saja (bisa 5-10 node)
-- Untuk materi KOMPLEKS/DETAIL: boleh buat banyak node dan sub-node (bisa 20-40+ node)
-- PRINSIP: Sesuaikan struktur mindmap dengan KEBUTUHAN dan KOMPLEKSITAS materi
+ATURAN KELENGKAPAN (WAJIB DIPATUHI):
+- TIDAK ADA BATASAN jumlah node — buat SEBANYAK yang diperlukan untuk mencakup seluruh materi
+- SEMUA konsep, topik, sub-topik, dan detail penting dalam materi HARUS direpresentasikan dalam mindmap
+- JANGAN menyederhanakan atau menghilangkan bagian materi hanya karena sudah terlalu banyak node
+- Materi singkat → node sedikit sesuai kebutuhan
+- Materi panjang/kompleks → node sebanyak yang diperlukan, tidak ada batas atas
+- PRINSIP UTAMA: Kelengkapan dan ketepatan lebih penting daripada kesederhanaan
 
 CONTOH edgeLabel yang bisa digunakan:
 - "adalah" (untuk definisi)
@@ -126,13 +128,15 @@ FORMAT OUTPUT (JSON Valid):
 }
 
 PENTING:
-- Jumlah node FLEKSIBEL sesuai kebutuhan materi
+- Jumlah node TIDAK DIBATASI — prioritaskan kelengkapan materi
 - Pastikan semua parentId valid (merujuk ke id yang ada)
 - Root node HARUS memiliki parentId: null dan edgeLabel: null
 - SETIAP node WAJIB memiliki "description" berisi penjelasan 1-3 kalimat
 - SETIAP node lain WAJIB memiliki edgeLabel yang sesuai konteks
 - Tidak boleh ada node orphan (kecuali root)
+- Output harus berupa JSON valid yang lengkap dan tidak terpotong
 `
+
 
 
 // --- Writing Style Map ---

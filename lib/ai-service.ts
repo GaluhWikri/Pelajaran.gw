@@ -248,7 +248,7 @@ ${FLASHCARD_JSON_OUTPUT_FORMAT_TEMPLATE}`
  * Build prompt for mindmap generation from existing notes
  */
 function buildMindmapPrompt(noteTitle: string, noteContent: string): string {
-    const truncatedContent = noteContent.substring(0, 5000)
+    const truncatedContent = noteContent.substring(0, 50000)
 
     return `${MINDMAP_SYSTEM_PROMPT}
 
