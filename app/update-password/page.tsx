@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { Logo } from '@/components/logo'
 import { useRouter } from 'next/navigation'
 
 export default function UpdatePasswordPage() {
@@ -91,11 +92,7 @@ export default function UpdatePasswordPage() {
                     <CardHeader className="space-y-1 text-center pb-2">
                         <div className="flex flex-col items-center justify-center gap-3 mb-2">
                             <div className="flex items-center gap-3">
-                                <img
-                                    src="/favicon/android-chrome-512x512.png"
-                                    alt="Logo"
-                                    className="w-16 h-16 object-contain"
-                                />
+                                <Logo width={64} height={64} className="w-16 h-16 object-contain" />
                                 <div className="text-4xl font-bold tracking-tight">
                                     Pelajaran<span className="text-orange-500">ku</span>
                                 </div>
