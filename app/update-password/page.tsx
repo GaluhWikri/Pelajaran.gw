@@ -20,16 +20,31 @@ export default function UpdatePasswordPage() {
     const [message, setMessage] = useState('')
     const router = useRouter()
 
-    // Ensure session exists (Supabase handles this via hash processing usually automatically in the background)
+    // Exchange code for session (for PKCE flow) and ensure session exists
     useEffect(() => {
-        // Optional: Check if user is actually logged in via the recovery link
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (!session) {
-                // If no session, maybe they just visited the page directly without magic link
-                // or token expired.
-                // console.warn("No active session found on update password page")
+        const handleRecovery = async () => {
+            const url = new URL(window.location.href)
+            const code = url.searchParams.get('code')
+
+            if (code) {
+                setStatus('loading')
+                const { error } = await supabase.auth.exchangeCodeForSession(code)
+                if (error) {
+                    setStatus('error')
+                    setMessage(error.message || 'Token reset password tidak valid atau telah kedaluwarsa.')
+                } else {
+                    setStatus('idle')
+                }
+            } else {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (!session) {
+                    setStatus('error')
+                    setMessage('Sesi tidak ditemukan. Silakan minta link reset password baru.')
+                }
             }
-        })
+        }
+
+        handleRecovery()
     }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
