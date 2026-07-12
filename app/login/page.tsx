@@ -96,7 +96,7 @@ export default function LoginPage() {
                         <div className="grid gap-3">
                             <Button
                                 variant="outline"
-                                className="w-full h-11 bg-[#1e293b] hover:bg-[#334155] border-transparent text-white justify-start relative px-4"
+                                className="w-full h-11 bg-white hover:bg-slate-50 border border-slate-200 text-slate-900 dark:bg-[#1e293b] dark:hover:bg-[#334155] dark:border-transparent dark:text-white justify-start relative px-4"
                                 onClick={() => handleOAuthLogin('google')}
                                 disabled={loading}
                             >
