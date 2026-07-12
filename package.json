@@ -40,6 +40,7 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.89.0",
     "@tiptap/extension-bubble-menu": "^3.14.0",
     "@tiptap/extension-drag-handle-react": "^3.14.0",
