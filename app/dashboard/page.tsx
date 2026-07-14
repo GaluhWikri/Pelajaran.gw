@@ -345,7 +345,7 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px] text-center bg-background/20 backdrop-blur-md border-white/10 shadow-2xl">
+                          <DialogContent className="sm:max-w-[425px] text-center bg-background/80 dark:bg-background/30 backdrop-blur-lg border-black/10 dark:border-white/10 shadow-2xl">
                             <DialogHeader>
                               <DialogTitle className="text-center text-xl">Badge Details</DialogTitle>
                             </DialogHeader>
@@ -370,7 +370,7 @@ export default function DashboardPage() {
                                   <span>Total XP</span>
                                   <span className="font-bold text-foreground">{currentXP.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between text-sm border-t border-white/10 pt-2 mt-2">
+                                <div className="flex justify-between text-sm border-t border-border/50 pt-2 mt-2">
                                   <span>To Next Level</span>
                                   <span className="font-bold text-primary">{(level * 300) - currentXP} XP</span>
                                 </div>
@@ -416,7 +416,7 @@ export default function DashboardPage() {
                         How to level up?
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md bg-background/20 backdrop-blur-md border-white/10 shadow-2xl">
+                    <DialogContent className="sm:max-w-md bg-background/80 dark:bg-background/30 backdrop-blur-lg border-black/10 dark:border-white/10 shadow-2xl">
                       <DialogHeader>
                         <DialogTitle>Level Up Guide 🚀</DialogTitle>
                         <DialogDescription>
@@ -457,25 +457,25 @@ export default function DashboardPage() {
                         <div className="space-y-2 pt-2">
                           <h4 className="font-semibold text-primary">Ranks</h4>
                           <div className="grid grid-cols-1 gap-2">
-                            <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
+                            <div className="flex items-center gap-3 p-2.5 rounded-lg bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/10 transition-all hover:bg-amber-500/15 dark:hover:bg-amber-500/10">
                               <img src="/image/badges/novice learner.png" className="w-8 h-8 object-contain" />
                               <div>
-                                <p className="font-bold text-xs uppercase">Level 1-25</p>
-                                <p className="font-medium">Novice Learner</p>
+                                <p className="font-bold text-xs uppercase text-amber-600 dark:text-amber-400">Level 1-25</p>
+                                <p className="font-medium text-foreground">Novice Learner</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
+                            <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-500/10 dark:bg-slate-500/5 border border-slate-500/20 dark:border-slate-500/10 transition-all hover:bg-slate-500/15 dark:hover:bg-slate-500/10">
                               <img src="/image/badges/advanced learner.png" className="w-8 h-8 object-contain" />
                               <div>
-                                <p className="font-bold text-xs uppercase">Level 26-49</p>
-                                <p className="font-medium">Advanced Scholar</p>
+                                <p className="font-bold text-xs uppercase text-slate-600 dark:text-slate-400">Level 26-49</p>
+                                <p className="font-medium text-foreground">Advanced Scholar</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border">
+                            <div className="flex items-center gap-3 p-2.5 rounded-lg bg-orange-500/10 dark:bg-orange-500/5 border border-orange-500/20 dark:border-orange-500/10 transition-all hover:bg-orange-500/15 dark:hover:bg-orange-500/10">
                               <img src="/image/badges/master learner.png" className="w-8 h-8 object-contain" />
                               <div>
-                                <p className="font-bold text-xs uppercase text-primary">Level 50+</p>
-                                <p className="font-medium text-primary">Master Learner</p>
+                                <p className="font-bold text-xs uppercase text-orange-600 dark:text-orange-400">Level 50+</p>
+                                <p className="font-medium text-foreground">Master Learner</p>
                               </div>
                             </div>
                           </div>
