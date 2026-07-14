@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import { LandingNavbar } from "@/components/landing-navbar"
 import dynamic from "next/dynamic"
 import { Logo } from "@/components/logo"
+import { RunningText } from "@/components/landing/running-text"
 
 // Dynamic import for heavy component
 const ProcessDemo = dynamic(() => import("@/components/landing/process-demo").then(mod => ({ default: mod.ProcessDemo })), {
@@ -257,6 +258,9 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Running Text / Infinite Ticker */}
+      <RunningText />
 
       {/* Process Animation Section */}
       <section className="py-12 md:py-20 px-4 relative">
