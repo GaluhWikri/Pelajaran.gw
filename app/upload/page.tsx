@@ -700,11 +700,12 @@ export default function UploadPage() {
 
 
 
-    const getFileType = (filename: string): "pdf" | "docx" | "pptx" | "video" | "audio" | "image" => {
+    const getFileType = (filename: string): "pdf" | "docx" | "pptx" | "video" | "audio" | "image" | "txt" => {
         const ext = filename.split(".").pop()?.toLowerCase()
         if (ext === "pdf") return "pdf"
         if (ext === "docx" || ext === "doc") return "docx"
         if (ext === "pptx" || ext === "ppt") return "pptx"
+        if (ext === "txt") return "txt"
         if (["mp4", "avi", "mov", "mkv"].includes(ext || "")) return "video"
         if (["mp3", "wav", "m4a"].includes(ext || "")) return "audio"
         return "image"

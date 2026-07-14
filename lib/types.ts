@@ -13,7 +13,7 @@ export interface Material {
   id: string
   userId: string
   title: string
-  type: "pdf" | "docx" | "pptx" | "video" | "audio" | "image"
+  type: "pdf" | "docx" | "pptx" | "video" | "audio" | "image" | "txt"
   fileUrl: string
   fileName: string
   fileSize: number

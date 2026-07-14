@@ -1,8 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useStore } from "@/lib/store"
 import { Card } from "@/components/ui/card"
-import { FileText, Video, Mic, Image as ImageIcon, AlertCircle } from "lucide-react"
+import { FileText, Video, Mic, Image as ImageIcon, AlertCircle, Loader2 } from "lucide-react"
 
 interface DocumentTabProps {
   noteId: string
@@ -13,6 +14,26 @@ export function DocumentTab({ noteId }: DocumentTabProps) {
   
   const note = notes.find((n) => n.id === noteId)
   const material = note?.materialId ? materials.find((m) => m.id === note.materialId) : null
+
+  const [txtContent, setTxtContent] = useState<string | null>(null)
+  const [loadingTxt, setLoadingTxt] = useState(false)
+
+  useEffect(() => {
+    if (material && material.type === "txt") {
+      setLoadingTxt(true)
+      fetch(material.fileUrl)
+        .then((res) => res.text())
+        .then((text) => {
+          setTxtContent(text)
+          setLoadingTxt(false)
+        })
+        .catch((err) => {
+          console.error("Failed to load txt file:", err)
+          setTxtContent("Gagal memuat isi file teks.")
+          setLoadingTxt(false)
+        })
+    }
+  }, [material])
 
   if (!material) {
     return (
@@ -92,6 +113,19 @@ export function DocumentTab({ noteId }: DocumentTabProps) {
              />
            </div>
         )
+      case "txt":
+        if (loadingTxt) {
+          return (
+            <div className="flex items-center justify-center h-full w-full">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          )
+        }
+        return (
+          <div className="w-full h-full p-6 overflow-auto bg-muted/5 rounded-md text-left font-mono text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+            {txtContent}
+          </div>
+        )
       default:
         // docx, pptx fallback (browsers can't natively render these easily without external services like Google Docs Viewer)
         // Note: Google Docs Viewer requires public URLs to work, so blob URLs will fail here
@@ -117,7 +151,7 @@ export function DocumentTab({ noteId }: DocumentTabProps) {
 
   const getIconRow = () => {
     switch (material.type) {
-      case "pdf": case "docx": case "pptx": return <FileText className="h-5 w-5 text-orange-500" />
+      case "pdf": case "docx": case "pptx": case "txt": return <FileText className="h-5 w-5 text-orange-500" />
       case "video": return material.fileUrl.includes("youtu") ? <Video className="h-5 w-5 text-orange-500" /> : <Video className="h-5 w-5 text-orange-500" />
       case "audio": return <Mic className="h-5 w-5 text-orange-500" />
       case "image": return <ImageIcon className="h-5 w-5 text-orange-500" />
