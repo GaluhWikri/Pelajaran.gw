@@ -76,6 +76,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
         duration: globalDuration,
         volume: globalVolume,
         playbackSpeed: globalPlaybackSpeed,
+        audioElement,
         // Actions
         play: playGlobal,
         pause: pauseGlobal,
@@ -97,10 +98,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
     const previousVolumeRef = useRef(1)
     const [activeDialogueIndex, setActiveDialogueIndex] = useState(-1)
 
-    const audioRef = useRef<HTMLAudioElement | null>(null)
     const dialogueRefs = useRef<(HTMLDivElement | null)[]>([])
-    // Ref to store resume time to handle race condition between state sync and audio loading
-    const targetResumeTimeRef = useRef<number | null>(null)
 
     // Refs to store current values for cleanup access
     const audioStateRef = useRef({
@@ -397,8 +395,10 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
         if (globalAudioNoteId === noteId) {
             if (globalIsPlaying) {
                 pauseGlobal()
+                audioElement?.pause()
             } else {
                 playGlobal()
+                audioElement?.play().catch(e => console.error("Global play failed:", e))
             }
         } else {
             // New playback - Play this note globally
@@ -411,6 +411,13 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
             })
             playGlobal()
             hideMini()
+
+            // Play the global audio directly inside click handler to allow browser user gesture bypass
+            if (audioElement) {
+                audioElement.src = audioUrl
+                audioElement.load()
+                audioElement.play().catch(e => console.error("Immediate global play failed:", e))
+            }
         }
     }
 
@@ -420,6 +427,9 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
 
         if (globalAudioNoteId === noteId) {
             setGlobalCurrentTime(newTime)
+            if (audioElement) {
+                audioElement.currentTime = newTime
+            }
         }
     }
 
@@ -429,8 +439,9 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
 
         if (globalAudioNoteId === noteId) {
             setGlobalVolume(newVolume)
-        } else if (audioRef.current) {
-            audioRef.current.volume = newVolume
+            if (audioElement) {
+                audioElement.volume = newVolume
+            }
         }
 
         // Update muted state based on volume
@@ -455,56 +466,10 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
 
         if (globalAudioNoteId === noteId) { // Typo fix: globalAudioNoteId
             setGlobalCurrentTime(newTime)
-        } else if (audioRef.current) {
-            audioRef.current.currentTime = newTime
-        }
-    }
-
-
-    // Audio element event handlers
-    const handleTimeUpdate = () => {
-        if (!audioRef.current) return
-
-        const time = audioRef.current.currentTime
-        // Prevent overwriting state with 0 during initial load/buffering
-        if (time > 0.5 || Math.abs(time - currentTime) > 1) {
-            setCurrentTime(time)
-        }
-    }
-
-    const handleLoadedMetadata = () => {
-        if (!audioRef.current) return
-        setDuration(audioRef.current.duration)
-
-        // Restore playback position from Ref (more reliable than state)
-        if (targetResumeTimeRef.current !== null && targetResumeTimeRef.current > 0) {
-            console.log('[PodcastTab] Restoring playback position from REF:', targetResumeTimeRef.current)
-            audioRef.current.currentTime = targetResumeTimeRef.current
-        } else if (currentTime > 0) {
-            // Fallback to state
-            if (audioRef.current.currentTime < 1) {
-                audioRef.current.currentTime = currentTime
+            if (audioElement) {
+                audioElement.currentTime = newTime
             }
         }
-
-        // Auto-resume if playing
-        if (isPlaying) {
-            console.log('[PodcastTab] Auto-resuming playback')
-            audioRef.current.play().catch(e => console.error("Auto-resume failed:", e))
-        }
-    }
-
-    const handleCanPlay = () => {
-        if (audioRef.current && targetResumeTimeRef.current !== null && targetResumeTimeRef.current > 0) {
-            if (Math.abs(audioRef.current.currentTime - targetResumeTimeRef.current) > 1) {
-                audioRef.current.currentTime = targetResumeTimeRef.current
-            }
-        }
-    }
-
-    const handleEnded = () => {
-        setIsPlaying(false)
-        setActiveDialogueIndex(-1)
     }
 
     const hasContent = noteContent && noteContent.trim().length > 0
@@ -640,19 +605,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Hidden audio element */}
-                            {audioUrl && (
-                                <audio
-                                    ref={audioRef}
-                                    src={audioUrl}
-                                    preload="auto"
-                                    onCanPlay={handleCanPlay}
-                                    onTimeUpdate={handleTimeUpdate}
-                                    onLoadedMetadata={handleLoadedMetadata}
-                                    onEnded={handleEnded}
-                                    onPlay={() => setIsPlaying(true)}
-                                />
-                            )}
+
 
                             {/* Progress bar */}
                             <div className="space-y-2">

@@ -35,6 +35,7 @@ export function FloatingAudioPlayer() {
         setPlaybackSpeed,
         setPosition,
         closePlayer,
+        setAudioElement,
     } = useAudioPlayerStore()
 
     const pathname = usePathname()
@@ -54,6 +55,17 @@ export function FloatingAudioPlayer() {
 
 
     const audioRef = useRef<HTMLAudioElement | null>(null)
+
+    // Register audio ref globally
+    useEffect(() => {
+        if (audioRef.current) {
+            setAudioElement(audioRef.current)
+        }
+        return () => {
+            setAudioElement(null)
+        }
+    }, [setAudioElement])
+
     const containerRef = useRef<HTMLDivElement | null>(null)
     const [isDragging, setIsDragging] = useState(false)
     const dragOffsetRef = useRef({ x: 0, y: 0 })
@@ -66,7 +78,14 @@ export function FloatingAudioPlayer() {
     // Sync audio element with store state
     useEffect(() => {
         const audio = audioRef.current
-        if (!audio || !audioUrl) return
+        if (!audio) return
+
+        if (!audioUrl) {
+            // Audio player was closed/reset
+            audio.pause()
+            audio.src = ""
+            return
+        }
 
         if (isPlaying) {
             const playPromise = audio.play()
@@ -209,14 +228,15 @@ export function FloatingAudioPlayer() {
         const newX = e.clientX - dragOffsetRef.current.x
         const newY = e.clientY - dragOffsetRef.current.y
 
-        // Keep within viewport bounds
+        // Keep within viewport bounds (accounting for header height of 64px)
+        const HEADER_HEIGHT = 64
         const maxX = window.innerWidth - containerRef.current.offsetWidth
         const maxY = window.innerHeight - containerRef.current.offsetHeight
 
         // Update local state only (fast, no store write)
         setLocalPosition({
             x: Math.max(0, Math.min(newX, maxX)),
-            y: Math.max(0, Math.min(newY, maxY)),
+            y: Math.max(HEADER_HEIGHT, Math.min(newY, maxY)),
         })
     }, [isDragging])
 
@@ -252,12 +272,14 @@ export function FloatingAudioPlayer() {
         const newX = touch.clientX - dragOffsetRef.current.x
         const newY = touch.clientY - dragOffsetRef.current.y
 
+        // Keep within viewport bounds (accounting for header height of 64px)
+        const HEADER_HEIGHT = 64
         const maxX = window.innerWidth - containerRef.current.offsetWidth
         const maxY = window.innerHeight - containerRef.current.offsetHeight
 
         setLocalPosition({
             x: Math.max(0, Math.min(newX, maxX)),
-            y: Math.max(0, Math.min(newY, maxY)),
+            y: Math.max(HEADER_HEIGHT, Math.min(newY, maxY)),
         })
     }, [isDragging])
 
@@ -303,36 +325,33 @@ export function FloatingAudioPlayer() {
                 right: "24px",
             }
         }
-        // Custom position (from store)
+        // Custom position (from store) - cap y at minimum 64px to prevent it from sliding under header
+        const HEADER_HEIGHT = 64
+        const safeY = Math.max(HEADER_HEIGHT, position.y)
         return {
-            top: `${position.y}px`,
+            top: `${safeY}px`,
             left: `${position.x}px`,
         }
     }
 
-    // Don't render anything if no audio URL is set
-    if (!audioUrl) {
-        return null
-    }
-
     return (
         <>
-            {/* Persist audio element regardless of showMiniPlayer state */}
+            {/* Always render the audio element so its ref is registered globally and ready for user gestures */}
             <audio
                 ref={audioRef}
-                src={audioUrl}
+                src={audioUrl || undefined}
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
                 onCanPlay={handleCanPlay}
                 onEnded={handleEnded}
             />
 
-            {/* Floating player UI - Only show if enabled */}
-            {showMiniPlayer && (
+            {/* Floating player UI - Only show if enabled and we have an audio URL */}
+            {showMiniPlayer && audioUrl && (
                 <div
                     ref={containerRef}
                     className={cn(
-                        "fixed z-100 bg-background/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl",
+                        "fixed z-45 bg-background/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl",
                         !isDragging && "transition-all duration-200",
                         isDragging && "cursor-grabbing",
                         isExpanded ? "w-80" : "w-72"
@@ -372,6 +391,10 @@ export function FloatingAudioPlayer() {
                             className="h-7 w-7 shrink-0 hover:bg-destructive/10 hover:text-destructive"
                             onClick={(e) => {
                                 e.stopPropagation()
+                                if (audioRef.current) {
+                                    audioRef.current.pause()
+                                    audioRef.current.src = ""
+                                }
                                 closePlayer()
                             }}
                         >
@@ -417,7 +440,15 @@ export function FloatingAudioPlayer() {
                             <Button
                                 size="icon"
                                 className="h-10 w-10 rounded-full bg-orange-500 hover:bg-orange-600"
-                                onClick={() => isPlaying ? pause() : play()}
+                                onClick={() => {
+                                    if (isPlaying) {
+                                        pause()
+                                        audioRef.current?.pause()
+                                    } else {
+                                        play()
+                                        audioRef.current?.play().catch(e => console.error("Floating audio play failed:", e))
+                                    }
+                                }}
                             >
                                 {isPlaying ? (
                                     <Pause className="h-5 w-5 text-white" />

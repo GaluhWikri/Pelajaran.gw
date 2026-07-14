@@ -10,6 +10,7 @@ interface AudioPlayerState {
     duration: number
     volume: number
     playbackSpeed: number
+    audioElement: HTMLAudioElement | null
 
     // Podcast data
     audioUrl: string | null
@@ -24,6 +25,7 @@ interface AudioPlayerState {
     position: { x: number; y: number }
 
     // Actions
+    setAudioElement: (el: HTMLAudioElement | null) => void
     setAudioData: (data: {
         audioUrl: string
         podcastTitle: string
@@ -50,6 +52,7 @@ const initialState = {
     duration: 0,
     volume: 1,
     playbackSpeed: 1,
+    audioElement: null,
     audioUrl: null,
     podcastTitle: "",
     noteId: null,
@@ -64,6 +67,8 @@ export const useAudioPlayerStore = create<AudioPlayerState>()(
     persist(
         (set, get) => ({
             ...initialState,
+
+            setAudioElement: (audioElement) => set({ audioElement }),
 
             setAudioData: (data) => set({
                 audioUrl: data.audioUrl,
