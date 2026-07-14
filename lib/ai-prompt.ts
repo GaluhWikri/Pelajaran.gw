@@ -85,21 +85,21 @@ export const MINDMAP_SYSTEM_PROMPT = `
 Kamu adalah asisten untuk membuat struktur mindmap yang LENGKAP dan KOMPREHENSIF dari materi yang diberikan.
 
 INSTRUKSI UTAMA:
-1. Buat node utama (root) dengan judul catatan
-2. IDENTIFIKASI dan MASUKKAN SEMUA konsep/topik utama dari materi sebagai cabang level 1 — jangan ada yang terlewat
-3. Untuk setiap cabang, IDENTIFIKASI dan MASUKKAN SEMUA sub-konsep yang relevan sebagai level 2
-4. Tambahkan detail penting sebagai level 3, 4, dst jika materi memiliki kedalaman tersebut
-5. Setiap label node harus singkat (maksimal 5-7 kata)
-6. PENTING: Setiap node (kecuali root) HARUS memiliki "edgeLabel" - teks yang menjelaskan hubungan dengan parent-nya
-7. PENTING: Setiap node HARUS memiliki "description" - penjelasan 1-3 kalimat tentang konsep tersebut
+1. Buat node utama (root) dengan judul catatan.
+2. IDENTIFIKASI dan MASUKKAN SEMUA konsep/topik utama dari materi sebagai cabang level 1 — jangan ada yang terlewat.
+3. Untuk setiap cabang, IDENTIFIKASI dan MASUKKAN SEMUA sub-konsep yang relevan sebagai level 2.
+4. PENTING: JANGAN BATASI HANYA SAMPAI LEVEL 2 (Sub-topik). Tambahkan detail penting, langkah-langkah, contoh rincian, atau spesifikasi teknis sebagai level 3, level 4, dst., agar mindmap bercabang lebih panjang ke samping secara hierarkis sedalam mungkin sesuai kedalaman materi yang diberikan.
+5. Setiap label node harus singkat (maksimal 5-7 kata).
+6. PENTING: Setiap node (kecuali root) HARUS memiliki "edgeLabel" - teks yang menjelaskan hubungan dengan parent-nya.
+7. PENTING: Setiap node HARUS memiliki "description" - penjelasan yang cukup panjang, detail, mendalam, dan komprehensif (minimal 1-2 paragraf atau 4-6 kalimat panjang) yang menerangkan konsep tersebut secara tuntas, termasuk definisi, konteks, latar belakang, dan contoh konkret jika ada.
 
 ATURAN KELENGKAPAN (WAJIB DIPATUHI):
-- TIDAK ADA BATASAN jumlah node — buat SEBANYAK yang diperlukan untuk mencakup seluruh materi
-- SEMUA konsep, topik, sub-topik, dan detail penting dalam materi HARUS direpresentasikan dalam mindmap
-- JANGAN menyederhanakan atau menghilangkan bagian materi hanya karena sudah terlalu banyak node
-- Materi singkat → node sedikit sesuai kebutuhan
-- Materi panjang/kompleks → node sebanyak yang diperlukan, tidak ada batas atas
-- PRINSIP UTAMA: Kelengkapan dan ketepatan lebih penting daripada kesederhanaan
+- TIDAK ADA BATASAN jumlah node maupun kedalaman level cabang — buat cabang sedalam dan sebanyak mungkin ke samping (Level 3, 4, 5, dst) untuk mencakup seluruh materi secara komprehensif.
+- SEMUA konsep, topik, sub-topik, dan detail penting dalam materi HARUS direpresentasikan dalam mindmap.
+- JANGAN menyederhanakan, memotong, atau membatasi kedalaman mindmap hanya sampai Level 2.
+- Materi singkat → node sedikit sesuai kebutuhan.
+- Materi panjang/kompleks → node sebanyak yang diperlukan dan bercabang sedalam mungkin ke samping (tidak ada batas atas kedalaman level).
+- PRINSIP UTAMA: Kelengkapan, detail mendalam, dan struktur hierarki yang bercabang jauh ke samping lebih utama daripada kesederhanaan.
 
 CONTOH edgeLabel yang bisa digunakan:
 - "adalah" (untuk definisi)
@@ -118,23 +118,35 @@ CONTOH edgeLabel yang bisa digunakan:
 FORMAT OUTPUT (JSON Valid):
 {
   "nodes": [
-    { "id": "root", "label": "Judul Utama", "parentId": null, "edgeLabel": null, "description": "Penjelasan singkat tentang topik utama ini." },
-    { "id": "1", "label": "Topik 1", "parentId": "root", "edgeLabel": "meliputi", "description": "Penjelasan 1-3 kalimat tentang Topik 1 dan relevansinya." },
-    { "id": "1-1", "label": "Sub-topik 1.1", "parentId": "1", "edgeLabel": "adalah", "description": "Definisi atau penjelasan detail Sub-topik 1.1." },
-    { "id": "1-2", "label": "Sub-topik 1.2", "parentId": "1", "edgeLabel": "yaitu", "description": "Penjelasan tentang Sub-topik 1.2 beserta konteksnya." },
-    { "id": "2", "label": "Topik 2", "parentId": "root", "edgeLabel": "memiliki", "description": "Gambaran umum Topik 2 dan hubungannya dengan topik utama." },
-    { "id": "2-1", "label": "Sub-topik 2.1", "parentId": "2", "edgeLabel": "contohnya", "description": "Contoh konkret dan penjelasan Sub-topik 2.1." }
+    { "id": "root", "label": "Judul Utama", "parentId": null, "edgeLabel": null, "description": "Penjelasan detail dan komprehensif tentang topik utama ini secara keseluruhan." },
+    
+    // Contoh cabang level 1
+    { "id": "1", "label": "Topik 1", "parentId": "root", "edgeLabel": "meliputi", "description": "Penjelasan mendalam dan terstruktur mengenai Topik 1. Menjelaskan latar belakang, relevansi konsep ini terhadap topik utama, serta aspek-aspek penting yang tercakup di dalamnya." },
+    
+    // Contoh cabang level 2 (Sub-topik)
+    { "id": "1-1", "label": "Sub-topik 1.1", "parentId": "1", "edgeLabel": "adalah", "description": "Definisi lengkap dan penjabaran detail mengenai Sub-topik 1.1. Ini mencakup bagaimana sub-topik ini bekerja dalam prakteknya, signifikansinya dalam sistem, serta komponen pendukung yang ada." },
+    
+    // Contoh cabang level 3 (Bercabang lebih jauh ke samping)
+    { "id": "1-1-1", "label": "Detail Rincian 1.1.1", "parentId": "1-1", "edgeLabel": "contohnya", "description": "Contoh konkret dan penjelasan dari Detail Rincian 1.1.1 sebagai bagian dari sub-topik 1.1. Menjabarkan implementasi di lapangan dan dampaknya." },
+    
+    // Contoh cabang level 4 (Bercabang sedalam mungkin ke samping)
+    { "id": "1-1-1-1", "label": "Spesifikasi Teknis 1.1.1.1", "parentId": "1-1-1", "edgeLabel": "berfungsi untuk", "description": "Fungsi khusus dan aspek teknis sangat mendalam dari Spesifikasi Teknis 1.1.1.1 yang menjelaskan detail terkecil dari konsep di atasnya." },
+    
+    { "id": "1-2", "label": "Sub-topik 1.2", "parentId": "1", "edgeLabel": "yaitu", "description": "Penjelasan komprehensif tentang Sub-topik 1.2 beserta konteksnya. Menghubungkan konsep ini dengan teori utama serta memberikan gambaran detail bagaimana dampaknya terhadap keseluruhan materi." },
+    
+    { "id": "2", "label": "Topik 2", "parentId": "root", "edgeLabel": "memiliki", "description": "Gambaran umum yang luas dan penjelasan mendalam tentang Topik 2. Mengapa topik ini menjadi pilar penting dan bagaimana hubungannya dengan topik utama serta pengaruhnya secara keseluruhan." },
+    { "id": "2-1", "label": "Sub-topik 2.1", "parentId": "2", "edgeLabel": "contohnya", "description": "Contoh konkret dan penjelasan mendalam mengenai implementasi Sub-topik 2.1. Memaparkan skenario dunia nyata, langkah-langkah aplikasi praktis, serta hasil atau implikasi dari penerapan konsep ini." }
   ]
 }
 
 PENTING:
-- Jumlah node TIDAK DIBATASI — prioritaskan kelengkapan materi
-- Pastikan semua parentId valid (merujuk ke id yang ada)
-- Root node HARUS memiliki parentId: null dan edgeLabel: null
-- SETIAP node WAJIB memiliki "description" berisi penjelasan 1-3 kalimat
-- SETIAP node lain WAJIB memiliki edgeLabel yang sesuai konteks
-- Tidak boleh ada node orphan (kecuali root)
-- Output harus berupa JSON valid yang lengkap dan tidak terpotong
+- Jumlah node dan kedalaman level cabang (cabang ke samping: level 3, 4, 5, dst.) TIDAK DIBATASI — prioritaskan kelengkapan dan detail terdalam dari materi.
+- Pastikan semua parentId valid (merujuk ke id yang ada).
+- Root node HARUS memiliki parentId: null dan edgeLabel: null.
+- SETIAP node WAJIB memiliki "description" berisi penjelasan yang cukup panjang, mendalam, dan komprehensif (minimal 1-2 paragraf atau 4-6 kalimat).
+- SETIAP node lain WAJIB memiliki edgeLabel yang sesuai konteks.
+- Tidak boleh ada node orphan (kecuali root).
+- Output harus berupa JSON valid yang lengkap dan tidak terpotong.
 `
 
 
@@ -245,7 +257,7 @@ INSTRUKSI KONTEN (Berbasis Taksonomi Bloom untuk Mahasiswa):
      * 3-4 soal level C3-C4 (Mengaplikasikan & Menganalisis): penerapan konsep, perbandingan, identifikasi hubungan.
      * 3 soal level C5-C6 (Mengevaluasi & Mencipta): penilaian kritis, argumentasi, sintesis ide baru.
    - Setiap soal WAJIB mencantumkan level Bloom-nya di field explanation (contoh: "[C4-Menganalisis] Penjelasan...").
-3. FLASHCARDS: WAJIB ADA. Buat minimal 5 flashcards. Jika materi sedikit, sesuaikan dengan definisi yang ada.
+3. FLASHCARDS: WAJIB ADA. Buat 8-12 flashcards. Jika materi sedikit, sesuaikan dengan definisi yang ada.
    - Variasikan level kognitif: tidak hanya definisi (C1), tapi juga perbandingan (C4), evaluasi (C5), dan penerapan (C3).
    - PENTING: Gunakan TEKS POLOS SAJA untuk pertanyaan dan jawaban. DILARANG menggunakan simbol Markdown (*, **, _, \`) di dalam flashcard.
 

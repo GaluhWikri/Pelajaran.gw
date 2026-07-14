@@ -573,15 +573,13 @@ async function mockGenerateLearningContent(file: File, errorMessage?: string) {
                 },
             ],
         },
-        flashcards: [
-            {
-                question: "Setup",
-                answer: "Add NEXT_PUBLIC_GEMINI_API_KEY to .env",
-                reviewCount: 0,
-                userId: "",
-                noteId: "",
-            },
-        ],
+        flashcards: Array.from({ length: 10 }).map((_, i) => ({
+            question: `Mock question ${i + 1} (Setup)`,
+            answer: `Mock answer ${i + 1} (Add NEXT_PUBLIC_GEMINI_API_KEY to .env)`,
+            reviewCount: 0,
+            userId: "",
+            noteId: "",
+        })),
     }
 }
 

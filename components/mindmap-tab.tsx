@@ -68,9 +68,9 @@ const NodeDetailModal = memo(({ node, onClose }: NodeDetailModalProps) => {
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
             <DialogContent
                 showCloseButton={false}
-                className="sm:max-w-[420px] p-0 gap-0 overflow-hidden rounded-2xl border-border/60"
+                className="sm:max-w-[520px] p-0 gap-0 overflow-hidden rounded-2xl border-border/60"
             >
-                <div className="p-5 pb-4 space-y-4">
+                <div className="p-5 pb-4 space-y-4 max-h-[70vh] overflow-y-auto">
 
                     {/* ── Top row: icon · badges · close ── */}
                     <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ const NodeDetailModal = memo(({ node, onClose }: NodeDetailModalProps) => {
 
                     {/* ── Description ── */}
                     <DialogDescription asChild>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                             {node?.description ?? (
                                 <span className="italic">
                                     Belum ada penjelasan. Coba regenerate mindmap untuk mendapatkan deskripsi.
@@ -134,7 +134,7 @@ const NodeDetailModal = memo(({ node, onClose }: NodeDetailModalProps) => {
                             "grid gap-2",
                             (node!.children!.length === 1) ? "grid-cols-1" : "grid-cols-2"
                         )}>
-                            {node!.children!.slice(0, 4).map((child, i) => (
+                            {node!.children!.map((child, i) => (
                                 <div
                                     key={i}
                                     className="rounded-xl bg-muted/60 border border-border/50 px-3.5 py-3"

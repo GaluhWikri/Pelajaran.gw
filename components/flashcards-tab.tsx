@@ -76,7 +76,10 @@ export function FlashcardsTab({ noteId }: FlashcardsTabProps) {
 
         setIsGenerating(true)
         try {
-            const generatedCards = await generateFlashcardsFromNote(currentNote.content, 5)
+            const hasExisting = noteFlashcards.length > 0
+            const count = hasExisting ? 5 : Math.floor(Math.random() * 5) + 8
+
+            const generatedCards = await generateFlashcardsFromNote(currentNote.content, count)
 
             for (const card of generatedCards) {
                 const newId = crypto.randomUUID()
@@ -192,7 +195,7 @@ export function FlashcardsTab({ noteId }: FlashcardsTabProps) {
                                 <CardContent className="p-6 md:p-8 h-full flex items-center justify-center overflow-auto">
                                     <div className="text-center space-y-4 w-full">
                                         <p className="text-xs md:text-sm font-medium text-primary uppercase">Question</p>
-                                        <p className="text-lg md:text-xl font-medium wrap-break-word px-2">{noteFlashcards[currentIndex].question}</p>
+                                        <p className="text-lg md:text-xl font-medium wrap-break-word px-2">{noteFlashcards[currentIndex]?.question || ""}</p>
                                         <p className="text-xs text-muted-foreground">Click to flip</p>
                                     </div>
                                 </CardContent>
@@ -203,7 +206,7 @@ export function FlashcardsTab({ noteId }: FlashcardsTabProps) {
                                 <CardContent className="p-6 md:p-8 h-full flex items-center justify-center overflow-auto">
                                     <div className="text-center space-y-4 w-full">
                                         <p className="text-xs md:text-sm font-medium text-primary uppercase">Answer</p>
-                                        <p className="text-lg md:text-xl font-medium wrap-break-word px-2">{noteFlashcards[currentIndex].answer}</p>
+                                        <p className="text-lg md:text-xl font-medium wrap-break-word px-2">{noteFlashcards[currentIndex]?.answer || ""}</p>
                                         <p className="text-xs text-muted-foreground">Click to flip back</p>
                                     </div>
                                 </CardContent>
