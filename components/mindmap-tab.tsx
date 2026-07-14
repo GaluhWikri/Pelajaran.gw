@@ -75,7 +75,7 @@ const NodeDetailModal = memo(({ node, onClose }: NodeDetailModalProps) => {
                     {/* ── Top row: icon · badges · close ── */}
                     <div className="flex items-center gap-2">
                         {/* Icon */}
-                        <div className={cn("flex-shrink-0 rounded-xl p-2.5", theme.iconBg)}>
+                        <div className={cn("shrink-0 rounded-xl p-2.5", theme.iconBg)}>
                             <BookOpen className={cn("h-4 w-4", theme.iconColor)} />
                         </div>
 
@@ -103,7 +103,7 @@ const NodeDetailModal = memo(({ node, onClose }: NodeDetailModalProps) => {
                         {/* Close button */}
                         <button
                             onClick={onClose}
-                            className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                             aria-label="Tutup"
                         >
                             <X className="h-4 w-4" />
