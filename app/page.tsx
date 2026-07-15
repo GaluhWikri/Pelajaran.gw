@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState, lazy, Suspense } from "react"
-import { motion, useScroll, useTransform, AnimatePresence, useMotionTemplate } from "framer-motion"
+import { motion, useScroll, useTransform, AnimatePresence, useMotionTemplate, Variants } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle, Mic } from "lucide-react"
+import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle, Mic, BookOpen } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
@@ -40,8 +40,20 @@ export default function LandingPage() {
   const blurFilter = useMotionTemplate`blur(${blur}px)`
 
   // Carousel state
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const [[currentSlide, direction], setSlide] = useState([0, 0])
   const [isMobile, setIsMobile] = useState(false)
+
+  const scrollRevealVariants = {
+    hidden: { opacity: 0, y: 35 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.21, 0.47, 0.32, 0.98] as const
+      }
+    }
+  }
 
   // Detect mobile device
   useEffect(() => {
@@ -78,8 +90,19 @@ export default function LandingPage() {
 
   const demoScreenshots = isMobile ? mobileScreenshots : desktopScreenshots
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % demoScreenshots.length)
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + demoScreenshots.length) % demoScreenshots.length)
+  const nextSlide = () => {
+    setSlide(([prevSlide]) => {
+      const nextIdx = (prevSlide + 1) % demoScreenshots.length
+      return [nextIdx, 1]
+    })
+  }
+
+  const prevSlide = () => {
+    setSlide(([prevSlide]) => {
+      const prevIdx = (prevSlide - 1 + demoScreenshots.length) % demoScreenshots.length
+      return [prevIdx, -1]
+    })
+  }
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -94,48 +117,90 @@ export default function LandingPage() {
       <LandingNavbar />
 
       {/* Hero Section */}
-      <section className="pt-24 pb-12 md:pt-32 md:pb-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center space-y-6"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50 text-sm">
-              <Sparkles className="h-4 w-4 text-orange-500" />
-              <span>Didukung oleh Gemini AI</span>
-            </div>
+      <section className="pt-24 pb-12 md:pt-32 md:pb-20 px-4 relative overflow-hidden">
+        {/* Background glow overlay */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.08),transparent_50%)] pointer-events-none -z-10" />
 
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+        <div className="container mx-auto max-w-6xl relative">
+
+          {/* Staggered Content Container */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.12,
+                  delayChildren: 0.1
+                }
+              }
+            }}
+            initial="hidden"
+            animate="visible"
+            className="text-center space-y-6 max-w-4xl mx-auto"
+          >
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 150 } }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50 text-xs md:text-sm font-semibold"
+            >
+              <Sparkles className="h-4 w-4 text-orange-500 animate-pulse" />
+              <span className="text-muted-foreground">Didukung oleh Gemini AI</span>
+            </motion.div>
+
+            <motion.h1
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 20 } }
+              }}
+              className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-foreground"
+            >
               Belajar Lebih Cerdas
               <br />
-              dengan <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-orange-600">AI Assistant</span>
-            </h1>
+              dengan <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 via-amber-500 to-orange-600 drop-shadow-xs relative">
+                AI Assistant
+                <span className="absolute bottom-1.5 left-0 right-0 h-1 bg-linear-to-r from-orange-500/40 via-amber-500/40 to-orange-600/40 rounded-full blur-xs" />
+              </span>
+            </motion.h1>
 
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Transform materi & video belajar Anda menjadi catatan interaktif, ringkasan, flashcard, quiz, mind map,dan podcast dengan bantuan AI dalam hitungan detik.
-            </p>
+            <motion.p
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 20 } }
+              }}
+              className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            >
+              Transform materi & video belajar Anda menjadi <span className="text-foreground font-semibold">catatan interaktif, ringkasan, flashcard, quiz, mind map</span>, dan <span className="text-foreground font-semibold">podcast</span> dengan bantuan AI dalam hitungan detik.
+            </motion.p>
 
-            <div className="flex items-center justify-center gap-4 pt-4">
-              <Link href="/register">
-                <Button size="lg" className="gap-2 text-lg h-12 px-8">
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 20 } }
+              }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full sm:w-auto"
+            >
+              <Link href="/register" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto gap-2.5 text-base h-13 px-8 rounded-full bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-300">
                   Mulai Belajar
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg h-12 px-8" onClick={() => {
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base h-13 px-8 rounded-full border-border/80 hover:bg-muted/50 hover:scale-102 transition-all duration-300" onClick={() => {
                 document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })
               }}>
                 Lihat Demo
               </Button>
-            </div>
+            </motion.div>
 
             {/* Social Proof */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 150 } }
+              }}
               className="flex items-center justify-center gap-3 pt-6"
             >
               <div className="flex -space-x-4">
@@ -155,7 +220,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <span className="text-muted-foreground font-medium">
+              <span className="text-muted-foreground font-medium text-sm">
                 Disukai oleh <span className="text-foreground font-bold">2,000,000+</span> Pelajar
               </span>
             </motion.div>
@@ -196,13 +261,35 @@ export default function LandingPage() {
               <div className="relative bg-background overflow-hidden">
                 {/* Main Image Container - Match actual screenshot aspect ratio */}
                 <div className={`relative w-full ${isMobile ? 'aspect-390/844' : 'aspect-2/1'}`}>
-                  <AnimatePresence initial={false} custom={currentSlide}>
+                  <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                       key={currentSlide}
-                      initial={{ opacity: 0, x: 100 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -100 }}
-                      transition={{ duration: 0.3 }}
+                      custom={direction}
+                      variants={{
+                        enter: (direction: number) => ({
+                          x: direction > 0 ? 150 : -150,
+                          opacity: 0,
+                          scale: 0.97
+                        }),
+                        center: {
+                          x: 0,
+                          opacity: 1,
+                          scale: 1
+                        },
+                        exit: (direction: number) => ({
+                          x: direction < 0 ? 150 : -150,
+                          opacity: 0,
+                          scale: 0.97
+                        })
+                      }}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{
+                        x: { type: "spring", stiffness: 300, damping: 30 },
+                        opacity: { duration: 0.2 },
+                        scale: { duration: 0.2 }
+                      }}
                       className="absolute inset-0 w-full h-full"
                     >
                       <Image
@@ -245,7 +332,12 @@ export default function LandingPage() {
                     {demoScreenshots.map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => setCurrentSlide(index)}
+                        onClick={() => {
+                          setSlide(([prevSlide]) => {
+                            const dir = index > prevSlide ? 1 : -1
+                            return [index, dir]
+                          })
+                        }}
                         className={`h-2 rounded-full transition-all ${index === currentSlide ? 'w-8 bg-primary' : 'w-2 bg-muted-foreground/30'
                           }`}
                         aria-label={`Go to slide ${index + 1}`}
@@ -263,7 +355,14 @@ export default function LandingPage() {
       <RunningText />
 
       {/* Process Animation Section */}
-      <section className="py-12 md:py-20 px-4 relative">
+      <motion.section
+        id="cara-kerja"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={scrollRevealVariants}
+        className="py-12 md:py-20 px-4 relative scroll-mt-20"
+      >
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
@@ -280,22 +379,28 @@ export default function LandingPage() {
             <ProcessDemo />
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Features Section */}
-      <section className="py-16 md:py-24 px-4 relative overflow-hidden">
+      <section id="features" className="py-16 md:py-24 px-4 relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-linear-to-tr from-orange-500/5 to-transparent rounded-full blur-3xl -z-10" />
 
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-20 space-y-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={scrollRevealVariants}
+            className="text-center mb-20 space-y-4"
+          >
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
               Fitur <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-amber-500">Unggulan</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Platform belajar all-in-one yang didukung AI untuk memaksimalkan potensi akademis Anda.
             </p>
-          </div>
+          </motion.div>
 
           {(() => {
             const features = [
@@ -326,31 +431,73 @@ export default function LandingPage() {
               }
             ]
 
-            const FeatureCard = ({ feature, i }: { feature: typeof features[0]; i: number }) => (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="group relative p-8 rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/10"
-              >
-                <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
+            const iconVariants: Record<string, Variants> = {
+              "Smart Notes": {
+                hover: { 
+                  rotate: [0, -8, 8, -5, 5, 0],
+                  transition: { duration: 0.5 }
+                }
+              },
+              "AI Tutor 24/7": {
+                hover: { 
+                  scale: [1, 1.12, 0.96, 1.08, 1],
+                  transition: { repeat: Infinity, duration: 1.4, ease: "easeInOut" }
+                }
+              },
+              "Quiz & Flashcard": {
+                hover: { 
+                  scale: [1, 1.22, 1.1],
+                  rotate: [0, -15, 15, 0],
+                  transition: { duration: 0.45 }
+                }
+              },
+              "Mind Map": {
+                hover: { 
+                  rotate: [0, 45, -10, 0],
+                  scale: 1.15,
+                  transition: { duration: 0.6 }
+                }
+              },
+              "Podcast": {
+                hover: { 
+                  y: [0, -6, 0],
+                  transition: { repeat: Infinity, duration: 0.7, ease: "easeInOut" }
+                }
+              }
+            }
 
-                <div className="relative z-10 space-y-4">
-                  <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                    <feature.icon className="h-7 w-7 text-orange-600 group-hover:text-white transition-colors duration-300" />
+            const FeatureCard = ({ feature, i }: { feature: typeof features[0]; i: number }) => {
+              const variants = iconVariants[feature.title as keyof typeof iconVariants]
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover="hover"
+                  className="group relative p-8 rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/10"
+                >
+                  <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
+
+                  <div className="relative z-10 space-y-4">
+                    <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                      <motion.div variants={variants}>
+                        <feature.icon className="h-7 w-7 text-orange-600 group-hover:text-white transition-colors duration-300" />
+                      </motion.div>
+                    </div>
+
+                    <h3 className="text-2xl font-bold group-hover:text-orange-600 transition-colors duration-300">
+                      {feature.title}
+                    </h3>
+
+                    <p className="text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
-
-                  <h3 className="text-2xl font-bold group-hover:text-orange-600 transition-colors duration-300">
-                    {feature.title}
-                  </h3>
-
-                  <p className="text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              </motion.div>
-            )
+                </motion.div>
+              )
+            }
 
             return (
               <div className="space-y-6">
@@ -373,7 +520,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 md:py-24 px-4 relative overflow-visible">
+      <section id="faq" className="py-16 md:py-24 px-4 relative overflow-visible">
         {/* Background Gradients */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -z-10" />
@@ -381,10 +528,10 @@ export default function LandingPage() {
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12 md:mb-16 space-y-4">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={scrollRevealVariants}
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-medium mb-4">
                 <HelpCircle className="h-4 w-4" />
@@ -399,7 +546,13 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          <Accordion type="single" collapsible className="w-full space-y-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={scrollRevealVariants}
+          >
+            <Accordion type="single" collapsible className="w-full space-y-4">
             {[
               {
                 id: "item-1",
@@ -450,69 +603,127 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </Accordion>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24 px-4 relative">
+      <section className="py-16 md:py-24 px-4 relative overflow-hidden">
         <div className="container mx-auto max-w-5xl">
+          {/* Scroll Reveal Wrapper */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="relative rounded-[2.5rem] overflow-hidden bg-background/40 backdrop-blur-2xl border border-white/10 shadow-2xl"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={{
+              hidden: { opacity: 0, y: 40, scale: 0.97 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const }
+              }
+            }}
           >
-            {/* Background Effects */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/25 rounded-full blur-[100px] -z-10 animate-pulse" />
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-100 contrast-150 mix-blend-overlay" />
+            {/* Looping Floating Card */}
+            <motion.div
+              animate={{
+                y: [0, -8, 0]
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 5,
+                ease: "easeInOut"
+              }}
+              className="relative rounded-[2.5rem] overflow-hidden bg-background/50 dark:bg-background/40 backdrop-blur-2xl border border-border/80 dark:border-white/10 shadow-2xl"
+            >
+              {/* Ambient background glows */}
+              <div className="absolute -left-16 -top-16 w-80 h-80 bg-orange-500/20 rounded-full blur-[100px] -z-10 animate-pulse pointer-events-none" />
+              <div className="absolute -right-16 -bottom-16 w-80 h-80 bg-orange-500/15 rounded-full blur-[100px] -z-10 animate-pulse pointer-events-none" style={{ animationDelay: "1.5s" }} />
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 brightness-100 dark:opacity-10 mix-blend-overlay pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col items-center justify-center text-center p-12 md:p-20 space-y-8">
+              <div className="relative z-10 flex flex-col items-center justify-center text-center p-10 md:p-20 space-y-8">
+                {/* Typography */}
+                <div className="space-y-4 max-w-3xl">
+                  <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.15]">
+                    Revolusi Cara Belajarmu <br className="hidden md:block" />
+                    <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-amber-500">Jadi Lebih Mudah</span>
+                  </h2>
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                    Tinggalkan cara lama yang membosankan. Biarkan AI membantu Anda merangkum, membuat kuis, dan menghafal materi dalam hitungan detik.
+                  </p>
+                </div>
 
+                {/* Call to Action Button with Shiny Effect */}
+                <div className="pt-2 w-full sm:w-auto relative group">
+                  {/* Outer Glow Ring */}
+                  <div className="absolute inset-0 rounded-full bg-orange-500/25 blur-md scale-105 group-hover:scale-115 group-hover:bg-orange-500/40 transition-all duration-300 animate-pulse" />
+                  <Link href="/register">
+                    <Button
+                      size="lg"
+                      className="relative w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg h-14 px-10 rounded-full overflow-hidden hover:scale-105 transition-all duration-300 shadow-lg shadow-orange-500/25"
+                    >
+                      {/* Shiny reflection streak */}
+                      <motion.div
+                        className="absolute inset-0 w-[50%] h-full bg-linear-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none"
+                        animate={{
+                          x: ["-100%", "250%"]
+                        }}
+                        transition={{
+                          repeat: Infinity,
+                          repeatDelay: 3,
+                          duration: 1.4,
+                          ease: "easeInOut"
+                        }}
+                      />
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        Mulai Belajar
+                        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </Button>
+                  </Link>
+                </div>
 
+                {/* Feature Highlights Grid */}
+                <motion.div 
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: { 
+                      opacity: 1, 
+                      transition: { staggerChildren: 0.08 } 
+                    }
+                  }}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 w-full border-t border-border/40 pt-10 mt-8"
+                >
+                  {[
+                    { icon: Zap, label: "Proses Cepat" },
+                    { icon: Brain, label: "AI Cerdas" },
+                    { icon: FileText, label: "Unlimited Notes" },
+                    { icon: Network, label: "Mind Map" },
+                    { icon: Mic, label: "Podcast" },
+                  ].map((item, i) => (
+                    <motion.div 
+                      key={i}
+                      variants={{
+                        hidden: { opacity: 0, y: 15 },
+                        visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+                      }}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      className="flex flex-col items-center justify-center p-4 rounded-2xl bg-muted/40 dark:bg-muted/10 border border-border/40 hover:border-orange-500/30 hover:bg-orange-500/5 transition-all duration-300 group shadow-xs"
+                    >
+                      <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center mb-2.5 text-orange-500 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300">
+                        <item.icon className="h-5 w-5" />
+                      </div>
+                      <span className="text-xs font-bold text-foreground/80 group-hover:text-foreground transition-colors text-center">{item.label}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
 
-              {/* Typography */}
-              <div className="space-y-6 max-w-3xl">
-                <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-                  Revolusi Cara Belajarmu <br className="hidden md:block" />
-                  <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-amber-500">Jadi Lebih Mudah</span>
-                </h2>
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                  Tinggalkan cara lama yang membosankan. Biarkan AI membantu Anda merangkum, membuat kuis, dan menghafal materi dalam hitungan detik.
-                </p>
               </div>
-
-              {/* Call to Action Button */}
-              <div className="pt-4 w-full sm:w-auto">
-                <Link href="/register">
-                  <Button
-                    size="lg"
-                    className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg h-14 px-10 rounded-full shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-300"
-                  >
-                    Mulai Belajar
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Feature Highlights Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 gap-y-8 w-full border-t border-border/50 pt-10 mt-8">
-                {[
-                  { icon: Zap, label: "Proses Cepat" },
-                  { icon: CheckCircle2, label: "Gratis Selamanya" },
-                  { icon: Brain, label: "AI Cerdas" },
-                  { icon: FileText, label: "Unlimited Notes" },
-                  { icon: Network, label: "Mind Map" },
-                  { icon: Mic, label: "Podcast" },
-                ].map((item, i) => (
-                  <div key={i} className="flex flex-col items-center gap-2 text-foreground/80">
-                    <item.icon className="h-6 w-6 text-orange-500" />
-                    <span className="text-sm font-semibold">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>

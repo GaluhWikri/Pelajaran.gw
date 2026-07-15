@@ -72,7 +72,7 @@ function BrainIcon(props: React.SVGProps<SVGSVGElement>) {
 export function ProcessDemo() {
   const [step, setStep] = useState<number>(0)
   const [isAutoPlay, setIsAutoPlay] = useState<boolean>(true)
-  
+
   // Step 0 states
   const [selectedSource, setSelectedSource] = useState<SourceType>("pdf")
   const [uploadProgress, setUploadProgress] = useState<number>(0)
@@ -221,7 +221,7 @@ export function ProcessDemo() {
     setSelectedSource(sourceId)
     setIsUploading(true)
     setUploadProgress(0)
-    
+
     if (uploadTimerRef.current) clearInterval(uploadTimerRef.current)
     uploadTimerRef.current = setInterval(() => {
       setUploadProgress(prev => {
@@ -239,14 +239,14 @@ export function ProcessDemo() {
     <div className="w-full max-w-5xl mx-auto p-4">
       {/* Outer Card Container */}
       <div className="relative rounded-3xl overflow-hidden bg-card/60 backdrop-blur-md border border-border shadow-2xl flex flex-col will-change-transform">
-        
+
         {/* Header with Interactive Stepper and Autoplay indicator */}
         <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-5 gap-4 border-b border-border bg-muted/30">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-orange-500 animate-pulse" />
             <h3 className="font-bold text-sm text-foreground uppercase tracking-wider">AI Interactive Simulator</h3>
           </div>
-          
+
           {/* Stepper Buttons */}
           <div className="flex items-center gap-1.5 bg-muted/65 p-1 rounded-xl border border-border/50">
             {["Upload", "Proses AI", "Hasil Utama"].map((lbl, idx) => {
@@ -258,17 +258,17 @@ export function ProcessDemo() {
                   onClick={() => handleStepClick(idx)}
                   className={cn(
                     "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 flex items-center gap-1.5",
-                    active 
-                      ? "bg-orange-600 text-white shadow-md scale-105" 
-                      : completed 
-                        ? "text-orange-500 hover:bg-muted/80" 
+                    active
+                      ? "bg-orange-600 text-white shadow-md scale-105"
+                      : completed
+                        ? "text-orange-500 hover:bg-muted/80"
                         : "text-muted-foreground hover:bg-muted/80"
                   )}
                 >
                   <span className={cn(
                     "w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] border",
-                    active 
-                      ? "bg-white text-orange-600 border-white" 
+                    active
+                      ? "bg-white text-orange-600 border-white"
                       : completed
                         ? "bg-orange-100 text-orange-600 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400"
                         : "bg-muted border-border"
@@ -290,8 +290,8 @@ export function ProcessDemo() {
             }}
             className={cn(
               "px-3 py-1.5 rounded-xl text-xs font-medium border flex items-center gap-1.5 transition-all duration-300",
-              isAutoPlay 
-                ? "bg-orange-500/10 text-orange-500 border-orange-500/30 hover:bg-orange-500/20" 
+              isAutoPlay
+                ? "bg-orange-500/10 text-orange-500 border-orange-500/30 hover:bg-orange-500/20"
                 : "bg-muted text-muted-foreground border-border hover:bg-muted-foreground/10"
             )}
           >
@@ -311,7 +311,7 @@ export function ProcessDemo() {
 
         {/* Content Section: 2-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[460px] divide-y lg:divide-y-0 lg:divide-x divide-border">
-          
+
           {/* Left Column: Interactive Controls/Triggers */}
           <div className="lg:col-span-5 p-6 md:p-8 flex flex-col justify-between bg-muted/10">
             <AnimatePresence mode="wait">
@@ -329,7 +329,7 @@ export function ProcessDemo() {
                       <h4 className="font-bold text-lg text-foreground">1. Pilih Sumber Belajar</h4>
                       <p className="text-sm text-muted-foreground">Pilih atau klik file di bawah ini untuk mensimulasikan proses upload instan.</p>
                     </div>
-                    
+
                     <div className="space-y-2.5">
                       {sourceFiles.map((file) => {
                         const Icon = file.icon
@@ -340,8 +340,8 @@ export function ProcessDemo() {
                             onClick={() => startManualUpload(file.id)}
                             className={cn(
                               "w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all duration-300 hover:scale-[1.02]",
-                              isSelected 
-                                ? "bg-orange-500/10 border-orange-500 shadow-md shadow-orange-500/5" 
+                              isSelected
+                                ? "bg-orange-500/10 border-orange-500 shadow-md shadow-orange-500/5"
                                 : "bg-card/50 border-border hover:bg-card hover:border-orange-500/30"
                             )}
                           >
@@ -375,8 +375,8 @@ export function ProcessDemo() {
                       onClick={() => handleStepClick(1)}
                       className={cn(
                         "w-full py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer shadow-lg",
-                        uploadProgress === 100 
-                          ? "bg-orange-600 hover:bg-orange-700 text-white shadow-orange-500/10 hover:shadow-orange-500/20 hover:scale-[1.02]" 
+                        uploadProgress === 100
+                          ? "bg-orange-600 hover:bg-orange-700 text-white shadow-orange-500/10 hover:shadow-orange-500/20 hover:scale-[1.02]"
                           : "bg-muted text-muted-foreground border border-border cursor-not-allowed"
                       )}
                     >
@@ -409,11 +409,11 @@ export function ProcessDemo() {
                         <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
                         <span className="ml-2 text-[10px] uppercase font-bold tracking-wider">Gemini-1.5-Flash@system</span>
                       </div>
-                      
+
                       {terminalLogs.length === 0 && (
                         <div className="text-orange-600/60 italic animate-pulse">Memulai engine AI...</div>
                       )}
-                      
+
                       {terminalLogs.map((log, idx) => (
                         <motion.div
                           initial={{ opacity: 0, x: -5 }}
@@ -427,7 +427,7 @@ export function ProcessDemo() {
                       ))}
 
                       {isProcessingComplete && (
-                        <motion.div 
+                        <motion.div
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           className="text-emerald-500 font-bold mt-3 border-t border-emerald-950/30 pt-2 flex items-center gap-1.5"
@@ -445,8 +445,8 @@ export function ProcessDemo() {
                       onClick={() => handleStepClick(2)}
                       className={cn(
                         "w-full py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer shadow-lg",
-                        isProcessingComplete 
-                          ? "bg-orange-600 hover:bg-orange-700 text-white shadow-orange-500/10 hover:shadow-orange-500/20 hover:scale-[1.02]" 
+                        isProcessingComplete
+                          ? "bg-orange-600 hover:bg-orange-700 text-white shadow-orange-500/10 hover:shadow-orange-500/20 hover:scale-[1.02]"
                           : "bg-muted text-muted-foreground border border-border cursor-not-allowed"
                       )}
                     >
@@ -490,8 +490,8 @@ export function ProcessDemo() {
                             }}
                             className={cn(
                               "p-3 rounded-xl border text-left flex items-center gap-3 transition-all duration-300 hover:scale-[1.01]",
-                              isSelected 
-                                ? "bg-orange-500/10 border-orange-500/80 shadow-xs" 
+                              isSelected
+                                ? "bg-orange-500/10 border-orange-500/80 shadow-xs"
                                 : "bg-card/50 border-border hover:bg-card hover:border-orange-500/20"
                             )}
                           >
@@ -553,7 +553,7 @@ export function ProcessDemo() {
                 >
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-xl text-center space-y-6 relative overflow-hidden">
                     <div className="absolute inset-0 bg-linear-to-b from-orange-500/3 to-transparent pointer-events-none" />
-                    
+
                     {/* Cloud Upload Icon */}
                     <div className="flex justify-center">
                       <div className="relative">
@@ -661,10 +661,10 @@ export function ProcessDemo() {
                   className="w-full max-w-md relative z-10"
                 >
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-xl min-h-[300px] flex flex-col justify-between">
-                    
+
                     {/* Dynamic View based on Active Tab */}
                     <div className="flex-1 flex flex-col justify-center">
-                      
+
                       {/* PREVIEW: SUMMARY */}
                       {activeResultTab === "summary" && (
                         <motion.div
@@ -676,7 +676,7 @@ export function ProcessDemo() {
                             <FileText className="h-5 w-5 text-orange-500" />
                             <h4 className="font-bold text-sm text-foreground">Ringkasan Pintar</h4>
                           </div>
-                          
+
                           <div className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
                             <p className="font-bold text-foreground">Topik: Konsep Turunan & Limit</p>
                             <p>📝 <strong>Turunan</strong> mengukur laju perubahan nilai fungsi terhadap variabel independennya.</p>
@@ -694,7 +694,7 @@ export function ProcessDemo() {
                           className="flex flex-col items-center justify-center py-4"
                         >
                           {/* 3D Flip Card */}
-                          <div 
+                          <div
                             onClick={() => {
                               setIsAutoPlay(false)
                               setFlashcardFlipped(!flashcardFlipped)
@@ -711,7 +711,7 @@ export function ProcessDemo() {
                                 <p className="font-bold text-sm text-foreground my-auto px-2">Apa definisi dari Turunan (Derivative)?</p>
                                 <span className="text-[10px] text-muted-foreground">Klik untuk membalik kartu</span>
                               </div>
-                              
+
                               {/* Back */}
                               <div className="absolute inset-0 backface-hidden bg-orange-600 text-white rounded-2xl p-5 flex flex-col justify-between text-center items-center rotate-y-180">
                                 <span className="text-[10px] uppercase font-bold text-orange-100 tracking-wider">Jawaban</span>
@@ -739,7 +739,7 @@ export function ProcessDemo() {
 
                           <div className="space-y-3">
                             <p className="font-bold text-xs text-foreground">Pertanyaan: Turunan pertama dari fungsi $f(x) = 3x^2 + 5x$ adalah...</p>
-                            
+
                             <div className="grid grid-cols-1 gap-2">
                               {[
                                 { key: "a", text: "f'(x) = 3x + 5", status: "incorrect" },
@@ -809,7 +809,7 @@ export function ProcessDemo() {
                                   <stop offset="0%" stopColor="#a855f7" />
                                   <stop offset="100%" stopColor="#ec4899" />
                                 </linearGradient>
-                                
+
                                 <linearGradient id="line-turunan" x1="100%" y1="100%" x2="0%" y2="0%">
                                   <stop offset="0%" stopColor="#3b82f6" />
                                   <stop offset="100%" stopColor="#f97316" />
@@ -830,33 +830,33 @@ export function ProcessDemo() {
                               <line x1="150" y1="90" x2="150" y2="146" stroke="#cbd5e1" className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="1.5" />
 
                               {/* Animated Connector Lines (Data Flow) */}
-                              <motion.line 
-                                x1="150" y1="90" x2="60" y2="50" 
-                                stroke="#3b82f6" 
-                                strokeWidth="2.5" 
+                              <motion.line
+                                x1="150" y1="90" x2="60" y2="50"
+                                stroke="#3b82f6"
+                                strokeWidth="2.5"
                                 strokeDasharray="5 5"
                                 animate={{ strokeDashoffset: [0, -20] }}
                                 transition={{ ease: "linear", duration: 1.5, repeat: Infinity }}
                               />
-                              <motion.line 
-                                x1="150" y1="90" x2="240" y2="50" 
-                                stroke="#10b981" 
-                                strokeWidth="2.5" 
+                              <motion.line
+                                x1="150" y1="90" x2="240" y2="50"
+                                stroke="#10b981"
+                                strokeWidth="2.5"
                                 strokeDasharray="5 5"
                                 animate={{ strokeDashoffset: [0, -20] }}
                                 transition={{ ease: "linear", duration: 1.5, repeat: Infinity }}
                               />
-                              <motion.line 
-                                x1="150" y1="90" x2="150" y2="146" 
-                                stroke="#a855f7" 
-                                strokeWidth="2.5" 
+                              <motion.line
+                                x1="150" y1="90" x2="150" y2="146"
+                                stroke="#a855f7"
+                                strokeWidth="2.5"
                                 strokeDasharray="5 5"
                                 animate={{ strokeDashoffset: [0, -20] }}
                                 transition={{ ease: "linear", duration: 1.5, repeat: Infinity }}
                               />
-                              
+
                               {/* Central Node: Kalkulus */}
-                              <motion.g 
+                              <motion.g
                                 onMouseEnter={() => setHoveredNode("center")}
                                 onMouseLeave={() => setHoveredNode(null)}
                                 whileHover={{ scale: 1.05 }}
@@ -869,7 +869,7 @@ export function ProcessDemo() {
                               </motion.g>
 
                               {/* Node 1: Turunan */}
-                              <motion.g 
+                              <motion.g
                                 onMouseEnter={() => setHoveredNode("turunan")}
                                 onMouseLeave={() => setHoveredNode(null)}
                                 whileHover={{ scale: 1.08 }}
@@ -882,7 +882,7 @@ export function ProcessDemo() {
                               </motion.g>
 
                               {/* Node 2: Integral */}
-                              <motion.g 
+                              <motion.g
                                 onMouseEnter={() => setHoveredNode("integral")}
                                 onMouseLeave={() => setHoveredNode(null)}
                                 whileHover={{ scale: 1.08 }}
@@ -895,7 +895,7 @@ export function ProcessDemo() {
                               </motion.g>
 
                               {/* Node 3: Limit */}
-                              <motion.g 
+                              <motion.g
                                 onMouseEnter={() => setHoveredNode("limit")}
                                 onMouseLeave={() => setHoveredNode(null)}
                                 whileHover={{ scale: 1.08 }}
@@ -920,8 +920,8 @@ export function ProcessDemo() {
                                 transition={{ duration: 0.15 }}
                                 className={cn(
                                   "text-xs font-semibold px-4 py-1.5 rounded-full",
-                                  hoveredNode 
-                                    ? "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/15" 
+                                  hoveredNode
+                                    ? "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/15"
                                     : "text-muted-foreground/60 italic"
                                 )}
                               >

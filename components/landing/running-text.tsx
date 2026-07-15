@@ -52,10 +52,10 @@ function MarqueeRow({ items, direction, speed = 40 }: MarqueeRowProps) {
           return (
             <div
               key={idx}
-              className="flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-card/40 dark:bg-card/25 border border-border/40 backdrop-blur-xs hover:border-orange-500/30 hover:bg-card/75 dark:hover:bg-card/40 transition-all duration-300 group shadow-xs cursor-default"
+              className="flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-card/40 dark:bg-card/25 border border-border/40 backdrop-blur-xs hover:border-orange-500/30 hover:bg-card/75 dark:hover:bg-card/40 transition-all duration-300 group shadow-xs hover:shadow-md hover:shadow-orange-500/5 cursor-default"
             >
-              <Icon className={`h-4.5 w-4.5 ${item.color} group-hover:scale-110 transition-transform`} />
-              <span className="text-sm font-semibold tracking-wide text-foreground/90 group-hover:text-foreground">
+              <Icon className="h-4.5 w-4.5 text-orange-500 group-hover:scale-110 transition-all duration-300" />
+              <span className="text-sm font-semibold tracking-wide text-foreground/90 group-hover:text-foreground transition-colors duration-300">
                 {item.text}
               </span>
             </div>
@@ -68,13 +68,9 @@ function MarqueeRow({ items, direction, speed = 40 }: MarqueeRowProps) {
 
 export function RunningText() {
   return (
-    <section className="py-12 md:py-16 overflow-hidden bg-muted/10 relative">
+    <section className="py-12 md:py-16 overflow-hidden bg-transparent relative">
       {/* Background radial glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[150px] bg-orange-500/5 dark:bg-orange-500/3 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Decorative lines */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-border/50 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-border/50 to-transparent" />
 
       <div className="container mx-auto max-w-6xl px-4 mb-4 text-center">
         <span className="text-xs font-bold uppercase tracking-widest text-primary/80 bg-primary/10 px-3 py-1.5 rounded-full">
@@ -83,7 +79,7 @@ export function RunningText() {
       </div>
 
       {/* Gradient mask at the edges to fade out the marquee content */}
-      <div className="relative w-full [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]">
+      <div className="relative w-full mask-[linear-gradient(to_right,transparent,white_15%,white_85%,transparent)] md:mask-[linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]">
         <div className="flex flex-col gap-2">
           <MarqueeRow items={row1} direction="left" speed={30} />
           <MarqueeRow items={row2} direction="right" speed={28} />
