@@ -539,7 +539,7 @@ export function ProcessDemo() {
           {/* Right Column: Sandbox Simulator Display */}
           <div className="lg:col-span-7 p-6 md:p-8 flex items-center justify-center bg-card/20 relative overflow-hidden">
             {/* Background grids */}
-            <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-30 dark:opacity-10 pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] opacity-30 dark:opacity-10 pointer-events-none" />
 
             <AnimatePresence mode="wait">
               {/* DISPLAY 0: UPLOAD ANIMATION */}
