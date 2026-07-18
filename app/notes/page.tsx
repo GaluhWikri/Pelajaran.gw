@@ -188,7 +188,7 @@ function NotesContent() {
                             {upload.status === 'uploading' ? 'Mengupload...' :
                               upload.status === 'processing' ? 'Memproses AI...' :
                                 upload.status === 'complete' ? 'Selesai!' :
-                                  'Gagal.'}
+                                  upload.error || 'Gagal.'}
                           </p>
                         </div>
                       </div>

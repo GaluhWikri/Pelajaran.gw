@@ -47,6 +47,7 @@ interface AppState {
     progress: number
     status: "uploading" | "processing" | "complete" | "error"
     noteId?: string
+    error?: string
   }[]
 
   // Effects

@@ -17,6 +17,7 @@ import {
 } from "./ai-prompt"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { extractTextFromPPTX } from "./ppt-parser"
+import { extractTextFromDOCX } from "./docx-parser"
 
 // --- Types ---
 
@@ -277,6 +278,36 @@ export async function generateLearningContent(file: File, options?: GenerationOp
     }
 
     try {
+        // Handle DOCX files specifically
+        if (file.name.toLowerCase().endsWith(".docx")) {
+            console.log("Detected DOCX file, extracting text...")
+            try {
+                const docxText = await extractTextFromDOCX(file)
+                if (docxText.trim().length > 15) {
+                    console.log("DOCX text extracted successfully, using text generation pipeline. Length:", docxText.length)
+                    const result = await generateLearningContentFromText(docxText, options)
+                    return result
+                }
+                console.warn("DOCX text extraction failed or empty (<15 chars).")
+                throw new Error("Dokumen Word ini kosong atau tidak dapat diekstrak teksnya.")
+            } catch (docxError: any) {
+                console.error("Failed to parse DOCX:", docxError)
+                throw docxError
+            }
+        }
+
+        // Handle unsupported legacy/complex formats gracefully
+        const lowercaseName = file.name.toLowerCase()
+        if (lowercaseName.endsWith(".doc")) {
+            throw new Error("Format .doc (Word versi lama) tidak didukung. Harap simpan dokumen Anda sebagai berkas .docx dan coba lagi.")
+        }
+        if (lowercaseName.endsWith(".ppt")) {
+            throw new Error("Format .ppt (PowerPoint versi lama) tidak didukung. Harap simpan presentasi Anda sebagai berkas .pptx dan coba lagi.")
+        }
+        if (lowercaseName.endsWith(".xls") || lowercaseName.endsWith(".xlsx")) {
+            throw new Error("Format spreadsheet (.xlsx/.xls) belum didukung untuk analisis materi belajar.")
+        }
+
         // Handle PPTX files specifically
         if (file.name.toLowerCase().endsWith(".pptx")) {
             console.log("Detected PPTX file, extracting text...")

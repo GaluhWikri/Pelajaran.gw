@@ -692,9 +692,13 @@ export default function UploadPage() {
             setTimeout(() => {
                 removeActiveUpload(uploadId)
             }, 3000)
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error processing file:", error)
-            updateActiveUpload(uploadId, { status: "error", progress: 100 })
+            updateActiveUpload(uploadId, { 
+                status: "error", 
+                progress: 100,
+                error: error.message || "Gagal memproses file."
+            })
         }
     }
 
@@ -883,7 +887,7 @@ export default function UploadPage() {
                                                     {upload.status === 'uploading' ? 'Mengupload...' :
                                                         upload.status === 'processing' ? 'Memproses dengan AI...' :
                                                             upload.status === 'complete' ? 'Selesai! Catatan berhasil dibuat.' :
-                                                                'Gagal memproses file.'}
+                                                                upload.error || 'Gagal memproses file.'}
                                                 </p>
                                             </div>
                                         </div>
@@ -1280,14 +1284,27 @@ export default function UploadPage() {
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
                                                 <div className={cn(
                                                     "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
-                                                    upload.status === 'complete' ? "bg-green-500/10 text-green-500" : "bg-primary/10 text-primary"
+                                                    upload.status === 'complete' ? "bg-green-500/10 text-green-500" : 
+                                                        upload.status === 'error' ? "bg-red-500/10 text-red-500" : 
+                                                            "bg-primary/10 text-primary"
                                                 )}>
-                                                    {upload.status === 'complete' ? <CheckCircle className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
+                                                    {upload.status === 'complete' ? (
+                                                        <CheckCircle className="h-4 w-4" />
+                                                    ) : upload.status === 'error' ? (
+                                                        <X className="h-4 w-4" />
+                                                    ) : (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium truncate max-w-[250px]" title={upload.fileName}>{upload.fileName}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {upload.status === 'complete' ? "Berhasil" : `${upload.progress}%`}
+                                                    <p className={cn(
+                                                        "text-xs",
+                                                        upload.status === 'error' ? "text-red-500 font-medium" : "text-muted-foreground"
+                                                    )}>
+                                                        {upload.status === 'complete' ? "Berhasil" : 
+                                                            upload.status === 'error' ? (upload.error || "Gagal") : 
+                                                                `${upload.progress}%`}
                                                     </p>
                                                 </div>
                                             </div>
