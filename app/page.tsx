@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from "react"
 import { motion, useScroll, useTransform, AnimatePresence, useMotionTemplate, Variants } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle, Mic, BookOpen } from "lucide-react"
+import { ArrowRight, Sparkles, FileText, Brain, Zap, CheckCircle2, ChevronLeft, ChevronRight, Network, HelpCircle, Mic, BookOpen, LayoutDashboard, Star, Layers, GraduationCap, Headphones, UploadCloud, Trophy, Globe } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
@@ -17,7 +17,7 @@ import { RunningText } from "@/components/landing/running-text"
 // Dynamic import for heavy component
 const ProcessDemo = dynamic(() => import("@/components/landing/process-demo").then(mod => ({ default: mod.ProcessDemo })), {
   loading: () => (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-100">
       <div className="animate-pulse text-muted-foreground">Loading...</div>
     </div>
   ),
@@ -65,27 +65,41 @@ export default function LandingPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Auto-scroll the active tab or pill into view
+  useEffect(() => {
+    const prefix = isMobile ? 'mobile-pill-' : 'browser-tab-';
+    const activeElement = document.getElementById(`${prefix}${currentSlide}`);
+    if (activeElement && activeElement.parentElement) {
+      const container = activeElement.parentElement;
+      const targetScrollLeft = activeElement.offsetLeft - container.offsetWidth / 2 + activeElement.offsetWidth / 2;
+      container.scrollTo({
+        left: targetScrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentSlide, isMobile])
+
   const desktopScreenshots = [
-    { src: "/image/demo desktop/dashboard.png", title: "Dashboard", description: "Overview aktivitas belajar Anda" },
-    { src: "/image/demo desktop/allnotes.png", title: "All Notes", description: "Semua catatan dalam satu tempat" },
-    { src: "/image/demo desktop/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
-    { src: "/image/demo desktop/note.png", title: "Smart Notes", description: "Catatan AI yang terstruktur" },
-    { src: "/image/demo desktop/flashcard.png", title: "Flashcards", description: "Review cepat dengan flashcard" },
-    { src: "/image/demo desktop/quiz.png", title: "Quiz", description: "Test pemahaman Anda" },
-    { src: "/image/demo desktop/mindmap.png", title: "Mind Map", description: "Visualisasikan ide Anda" },
-    { src: "/image/demo desktop/podcast.png", title: "Podcast", description: "Dengarkan materi belajar Anda" },
-    { src: "/image/demo desktop/upload.png", title: "Upload", description: "Upload catatan Anda" },
-    { src: "/image/demo desktop/leaderboard.png", title: "LeaderBoard", description: "LeaderBoard Anda" },
+    { src: "/image/demo desktop/dashboard.png", title: "Dashboard", route: "/dashboard", icon: LayoutDashboard, description: "Overview aktivitas belajar Anda" },
+    { src: "/image/demo desktop/allnotes.png", title: "All Notes", route: "/notes", icon: BookOpen, description: "Semua catatan dalam satu tempat" },
+    { src: "/image/demo desktop/favorites.png", title: "Favorites", route: "/favorites", icon: Star, description: "Catatan favorit Anda" },
+    { src: "/image/demo desktop/note.png", title: "Smart Notes", route: "/notes/notes-id", icon: FileText, description: "Catatan AI yang terstruktur" },
+    { src: "/image/demo desktop/flashcard.png", title: "Flashcards", route: "/notes/notes-id/flashcards", icon: Layers, description: "Review cepat dengan flashcard" },
+    { src: "/image/demo desktop/quiz.png", title: "Quiz", route: "/notes/notes-id/quiz", icon: GraduationCap, description: "Test pemahaman Anda" },
+    { src: "/image/demo desktop/mindmap.png", title: "Mind Map", route: "/notes/notes-id/mindmap", icon: Network, description: "Visualisasikan ide Anda" },
+    { src: "/image/demo desktop/podcast.png", title: "Podcast", route: "/notes/notes-id/podcast", icon: Headphones, description: "Dengarkan materi belajar Anda" },
+    { src: "/image/demo desktop/upload.png", title: "Upload", route: "/upload", icon: UploadCloud, description: "Upload catatan Anda" },
+    { src: "/image/demo desktop/leaderboard.png", title: "LeaderBoard", route: "/leaderboard", icon: Trophy, description: "LeaderBoard Anda" },
   ]
 
   const mobileScreenshots = [
-    { src: "/image/demo mobile/dashboard1.png", title: "Dashboard", description: "Overview aktivitas belajar Anda" },
-    { src: "/image/demo mobile/dashboard2.png", title: "Dashboard Detail", description: "Detail statistik belajar" },
-    { src: "/image/demo mobile/allnote.png", title: "All Notes", description: "Semua catatan dalam satu tempat" },
-    { src: "/image/demo mobile/favorites.png", title: "Favorites", description: "Catatan favorit Anda" },
-    { src: "/image/demo mobile/upload1.png", title: "Upload", description: "Upload materi belajar" },
-    { src: "/image/demo mobile/upload2.png", title: "Upload Process", description: "Proses upload file" },
-    { src: "/image/demo mobile/leaderboard.png", title: "LeaderBoard", description: "LeaderBoard Anda" },
+    { src: "/image/demo mobile/dashboard1.png", title: "Dashboard", route: "/dashboard", icon: LayoutDashboard, description: "Overview aktivitas belajar Anda" },
+    { src: "/image/demo mobile/dashboard2.png", title: "Dashboard Detail", route: "/dashboard/detail", icon: LayoutDashboard, description: "Detail statistik belajar" },
+    { src: "/image/demo mobile/allnote.png", title: "All Notes", route: "/notes", icon: BookOpen, description: "Semua catatan dalam satu tempat" },
+    { src: "/image/demo mobile/favorites.png", title: "Favorites", route: "/favorites", icon: Star, description: "Catatan favorit Anda" },
+    { src: "/image/demo mobile/upload1.png", title: "Upload", route: "/upload", icon: UploadCloud, description: "Upload materi belajar" },
+    { src: "/image/demo mobile/upload2.png", title: "Upload Process", route: "/upload/process", icon: UploadCloud, description: "Proses upload file" },
+    { src: "/image/demo mobile/leaderboard.png", title: "LeaderBoard", route: "/leaderboard", icon: Trophy, description: "LeaderBoard Anda" },
   ]
 
   const demoScreenshots = isMobile ? mobileScreenshots : desktopScreenshots
@@ -117,9 +131,9 @@ export default function LandingPage() {
       <LandingNavbar />
 
       {/* Hero Section */}
-      <section className="pt-24 pb-12 md:pt-32 md:pb-20 px-4 relative overflow-hidden">
+      <section className="pt-36 pb-12 md:pt-48 md:pb-20 px-4 relative overflow-hidden">
         {/* Background glow overlay */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.08),transparent_50%)] pointer-events-none -z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-125 bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.08),transparent_50%)] pointer-events-none -z-10" />
 
         <div className="container mx-auto max-w-6xl relative">
 
@@ -139,17 +153,6 @@ export default function LandingPage() {
             animate="visible"
             className="text-center space-y-6 max-w-4xl mx-auto"
           >
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 15 },
-                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 150 } }
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50 text-xs md:text-sm font-semibold"
-            >
-              <Sparkles className="h-4 w-4 text-orange-500 animate-pulse" />
-              <span className="text-muted-foreground">Didukung oleh Gemini AI</span>
-            </motion.div>
-
             <motion.h1
               variants={{
                 hidden: { opacity: 0, y: 20 },
@@ -243,43 +246,134 @@ export default function LandingPage() {
             <div className="hidden md:block absolute inset-0 bg-linear-to-r from-orange-500/10 to-orange-600/10 rounded-3xl -z-10" />
 
             {/* Demo Container - Limited size for laptop fit */}
-            <div className={`relative rounded-2xl md:rounded-3xl border-4 md:border-8 border-foreground/10 bg-background shadow-2xl overflow-hidden ${isMobile ? 'max-w-[280px] mx-auto' : ''
-              }`}>
-              {/* Browser/Phone Header - Only show on desktop */}
+            <div className={`relative rounded-3xl border border-border bg-card shadow-2xl overflow-hidden ${
+              isMobile ? 'max-w-85 mx-auto' : 'max-w-5xl mx-auto'
+            }`}>
+              {/* Browser Header - Only show on desktop */}
               {!isMobile && (
-                <div className="bg-muted/50 px-6 py-4 border-b flex items-center gap-2">
-                  <div className="flex gap-2">
-                    <div className="h-3 w-3 rounded-full bg-red-500" />
-                    <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                    <div className="h-3 w-3 rounded-full bg-green-500" />
+                <div className="bg-muted/30 border-b border-border">
+                  {/* Tab Bar */}
+                  <div className="flex items-center px-4 pt-3">
+                    {/* Window Controls */}
+                    <div className="flex gap-1.5 mr-6 shrink-0 pb-2">
+                      <span className="h-3 w-3 rounded-full bg-red-500/80" />
+                      <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
+                      <span className="h-3 w-3 rounded-full bg-green-500/80" />
+                    </div>
+
+                    {/* Interactive Tabs */}
+                    <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide max-w-full relative">
+                      {demoScreenshots.map((shot, index) => {
+                        const Icon = shot.icon;
+                        const isActive = index === currentSlide;
+                        return (
+                          <button
+                            key={index}
+                            id={`browser-tab-${index}`}
+                            onClick={() => {
+                              setSlide(([prevSlide]) => {
+                                const dir = index > prevSlide ? 1 : -1
+                                return [index, dir]
+                              })
+                            }}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-xs font-medium transition-all shrink-0 border-t border-x ${
+                              isActive 
+                                ? 'bg-background border-border text-foreground relative z-10 -mb-px' 
+                                : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                            }`}
+                          >
+                            <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : ''}`} />
+                            <span>{shot.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <span className="text-sm text-muted-foreground ml-4">Pelajaranku - DEMO</span>
+
+                  {/* Navigation & Address Bar */}
+                  <div className="flex items-center gap-3 px-4 py-2 border-t border-border bg-background/50">
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button 
+                        onClick={prevSlide}
+                        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Back"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={nextSlide}
+                        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Forward"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      <div className="h-4 w-px bg-border mx-1" />
+                    </div>
+                    {/* Address input */}
+                    <div className="flex-1 flex items-center gap-2 bg-muted/60 px-3 py-1 rounded-lg text-xs text-muted-foreground border border-border/50">
+                      <Globe className="h-3.5 w-3.5 text-muted-foreground/60" />
+                      <span>pelajaranku.ai{demoScreenshots[currentSlide].route}</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Screenshot/Demo Carousel */}
-              <div className="relative bg-background overflow-hidden">
-                {/* Main Image Container - Match actual screenshot aspect ratio */}
-                <div className={`relative w-full ${isMobile ? 'aspect-390/844' : 'aspect-2/1'}`}>
+              {/* Mobile Tab Pills Bar - Only show on mobile */}
+              {isMobile && (
+                <div className="flex items-center gap-2 p-3 overflow-x-auto no-scrollbar border-b border-border bg-muted/20 relative">
+                  {demoScreenshots.map((shot, index) => {
+                    const Icon = shot.icon;
+                    const isActive = index === currentSlide;
+                    return (
+                      <button
+                        key={index}
+                        id={`mobile-pill-${index}`}
+                        onClick={() => {
+                          setSlide(([prevSlide]) => {
+                            const dir = index > prevSlide ? 1 : -1
+                            return [index, dir]
+                          })
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                          isActive 
+                            ? 'bg-primary text-primary-foreground shadow-xs' 
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        <span>{shot.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Screenshot Display Viewport */}
+              <div className="relative bg-black/5 overflow-hidden">
+                {/* iPhone Bezel Effect for Mobile */}
+                {isMobile && (
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-4 bg-black rounded-full z-20 flex items-center justify-center">
+                    <div className="w-12 h-1 bg-neutral-800 rounded-full" />
+                  </div>
+                )}
+
+                <div className={`relative w-full ${isMobile ? 'aspect-9/19 pt-8' : 'aspect-video'}`}>
                   <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                       key={currentSlide}
                       custom={direction}
                       variants={{
                         enter: (direction: number) => ({
-                          x: direction > 0 ? 150 : -150,
+                          x: direction > 0 ? '100%' : '-100%',
                           opacity: 0,
-                          scale: 0.97
                         }),
                         center: {
                           x: 0,
                           opacity: 1,
-                          scale: 1
                         },
                         exit: (direction: number) => ({
-                          x: direction < 0 ? 150 : -150,
+                          x: direction < 0 ? '100%' : '-100%',
                           opacity: 0,
-                          scale: 0.97
                         })
                       }}
                       initial="enter"
@@ -287,62 +381,75 @@ export default function LandingPage() {
                       exit="exit"
                       transition={{
                         x: { type: "spring", stiffness: 300, damping: 30 },
-                        opacity: { duration: 0.2 },
-                        scale: { duration: 0.2 }
+                        opacity: { duration: 0.2 }
                       }}
-                      className="absolute inset-0 w-full h-full"
+                      className="absolute inset-0 w-full h-full flex items-center justify-center p-2 md:p-6"
                     >
-                      <Image
-                        src={demoScreenshots[currentSlide].src}
-                        alt={demoScreenshots[currentSlide].title}
-                        fill
-                        className="object-contain"
-                        priority={currentSlide === 0}
-                        loading={currentSlide === 0 ? "eager" : "lazy"}
-                        sizes="(max-width: 768px) 100vw, 80vw"
-                      />
+                      <div className="relative w-full h-full rounded-xl overflow-hidden border border-border/40 shadow-lg bg-background">
+                        <Image
+                          src={demoScreenshots[currentSlide].src}
+                          alt={demoScreenshots[currentSlide].title}
+                          fill
+                          className="object-cover"
+                          priority={currentSlide === 0}
+                          loading={currentSlide === 0 ? "eager" : "lazy"}
+                          sizes="(max-width: 768px) 100vw, 80vw"
+                        />
+                      </div>
                     </motion.div>
                   </AnimatePresence>
 
-                  {/* Navigation Buttons */}
+                  {/* Navigation Arrows */}
                   <button
                     onClick={prevSlide}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm border flex items-center justify-center hover:bg-background transition-colors z-10"
+                    className="absolute left-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/85 hover:bg-background backdrop-blur-md border border-border flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all z-10"
                     aria-label="Previous slide"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 text-foreground" />
                   </button>
                   <button
                     onClick={nextSlide}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm border flex items-center justify-center hover:bg-background transition-colors z-10"
+                    className="absolute right-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/85 hover:bg-background backdrop-blur-md border border-border flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all z-10"
                     aria-label="Next slide"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5 text-foreground" />
                   </button>
                 </div>
 
-                {/* Bottom Info & Dots */}
-                <div className="flex flex-col items-center gap-4 py-4 border-t bg-muted/10">
-                  <div className="text-center space-y-1 px-4">
-                    <p className="font-semibold text-base">{demoScreenshots[currentSlide].title}</p>
-                    <p className="text-sm text-muted-foreground">{demoScreenshots[currentSlide].description}</p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {demoScreenshots.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSlide(([prevSlide]) => {
-                            const dir = index > prevSlide ? 1 : -1
-                            return [index, dir]
-                          })
-                        }}
-                        className={`h-2 rounded-full transition-all ${index === currentSlide ? 'w-8 bg-primary' : 'w-2 bg-muted-foreground/30'
+                {/* Floating Glass Metadata Overlay */}
+                <div className={`absolute bottom-4 left-4 right-4 md:left-8 md:bottom-8 md:right-auto md:max-w-sm bg-background/80 backdrop-blur-xl border border-border/60 p-4 md:p-5 rounded-2xl shadow-xl z-10 transition-all duration-300`}>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const CurrentIcon = demoScreenshots[currentSlide].icon;
+                        return <CurrentIcon className="h-4 w-4 text-primary" />;
+                      })()}
+                      <h4 className="font-bold text-sm md:text-base text-foreground">
+                        {demoScreenshots[currentSlide].title}
+                      </h4>
+                    </div>
+                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+                      {demoScreenshots[currentSlide].description}
+                    </p>
+                    
+                    {/* Dots / Pagination */}
+                    <div className="flex gap-1.5 pt-2">
+                      {demoScreenshots.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setSlide(([prevSlide]) => {
+                              const dir = index > prevSlide ? 1 : -1
+                              return [index, dir]
+                            })
+                          }}
+                          className={`h-1.5 rounded-full transition-all ${
+                            index === currentSlide ? 'w-5 bg-primary' : 'w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50'
                           }`}
-                        aria-label={`Go to slide ${index + 1}`}
-                      />
-                    ))}
+                          aria-label={`Go to slide ${index + 1}`}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -375,7 +482,7 @@ export default function LandingPage() {
 
           <div className="relative z-10">
             {/* Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-orange-500/20 rounded-full blur-[100px] -z-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-100 bg-orange-500/20 rounded-full blur-[100px] -z-10" />
             <ProcessDemo />
           </div>
         </div>
@@ -384,7 +491,7 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" className="py-16 md:py-24 px-4 relative overflow-hidden">
         {/* Background Decoration */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-linear-to-tr from-orange-500/5 to-transparent rounded-full blur-3xl -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-linear-to-tr from-orange-500/5 to-transparent rounded-full blur-3xl -z-10" />
 
         <div className="container mx-auto max-w-6xl">
           <motion.div

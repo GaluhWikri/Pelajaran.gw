@@ -310,7 +310,7 @@ export function ProcessDemo() {
         </div>
 
         {/* Content Section: 2-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[460px] divide-y lg:divide-y-0 lg:divide-x divide-border">
+        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-115 divide-y lg:divide-y-0 lg:divide-x divide-border">
 
           {/* Left Column: Interactive Controls/Triggers */}
           <div className="lg:col-span-5 p-6 md:p-8 flex flex-col justify-between bg-muted/10">
@@ -402,7 +402,7 @@ export function ProcessDemo() {
                       <p className="text-sm text-muted-foreground">AI memproses konten Anda untuk memecah materi menjadi berbagai modul interaktif.</p>
                     </div>
 
-                    <div className="rounded-2xl border border-border bg-black/95 p-4 font-mono text-xs text-orange-400 space-y-2 h-[220px] overflow-y-auto custom-scrollbar shadow-inner">
+                    <div className="rounded-2xl border border-border bg-black/95 p-4 font-mono text-xs text-orange-400 space-y-2 h-55 overflow-y-auto custom-scrollbar shadow-inner">
                       <div className="flex items-center gap-2 border-b border-orange-950/50 pb-2 mb-2 text-orange-500">
                         <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
                         <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
@@ -660,7 +660,7 @@ export function ProcessDemo() {
                   exit={{ opacity: 0, scale: 0.98 }}
                   className="w-full max-w-md relative z-10"
                 >
-                  <div className="rounded-2xl border border-border bg-card p-6 shadow-xl min-h-[300px] flex flex-col justify-between">
+                  <div className="rounded-2xl border border-border bg-card p-6 shadow-xl min-h-75 flex flex-col justify-between">
 
                     {/* Dynamic View based on Active Tab */}
                     <div className="flex-1 flex flex-col justify-center">
@@ -699,7 +699,7 @@ export function ProcessDemo() {
                               setIsAutoPlay(false)
                               setFlashcardFlipped(!flashcardFlipped)
                             }}
-                            className="w-[280px] h-[160px] cursor-pointer perspective-1000 group/card"
+                            className="w-70 h-40 cursor-pointer perspective-1000 group/card"
                           >
                             <motion.div
                               className="w-full h-full relative transform-style-3d transition-transform duration-500 rounded-2xl border border-orange-500/20"
@@ -791,7 +791,7 @@ export function ProcessDemo() {
                         >
                           {/* Animated SVG Mindmap */}
                           <div className="relative w-full max-w-[320px] bg-muted/20 rounded-2xl p-2 border border-border/50">
-                            <svg className="w-full h-[180px]" viewBox="0 0 300 180">
+                            <svg className="w-full h-45" viewBox="0 0 300 180">
                               <defs>
                                 <linearGradient id="grad-center" x1="0%" y1="0%" x2="100%" y2="100%">
                                   <stop offset="0%" stopColor="#f97316" />

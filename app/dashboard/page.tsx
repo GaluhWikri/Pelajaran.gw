@@ -304,7 +304,7 @@ export default function DashboardPage() {
       <DashboardHeader />
       <Sidebar />
 
-      <main className={cn("pt-20 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+      <main className={cn("pt-20 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-17.5")}>
         <div className="p-8 space-y-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-balance">Welcome back, {storeUser?.name || user?.user_metadata?.full_name || user?.email} !</h2>
@@ -345,7 +345,7 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px] text-center bg-background/80 dark:bg-background/30 backdrop-blur-lg border-black/10 dark:border-white/10 shadow-2xl">
+                          <DialogContent className="sm:max-w-106.25 text-center bg-background/80 dark:bg-background/30 backdrop-blur-lg border-black/10 dark:border-white/10 shadow-2xl">
                             <DialogHeader>
                               <DialogTitle className="text-center text-xl">Badge Details</DialogTitle>
                             </DialogHeader>
@@ -361,7 +361,7 @@ export default function DashboardPage() {
                               <h3 className="text-3xl font-bold mt-8 text-transparent bg-clip-text bg-linear-to-r from-primary to-orange-500">
                                 {title}
                               </h3>
-                              <div className="mt-4 space-y-1 text-muted-foreground bg-muted/30 p-4 rounded-xl w-full max-w-[280px]">
+                              <div className="mt-4 space-y-1 text-muted-foreground bg-muted/30 p-4 rounded-xl w-full max-w-70">
                                 <div className="flex justify-between text-sm">
                                   <span>Current Level</span>
                                   <span className="font-bold text-foreground">{level}</span>

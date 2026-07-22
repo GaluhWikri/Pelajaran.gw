@@ -70,7 +70,7 @@ export function RunningText() {
   return (
     <section className="py-12 md:py-16 overflow-hidden bg-transparent relative">
       {/* Background radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[150px] bg-orange-500/5 dark:bg-orange-500/3 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-37.5 bg-orange-500/5 dark:bg-orange-500/3 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto max-w-6xl px-4 mb-4 text-center">
         <span className="text-xs font-bold uppercase tracking-widest text-primary/80 bg-primary/10 px-3 py-1.5 rounded-full">

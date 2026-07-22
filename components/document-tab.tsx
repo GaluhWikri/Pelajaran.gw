@@ -37,7 +37,7 @@ export function DocumentTab({ noteId }: DocumentTabProps) {
 
   if (!material) {
     return (
-      <div className="flex flex-col h-[500px] items-center justify-center">
+      <div className="flex flex-col h-125 items-center justify-center">
         <AlertCircle className="h-16 w-16 text-muted-foreground/30 mb-4" />
         <h3 className="text-lg font-medium mb-2 text-foreground/80">Tidak Ada Dokumen</h3>
         <p className="text-sm text-muted-foreground text-center max-w-sm">
@@ -168,7 +168,7 @@ export function DocumentTab({ noteId }: DocumentTabProps) {
         </h2>
       </div>
       
-      <Card className="flex-1 bg-background/50 border overflow-hidden min-h-[500px] h-[calc(100vh-250px)] flex flex-col items-center justify-center p-1 relative mb-4">
+      <Card className="flex-1 bg-background/50 border overflow-hidden min-h-125 h-[calc(100vh-250px)] flex flex-col items-center justify-center p-1 relative mb-4">
         {renderViewer()}
       </Card>
       

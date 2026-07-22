@@ -720,7 +720,7 @@ export default function UploadPage() {
             <DashboardHeader />
             <Sidebar />
 
-            <main className={cn("pt-24 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-[70px]")}>
+            <main className={cn("pt-24 transition-all duration-300", sidebarOpen ? "lg:pl-64" : "lg:pl-17.5")}>
                 <div className="p-8 space-y-8 max-w-6xl mx-auto">
 
                     {/* Header */}
@@ -823,7 +823,7 @@ export default function UploadPage() {
                                 />
                             </div>
                             <Select defaultValue="all">
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-45">
                                     <SelectValue placeholder="Semua Subjek" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -948,7 +948,7 @@ export default function UploadPage() {
 
             {/* Upload/Input Modal (First Step) */}
             <Dialog open={activeModal !== null} onOpenChange={(open) => !open && setActiveModal(null)}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-125">
                     <DialogHeader>
                         <DialogTitle>
                             {activeModal === 'youtube' ? "Upload Link YouTube" : "Upload File"}
@@ -975,7 +975,7 @@ export default function UploadPage() {
                                             <div key={idx} className="flex items-center justify-between p-2 border rounded bg-muted/20">
                                                 <div className="flex items-center gap-2 overflow-hidden">
                                                     <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                                    <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                                                    <span className="text-sm truncate max-w-50">{file.name}</span>
                                                     <span className="text-xs text-muted-foreground">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                                                 </div>
                                                 <Button
@@ -1042,7 +1042,7 @@ export default function UploadPage() {
 
             {/* Config Dialog (Second Step) */}
             <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-125">
                     <DialogHeader>
                         <DialogTitle>Mata Pelajaran/Kuliah</DialogTitle>
                     </DialogHeader>
@@ -1225,7 +1225,7 @@ export default function UploadPage() {
 
             {/* Processing Modal - UX Improvement */}
             <Dialog open={showProcessingModal} onOpenChange={setShowProcessingModal}>
-                <DialogContent className="w-[85vw] sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-2xl bg-background/95 backdrop-blur-md rounded-2xl">
+                <DialogContent className="w-[85vw] sm:max-w-106.25 p-0 overflow-hidden border-0 shadow-2xl bg-background/95 backdrop-blur-md rounded-2xl">
                     <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary via-orange-500 to-amber-500 animate-gradient-x" />
 
                     <DialogHeader className="px-4 pt-10 pb-2 sm:px-6">
@@ -1297,7 +1297,7 @@ export default function UploadPage() {
                                                     )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-medium truncate max-w-[250px]" title={upload.fileName}>{upload.fileName}</p>
+                                                    <p className="text-sm font-medium truncate max-w-62.5" title={upload.fileName}>{upload.fileName}</p>
                                                     <p className={cn(
                                                         "text-xs",
                                                         upload.status === 'error' ? "text-red-500 font-medium" : "text-muted-foreground"
@@ -1369,7 +1369,7 @@ export default function UploadPage() {
 
             {/* Invalid YouTube URL Modal - Using Dialog instead of AlertDialog to avoid pointer-events bug */}
             <Dialog open={showInvalidYoutubeModal} onOpenChange={setShowInvalidYoutubeModal}>
-                <DialogContent className="sm:max-w-[400px]" showCloseButton={false}>
+                <DialogContent className="sm:max-w-100" showCloseButton={false}>
                     <DialogHeader>
                         <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
                             <Youtube className="h-6 w-6 text-red-500" />

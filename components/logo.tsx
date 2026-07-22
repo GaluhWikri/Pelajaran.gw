@@ -2,7 +2,6 @@
 
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
-import Image from "next/image"
 
 interface LogoProps {
   width?: number
@@ -23,13 +22,12 @@ export function Logo({ width = 40, height = 40, className = "h-10 w-auto object-
   const themeDir = mounted && resolvedTheme === "light" ? "light" : "dark"
 
   return (
-    <Image
-      src={`/favicon/${themeDir}/android-chrome-192x192.png`}
+    <img
+      src={`/favicon/${themeDir}/android-chrome-192x192.png?v=3`}
       alt="Pelajaranku Logo"
       width={width}
       height={height}
       className={className}
-      priority
     />
   )
 }

@@ -68,7 +68,7 @@ const NodeDetailModal = memo(({ node, onClose }: NodeDetailModalProps) => {
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
             <DialogContent
                 showCloseButton={false}
-                className="sm:max-w-[520px] p-0 gap-0 overflow-hidden rounded-2xl border-border/60"
+                className="sm:max-w-130 p-0 gap-0 overflow-hidden rounded-2xl border-border/60"
             >
                 <div className="p-5 pb-4 space-y-4 max-h-[70vh] overflow-y-auto">
 
@@ -228,7 +228,7 @@ const MindmapNodeComponent = memo(({ data }: { data: { label: string; level: num
                     style.text,
                     // Layout & Stability - Exclusive sizing to prevent conflicts
                     "flex flex-col items-center justify-center text-center",
-                    level === 0 ? "w-[280px] min-h-[90px] text-lg rounded-2xl" : "w-[220px] min-h-[70px] text-sm",
+                    level === 0 ? "w-70 min-h-22.5 text-lg rounded-2xl" : "w-55 min-h-17.5 text-sm",
                     "wrap-break-word overflow-visible",
                     // Performance Optimization - Stable 2D Transform
                     "will-change-transform transition-transform duration-200 ease-out",
@@ -876,7 +876,7 @@ const MindmapContent = ({ noteId }: MindmapTabProps) => {
             }
 
             {/* Mindmap Canvas - Truly Full bleed */}
-            <div className="flex-1 flex flex-col min-h-[500px]">
+            <div className="flex-1 flex flex-col min-h-125">
                 <Card className="flex-1 overflow-hidden border-none shadow-none rounded-none py-0!">
                     <CardContent className="p-0 h-full relative">
                         {hasMindmap ? (

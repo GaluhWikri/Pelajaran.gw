@@ -594,7 +594,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
             {dialogues.length > 0 && !isProcessing && (
                 <div className="flex flex-col flex-1 gap-4 min-h-0">
                     {/* Audio Player */}
-                    <Card className="shrink-0 sticky top-[80px] z-20 shadow-md bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
+                    <Card className="shrink-0 sticky top-20 z-20 shadow-md bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base flex items-start gap-2 line-clamp-2 md:items-center">
                                 <Volume2 className="h-4 w-4 text-orange-500 mt-1 md:mt-0 shrink-0" />
@@ -719,7 +719,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                     </Card>
 
                     {/* Transcript */}
-                    <Card className="flex-1 min-h-[500px] h-[calc(100vh-300px)] flex flex-col bg-transparent">
+                    <Card className="flex-1 min-h-125 h-[calc(100vh-300px)] flex flex-col bg-transparent">
                         <CardHeader className="pb-2 p-4 z-10 border-b shrink-0">
                             <CardTitle className="text-sm flex items-center gap-2">
                                 📜 Transcript
@@ -809,7 +809,7 @@ export function PodcastTab({ noteId, noteTitle, noteContent }: PodcastTabProps) 
                                                                         <span key={wIndex}>
                                                                             <span
                                                                                 className={cn(
-                                                                                    "transition-colors duration-150 rounded-sm px-[2px] py-px",
+                                                                                    "transition-colors duration-150 rounded-sm px-0.5 py-px",
                                                                                     isActiveWord
                                                                                         ? "text-orange-700 dark:text-orange-300 font-medium bg-orange-500/20"
                                                                                         : isPast

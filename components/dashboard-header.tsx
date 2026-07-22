@@ -96,7 +96,7 @@ export function DashboardHeader() {
                 {!hasResults ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">No results found.</div>
                 ) : (
-                  <div className="max-h-[300px] overflow-y-auto py-2 custom-scrollbar">
+                  <div className="max-h-75 overflow-y-auto py-2 custom-scrollbar">
                     {filteredNotes.length > 0 && (
                       <div className="mb-2">
                         <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">

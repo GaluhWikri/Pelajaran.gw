@@ -73,8 +73,8 @@ export default function PendahuluanPage() {
 
       {/* Hero Background Elements */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-orange-500/5 dark:bg-orange-500/3 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-amber-500/5 dark:bg-amber-500/3 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute top-0 left-1/4 w-125 h-125 bg-orange-500/5 dark:bg-orange-500/3 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-150 h-150 bg-amber-500/5 dark:bg-amber-500/3 rounded-full blur-[150px] pointer-events-none" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-3 dark:opacity-5 mix-blend-overlay pointer-events-none" />
       </div>
 
