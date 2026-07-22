@@ -20,19 +20,21 @@ const navLinks = [
 export function LandingNavbar() {
   const pathname = usePathname()
   const isNavVisible = pathname === "/" || pathname === "/pendahuluan"
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-    // Set initial state
+    const handleScroll = () => setScrollY(window.scrollY)
     handleScroll()
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  // Default: transparent. On scroll: bg + blur fades in.
+  // 0px = fully transparent, 80px+ = fully blurred background
+  const scrollProgress = Math.min(1, scrollY / 80)
+  const isAtTop = scrollY < 20
 
   return (
     <motion.nav
@@ -40,13 +42,17 @@ export function LandingNavbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled
-          ? "py-3 bg-background/80 backdrop-blur-md border-b border-border/40 shadow-xs"
-          : "py-5 bg-transparent border-b border-transparent"
+        "fixed top-0 left-0 right-0 z-50 transition-[padding] duration-300 border-b border-border/30",
+        isAtTop ? "py-5" : "py-3"
       )}
     >
-      <div className="container mx-auto px-4 md:px-8 flex items-center justify-between relative">
+      {/* Background layer — transparent at top, blurred bg on scroll */}
+      <div
+        className="absolute inset-0 bg-background/80 backdrop-blur-md pointer-events-none border-b border-border/40 transition-opacity duration-300"
+        style={{ opacity: scrollProgress }}
+      />
+
+      <div className="container mx-auto px-4 md:px-8 flex items-center justify-between relative z-10">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity z-50">
           <Logo width={32} height={32} className="h-8 w-8 md:h-10 md:w-10 object-contain" />

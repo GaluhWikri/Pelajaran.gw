@@ -13,6 +13,8 @@ import { LandingNavbar } from "@/components/landing-navbar"
 import dynamic from "next/dynamic"
 import { Logo } from "@/components/logo"
 import { RunningText } from "@/components/landing/running-text"
+import Lenis from "lenis"
+import { ParticleBackground } from "@/components/landing/particle-background"
 
 // Dynamic import for heavy component
 const ProcessDemo = dynamic(() => import("@/components/landing/process-demo").then(mod => ({ default: mod.ProcessDemo })), {
@@ -63,6 +65,26 @@ export default function LandingPage() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Initialize Lenis smooth scroll
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    })
+
+    function raf(time: number) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+
+    requestAnimationFrame(raf)
+
+    return () => {
+      lenis.destroy()
+    }
   }, [])
 
   // Auto-scroll the active tab or pill into view
@@ -126,14 +148,19 @@ export default function LandingPage() {
   }, [user, router])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-hidden">
+      <ParticleBackground />
       {/* Landing Page Navbar */}
       <LandingNavbar />
 
       {/* Hero Section */}
       <section className="pt-36 pb-12 md:pt-48 md:pb-20 px-4 relative overflow-hidden">
         {/* Background glow overlay */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-125 bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.08),transparent_50%)] pointer-events-none -z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-125 pointer-events-none -z-10 overflow-hidden">
+          <ParallaxComponent speed={-80}>
+            <div className="w-full h-125 bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.08),transparent_50%)]" />
+          </ParallaxComponent>
+        </div>
 
         <div className="container mx-auto max-w-6xl relative">
 
@@ -199,34 +226,36 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Social Proof */}
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 15 },
-                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 150 } }
-              }}
-              className="flex items-center justify-center gap-3 pt-6"
-            >
-              <div className="flex -space-x-4">
-                {[
-                  { letter: "G", bg: "bg-[#29170F]", text: "text-white" },
-                  { letter: "A", bg: "bg-[#422216]", text: "text-white" },
-                  { letter: "L", bg: "bg-[#66361E]", text: "text-white" },
-                  { letter: "U", bg: "bg-[#914F2B]", text: "text-white" },
-                  { letter: "H", bg: "bg-[#F58F50]", text: "text-[#29170F]" },
-                ].map((avatar, i) => (
-                  <div
-                    key={i}
-                    className={`h-10 w-10 rounded-full ${avatar.bg} ${avatar.text} flex items-center justify-center text-sm font-bold border-2 border-background shadow-sm`}
-                    style={{ zIndex: 5 - i }}
-                  >
-                    {avatar.letter}
-                  </div>
-                ))}
-              </div>
-              <span className="text-muted-foreground font-medium text-sm">
-                Disukai oleh <span className="text-foreground font-bold">2,000,000+</span> Pelajar
-              </span>
-            </motion.div>
+            <ParallaxComponent speed={15}>
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 15 },
+                  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 150 } }
+                }}
+                className="flex items-center justify-center gap-3 pt-6"
+              >
+                <div className="flex -space-x-4">
+                  {[
+                    { letter: "G", bg: "bg-[#29170F]", text: "text-white" },
+                    { letter: "A", bg: "bg-[#422216]", text: "text-white" },
+                    { letter: "L", bg: "bg-[#66361E]", text: "text-white" },
+                    { letter: "U", bg: "bg-[#914F2B]", text: "text-white" },
+                    { letter: "H", bg: "bg-[#F58F50]", text: "text-[#29170F]" },
+                  ].map((avatar, i) => (
+                    <div
+                      key={i}
+                      className={`h-10 w-10 rounded-full ${avatar.bg} ${avatar.text} flex items-center justify-center text-sm font-bold border-2 border-background shadow-sm`}
+                      style={{ zIndex: 5 - i }}
+                    >
+                      {avatar.letter}
+                    </div>
+                  ))}
+                </div>
+                <span className="text-muted-foreground font-medium text-sm">
+                  Disukai oleh <span className="text-foreground font-bold">2,000,000+</span> Pelajar
+                </span>
+              </motion.div>
+            </ParallaxComponent>
           </motion.div>
         </div>
       </section>
@@ -852,6 +881,25 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+    </div>
+  )
+}
+
+function ParallaxComponent({ children, speed = 40 }: { children: React.ReactNode; speed?: number }) {
+  const ref = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  })
+
+  // Smooth parallax offset
+  const y = useTransform(scrollYProgress, [0, 1], [-speed, speed])
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <motion.div style={{ y }}>
+        {children}
+      </motion.div>
     </div>
   )
 }
