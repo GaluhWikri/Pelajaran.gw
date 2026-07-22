@@ -26,6 +26,83 @@ const ProcessDemo = dynamic(() => import("@/components/landing/process-demo").th
   ssr: false
 })
 
+// ─── Feature cards data & component (outside LandingPage to prevent remounting) ─
+const features = [
+  {
+    icon: FileText,
+    title: "Smart Notes",
+    description: "Upload materi apapun (PDF/Web/YouTube), AI akan merangkum poin penting secara otomatis."
+  },
+  {
+    icon: Brain,
+    title: "AI Tutor 24/7",
+    description: "Bingung dengan materi? Chat langsung dengan AI yang paham konteks catatan Anda."
+  },
+  {
+    icon: Zap,
+    title: "Quiz & Flashcard",
+    description: "Review pemahaman materi dengan kuis dan kartu hafalan yang dibuatkan AI."
+  },
+  {
+    icon: Network,
+    title: "Mind Map",
+    description: "Visualisasikan hubungan antar konsep dengan mind map yang dihasilkan AI secara otomatis."
+  },
+  {
+    icon: Mic,
+    title: "Podcast",
+    description: "Ubah materi menjadi podcast dialog dua pembicara yang bisa didengarkan kapan saja."
+  }
+]
+
+const iconVariants: Record<string, Variants> = {
+  "Smart Notes": {
+    hover: { rotate: [0, -8, 8, -5, 5, 0], transition: { duration: 0.5 } }
+  },
+  "AI Tutor 24/7": {
+    hover: { scale: [1, 1.12, 0.96, 1.08, 1], transition: { repeat: Infinity, duration: 1.4, ease: "easeInOut" } }
+  },
+  "Quiz & Flashcard": {
+    hover: { scale: [1, 1.22, 1.1], rotate: [0, -15, 15, 0], transition: { duration: 0.45 } }
+  },
+  "Mind Map": {
+    hover: { rotate: [0, 45, -10, 0], scale: 1.15, transition: { duration: 0.6 } }
+  },
+  "Podcast": {
+    hover: { y: [0, -6, 0], transition: { repeat: Infinity, duration: 0.7, ease: "easeInOut" } }
+  }
+}
+
+function FeatureCard({ feature, i }: { feature: typeof features[0]; i: number }) {
+  const variants = iconVariants[feature.title as keyof typeof iconVariants]
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      // once:true = animate only the first time it enters view (no re-trigger on scroll up/down)
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ delay: i * 0.08, duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] }}
+      whileHover="hover"
+      className="group relative p-8 rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/10"
+    >
+      <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
+      <div className="relative z-10 space-y-4">
+        <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+          <motion.div variants={variants}>
+            <feature.icon className="h-7 w-7 text-orange-600 group-hover:text-white transition-colors duration-300" />
+          </motion.div>
+        </div>
+        <h3 className="text-2xl font-bold group-hover:text-orange-600 transition-colors duration-300">
+          {feature.title}
+        </h3>
+        <p className="text-muted-foreground leading-relaxed">
+          {feature.description}
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function LandingPage() {
   const { user } = useAuth()
   const router = useRouter()
@@ -538,120 +615,20 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          {(() => {
-            const features = [
-              {
-                icon: FileText,
-                title: "Smart Notes",
-                description: "Upload materi apapun (PDF/Web/YouTube), AI akan merangkum poin penting secara otomatis."
-              },
-              {
-                icon: Brain,
-                title: "AI Tutor 24/7",
-                description: "Bingung dengan materi? Chat langsung dengan AI yang paham konteks catatan Anda."
-              },
-              {
-                icon: Zap,
-                title: "Quiz & Flashcard",
-                description: "Review pemahaman materi dengan kuis dan kartu hafalan yang dibuatkan AI."
-              },
-              {
-                icon: Network,
-                title: "Mind Map",
-                description: "Visualisasikan hubungan antar konsep dengan mind map yang dihasilkan AI secara otomatis."
-              },
-              {
-                icon: Mic,
-                title: "Podcast",
-                description: "Ubah materi menjadi podcast dialog dua pembicara yang bisa didengarkan kapan saja."
-              }
-            ]
-
-            const iconVariants: Record<string, Variants> = {
-              "Smart Notes": {
-                hover: { 
-                  rotate: [0, -8, 8, -5, 5, 0],
-                  transition: { duration: 0.5 }
-                }
-              },
-              "AI Tutor 24/7": {
-                hover: { 
-                  scale: [1, 1.12, 0.96, 1.08, 1],
-                  transition: { repeat: Infinity, duration: 1.4, ease: "easeInOut" }
-                }
-              },
-              "Quiz & Flashcard": {
-                hover: { 
-                  scale: [1, 1.22, 1.1],
-                  rotate: [0, -15, 15, 0],
-                  transition: { duration: 0.45 }
-                }
-              },
-              "Mind Map": {
-                hover: { 
-                  rotate: [0, 45, -10, 0],
-                  scale: 1.15,
-                  transition: { duration: 0.6 }
-                }
-              },
-              "Podcast": {
-                hover: { 
-                  y: [0, -6, 0],
-                  transition: { repeat: Infinity, duration: 0.7, ease: "easeInOut" }
-                }
-              }
-            }
-
-            const FeatureCard = ({ feature, i }: { feature: typeof features[0]; i: number }) => {
-              const variants = iconVariants[feature.title as keyof typeof iconVariants]
-
-              return (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover="hover"
-                  className="group relative p-8 rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/10"
-                >
-                  <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
-
-                  <div className="relative z-10 space-y-4">
-                    <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                      <motion.div variants={variants}>
-                        <feature.icon className="h-7 w-7 text-orange-600 group-hover:text-white transition-colors duration-300" />
-                      </motion.div>
-                    </div>
-
-                    <h3 className="text-2xl font-bold group-hover:text-orange-600 transition-colors duration-300">
-                      {feature.title}
-                    </h3>
-
-                    <p className="text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
-                </motion.div>
-              )
-            }
-
-            return (
-              <div className="space-y-6">
-                {/* Top row: 3 cards */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {features.slice(0, 3).map((feature, i) => (
-                    <FeatureCard key={i} feature={feature} i={i} />
-                  ))}
-                </div>
-                {/* Bottom row: 2 cards centered */}
-                <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                  {features.slice(3).map((feature, i) => (
-                    <FeatureCard key={i + 3} feature={feature} i={i + 3} />
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
+          <div className="space-y-6">
+            {/* Top row: 3 cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.slice(0, 3).map((feature, i) => (
+                <FeatureCard key={feature.title} feature={feature} i={i} />
+              ))}
+            </div>
+            {/* Bottom row: 2 cards centered */}
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {features.slice(3).map((feature, i) => (
+                <FeatureCard key={feature.title} feature={feature} i={i + 3} />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

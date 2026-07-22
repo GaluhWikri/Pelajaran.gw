@@ -41,7 +41,7 @@ export function ParticleBackground() {
       size: number; opacity: number; baseOpacity: number
       twinkleOffset: number; color: string
 
-      constructor() {
+      constructor(canvas: HTMLCanvasElement) {
         const W = canvas.width, H = canvas.height
         this.x = Math.random() * W
         this.y = Math.random() * H
@@ -57,8 +57,8 @@ export function ParticleBackground() {
           this.baseOpacity = Math.random() * 0.25 + 0.15
         }
         const sp = this.size * 0.11
-        this.vx = -0.32 * sp
-        this.vy =  0.20 * sp
+        this.vx = -3.2 * sp
+        this.vy =  2.0 * sp
         this.opacity = this.baseOpacity
         this.twinkleOffset = Math.random() * Math.PI * 2
 
@@ -75,7 +75,7 @@ export function ParticleBackground() {
         this.opacity = this.baseOpacity
       }
 
-      update() {
+      update(canvas: HTMLCanvasElement) {
         const W = canvas.width, H = canvas.height
         this.x += this.vx; this.y += this.vy
         if (this.x < 0) this.x = W
@@ -88,7 +88,7 @@ export function ParticleBackground() {
         ))
       }
 
-      draw() {
+      draw(ctx: CanvasRenderingContext2D) {
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fillStyle = `${this.color}${this.opacity})`
@@ -178,7 +178,7 @@ export function ParticleBackground() {
       canvas.width  = window.innerWidth
       canvas.height = window.innerHeight
       const count = Math.min(Math.floor((canvas.width * canvas.height) / 3500), 480)
-      stars = Array.from({ length: count }, () => new Star())
+      stars = Array.from({ length: count }, () => new Star(canvas))
     }
 
     init()
@@ -190,7 +190,7 @@ export function ParticleBackground() {
       // 2. Aurora glow on top
       drawAurora(Date.now() / 1000)
       // 3. Stars drift over aurora
-      stars.forEach(s => { s.update(); s.draw() })
+      stars.forEach(s => { s.update(canvas); s.draw(ctx) })
       rafId = requestAnimationFrame(animate)
     }
 
